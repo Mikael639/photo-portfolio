@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f3eb;
+  --ink: #19130f;
+  --accent: #bc7d4f;
+  --accent-soft: #d8b499;
+  --line: #2d241e;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-line: var(--line);
+  --font-serif: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 10%, #f0e5d0 0%, transparent 45%),
+    radial-gradient(circle at 90% 20%, #f3dac5 0%, transparent 35%),
+    var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+::selection {
+  background: rgba(188, 125, 79, 0.24);
+  color: var(--ink);
+}
+
+a,
+button {
+  cursor: pointer;
+}

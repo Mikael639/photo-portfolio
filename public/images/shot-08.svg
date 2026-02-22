@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
+  <defs><linearGradient id="g8" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#26181f"/><stop offset="100%" stop-color="#9a5f80"/></linearGradient></defs>
+  <rect width="1200" height="1600" fill="url(#g8)"/>
+  <circle cx="320" cy="360" r="180" fill="#efc2d9" opacity="0.18"/>
+  <circle cx="860" cy="980" r="280" fill="#efc2d9" opacity="0.14"/>
+  <text x="90" y="1480" fill="#ffeef7" font-size="82" font-family="serif">SHOT 08</text>
+</svg>
