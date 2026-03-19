@@ -1,209 +1,242 @@
-"use client";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import HomePageExperience from "../components/home/HomePageExperience";
+import { getPhotoObjectPosition } from "../lib/photoPresentation";
+import { getPublicPhotos } from "../lib/photoRepository";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
+export const metadata = {
+  title: "Accueil",
+  description:
+    "Portfolio photo editorial de Jerrypicsart pour fashion week, mariages, eglises et concerts.",
+};
 
-const services = [
-  {
-    title: "Fashion Week",
-    description: "Coverage runway, backstage et street style avec rendu editorial premium.",
-  },
-  {
-    title: "Mariage",
-    description: "Reportage emotionnel de la preparation a la soiree, avec une narration naturelle.",
-  },
-  {
-    title: "Eglise",
-    description: "Photographie benevole pour offices, chorales et evenements communautaires.",
-  },
-  {
-    title: "Concert",
-    description: "Captation live d artistes, ambiance scene et images fortes pour communication.",
-  },
-];
+const fallbackByCategory = {
+  "Fashion Week": "/images/shot-01.svg",
+  Mariage: "/images/shot-02.svg",
+  Eglise: "/images/shot-03.svg",
+  Concert: "/images/shot-04.svg",
+  Autre: "/images/shot-05.svg",
+  Portfolio: "/images/shot-06.svg",
+};
 
-const fallbackPhoto = {
-  src: "/images/shot-01.svg",
-  alt: "Photo portfolio Jerrypicsart",
+const defaultFallbackPhoto = {
+  id: "fallback-photo",
+  src: "/images/shot-06.svg",
+  alt: "Photographie Jerrypicsart",
+  title: "Selection Jerrypicsart",
+  category: "Portfolio",
+  roles: [],
+  objectPosition: "center center",
 };
 
 function getFirstPhotoByRole(list, role) {
-  for (let index = 0; index < list.length; index += 1) {
-    const photo = list[index];
+  for (const photo of list) {
     if (photo.roles?.includes(role)) return photo;
   }
+
   return null;
 }
 
-export default function HomePage() {
-  const [photos, setPhotos] = useState([]);
-  const [featuredStartIndex, setFeaturedStartIndex] = useState(0);
+function hasRenderableSource(src) {
+  if (!src || typeof src !== "string") return false;
+  if (/^https?:\/\//.test(src)) return true;
+  if (!src.startsWith("/")) return false;
 
-  useEffect(() => {
-    let isMounted = true;
+  const relativePath = src.replace(/^\/+/, "").split("/").join(path.sep);
+  return existsSync(path.join(process.cwd(), "public", relativePath));
+}
 
-    async function loadPhotos() {
-      try {
-        const response = await fetch("/api/photos?limit=40", {
-          method: "GET",
-          cache: "no-store",
-        });
-        const result = await response.json();
-        if (!response.ok || !result.ok) return;
-        if (isMounted) setPhotos(Array.isArray(result.data) ? result.data : []);
-      } catch {
-        // Keep fallback visuals when API is unavailable.
-      }
+function getFallbackSrc(category) {
+  return fallbackByCategory[category] || defaultFallbackPhoto.src;
+}
+
+function normalizePhoto(photo) {
+  const category = photo?.category || "Portfolio";
+  const title = photo?.title || "Selection Jerrypicsart";
+  const src = hasRenderableSource(photo?.src) ? photo.src : getFallbackSrc(category);
+
+  return {
+    id: photo?.id || `${category}-${title}-${src}`,
+    src,
+    alt: photo?.alt || title || defaultFallbackPhoto.alt,
+    title,
+    category,
+    roles: Array.isArray(photo?.roles) ? photo.roles : [],
+    objectPosition: getPhotoObjectPosition({ ...photo, title }),
+  };
+}
+
+function collectPhotos(pool, count, excludeIds = [], fallbackPhoto = defaultFallbackPhoto) {
+  const taken = [];
+  const seen = new Set(excludeIds);
+
+  for (const photo of pool) {
+    if (!photo || seen.has(photo.id)) continue;
+    seen.add(photo.id);
+    taken.push(photo);
+    if (taken.length === count) return taken;
+  }
+
+  while (taken.length < count) {
+    const index = taken.length + 1;
+    taken.push({
+      ...fallbackPhoto,
+      id: `${fallbackPhoto.id}-fallback-${index}`,
+      src: getFallbackSrc(fallbackPhoto.category),
+    });
+  }
+
+  return taken;
+}
+
+function buildCategoryPriority(pool, preferredCategories = []) {
+  const availableCategories = [];
+
+  for (const photo of pool) {
+    const category = photo?.category || "Autre";
+    if (!availableCategories.includes(category)) {
+      availableCategories.push(category);
+    }
+  }
+
+  const ordered = [];
+
+  for (const category of preferredCategories) {
+    if (availableCategories.includes(category) && !ordered.includes(category)) {
+      ordered.push(category);
+    }
+  }
+
+  for (const category of availableCategories) {
+    if (!ordered.includes(category)) {
+      ordered.push(category);
+    }
+  }
+
+  return ordered;
+}
+
+function collectMixedPhotos(
+  pool,
+  count,
+  { excludeIds = [], preferredCategories = [], fallbackPhoto = defaultFallbackPhoto } = {}
+) {
+  const taken = [];
+  const seen = new Set(excludeIds);
+  const grouped = new Map();
+
+  for (const photo of pool) {
+    if (!photo || seen.has(photo.id)) continue;
+
+    const category = photo.category || "Autre";
+    if (!grouped.has(category)) {
+      grouped.set(category, []);
     }
 
-    loadPhotos();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    grouped.get(category).push(photo);
+  }
 
-  const heroPhoto = getFirstPhotoByRole(photos, "hero") || photos[0] || fallbackPhoto;
-  const featuredByRole = photos.filter((photo) => photo.roles?.includes("featured"));
-  const featuredPool = (() => {
-    if (featuredByRole.length >= 3) return featuredByRole.slice(0, 3);
+  const categoryPriority = buildCategoryPriority(pool, preferredCategories);
+  let progressed = true;
 
-    const featuredIds = new Set(featuredByRole.map((photo) => photo.id));
-    const recentPhotos = photos.filter((photo) => !featuredIds.has(photo.id));
-    return [...featuredByRole, ...recentPhotos];
-  })();
-  const featuredPhotos = (() => {
-    if (featuredPool.length <= 3) return featuredPool.slice(0, 3);
+  while (taken.length < count && progressed) {
+    progressed = false;
 
-    return [0, 1, 2].map((offset) => {
-      const index = (featuredStartIndex + offset) % featuredPool.length;
-      return featuredPool[index];
+    for (const category of categoryPriority) {
+      const bucket = grouped.get(category) || [];
+      const nextPhoto = bucket.shift();
+      if (!nextPhoto || seen.has(nextPhoto.id)) continue;
+
+      seen.add(nextPhoto.id);
+      taken.push(nextPhoto);
+      progressed = true;
+
+      if (taken.length === count) break;
+    }
+  }
+
+  if (taken.length < count) {
+    for (const photo of pool) {
+      if (!photo || seen.has(photo.id)) continue;
+      seen.add(photo.id);
+      taken.push(photo);
+      if (taken.length === count) break;
+    }
+  }
+
+  while (taken.length < count) {
+    const index = taken.length + 1;
+    taken.push({
+      ...fallbackPhoto,
+      id: `${fallbackPhoto.id}-mixed-fallback-${index}`,
+      src: getFallbackSrc(fallbackPhoto.category),
     });
-  })();
-  const servicesBackground = getFirstPhotoByRole(photos, "servicesBackground") || featuredPhotos[0] || heroPhoto;
+  }
 
-  useEffect(() => {
-    if (featuredPool.length <= 3) return;
+  return taken;
+}
 
-    const intervalId = setInterval(() => {
-      setFeaturedStartIndex((current) => (current + 1) % featuredPool.length);
-    }, 15000);
+export default async function HomePage() {
+  let sourcePhotos = [];
 
-    return () => clearInterval(intervalId);
-  }, [featuredPool.length]);
+  try {
+    sourcePhotos = await getPublicPhotos({ limit: 48 });
+  } catch {
+    sourcePhotos = [];
+  }
+
+  const photos = (sourcePhotos.length ? sourcePhotos : [defaultFallbackPhoto]).map(normalizePhoto);
+
+  const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || photos[0] || defaultFallbackPhoto);
+  const featuredPool = photos.filter((photo) => photo.roles?.includes("featured"));
+  const editorialPool = [...featuredPool, ...photos];
+  const alternateCategories = Array.from(
+    new Set(photos.map((photo) => photo.category).filter((category) => category && category !== heroPhoto.category))
+  );
+  const supportingPreferredCategories = alternateCategories.length
+    ? [...alternateCategories, heroPhoto.category]
+    : [heroPhoto.category];
+  const featuredPreferredCategories = alternateCategories.length
+    ? [...alternateCategories, heroPhoto.category]
+    : [heroPhoto.category];
+
+  const supportingPhotos = collectMixedPhotos(editorialPool, 2, {
+    excludeIds: [heroPhoto.id],
+    preferredCategories: supportingPreferredCategories,
+    fallbackPhoto: heroPhoto,
+  });
+  const featuredPhotos = collectMixedPhotos(editorialPool, 4, {
+    excludeIds: [heroPhoto.id],
+    preferredCategories: featuredPreferredCategories,
+    fallbackPhoto: supportingPhotos[0] || heroPhoto,
+  });
+  const servicesBackground = normalizePhoto(
+    getFirstPhotoByRole(photos, "servicesBackground") || supportingPhotos[0] || heroPhoto
+  );
+  const identityPhoto = collectMixedPhotos(photos, 1, {
+    excludeIds: [heroPhoto.id, servicesBackground.id, ...featuredPhotos.map((photo) => photo.id)],
+    preferredCategories: alternateCategories.length
+      ? [heroPhoto.category, ...alternateCategories]
+      : [heroPhoto.category],
+    fallbackPhoto: supportingPhotos[0] || heroPhoto,
+  })[0];
+  const closingPhoto = collectPhotos(
+    photos,
+    1,
+    [heroPhoto.id, servicesBackground.id, identityPhoto.id, ...featuredPhotos.map((photo) => photo.id)],
+    identityPhoto || heroPhoto
+  )[0];
+  const categories = Array.from(new Set(photos.map((photo) => photo.category).filter(Boolean))).slice(0, 4);
 
   return (
-    <div className="space-y-20">
-      <section className="relative min-h-[82vh] overflow-hidden border-b border-line/30">
-        <Image src={heroPhoto.src} alt={heroPhoto.alt} fill priority className="object-cover" sizes="100vw" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-transparent" />
-
-        <div className="relative mx-auto flex min-h-[82vh] max-w-7xl items-end px-4 pb-14 pt-28 md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="max-w-3xl text-paper"
-          >
-            <p className="mb-4 text-sm uppercase tracking-[0.25em] text-paper/80">Jerrypicsart</p>
-            <h1 className="font-serif text-4xl leading-tight md:text-6xl">
-              Photographe pour fashion week, mariages, eglises et concerts.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base text-paper/85 md:text-lg">
-              Une image elegante, vivante et utile pour raconter votre evenement avec coherence visuelle.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/gallery"
-                className="rounded-full bg-paper px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-ink transition hover:bg-accent hover:text-paper"
-              >
-                Voir les realisations
-              </Link>
-              <Link
-                href="/contact"
-                className="rounded-full border border-paper/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-paper transition hover:border-paper hover:bg-paper/10"
-              >
-                Demander un devis
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-line/20 px-4 py-10 md:px-8 md:py-12">
-        <Image src={servicesBackground.src} alt={servicesBackground.alt} fill className="object-cover" sizes="100vw" />
-        <div className="absolute inset-0 bg-ink/65" />
-
-        <div className="relative z-10 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.45 }}
-            className="space-y-4"
-          >
-            <p className="text-sm uppercase tracking-[0.2em] text-paper/75">Prestations</p>
-            <h2 className="font-serif text-3xl leading-tight text-paper md:text-5xl">
-              Une offre claire pour chaque type d&apos;evenement
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {services.map((service, index) => (
-              <motion.article
-                key={service.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.35, delay: index * 0.06 }}
-                className="rounded-2xl border border-white/30 bg-white/10 p-5 text-paper backdrop-blur-sm"
-              >
-                <p className="font-serif text-2xl">{service.title}</p>
-                <p className="mt-2 text-sm text-paper/85">{service.description}</p>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 md:grid-cols-[1.1fr_1fr] md:px-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-5"
-        >
-          <p className="text-sm uppercase tracking-[0.2em] text-ink/70">Signature visuelle</p>
-          <h2 className="font-serif text-3xl leading-tight md:text-5xl">Un style organique, precis et lumineux.</h2>
-          <p className="max-w-xl text-ink/80">
-            Chaque serie est construite autour d&apos;une lumiere maitrisee, d&apos;un rythme juste et d&apos;une retouche
-            subtile.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-3 gap-3"
-        >
-          {featuredPhotos.map((photo) => (
-            <div key={photo.id} className="overflow-hidden rounded-xl border border-line/20">
-              <Image
-                src={photo.src}
-                alt={photo.alt}
-                width={900}
-                height={1200}
-                className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                sizes="(max-width: 768px) 33vw, 22vw"
-              />
-            </div>
-          ))}
-        </motion.div>
-      </section>
-    </div>
+    <HomePageExperience
+      heroPhoto={heroPhoto}
+      supportingPhotos={supportingPhotos}
+      featuredPhotos={featuredPhotos}
+      identityPhoto={identityPhoto}
+      servicesBackground={servicesBackground}
+      closingPhoto={closingPhoto}
+      categories={categories}
+    />
   );
 }

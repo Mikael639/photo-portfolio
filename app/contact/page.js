@@ -1,19 +1,50 @@
-import ContactForm from "../../components/ContactForm";
+import ContactExperience from "../../components/contact/ContactExperience";
+import { enhancePhotoPresentation } from "../../lib/photoPresentation";
+import { getPublicPhotos } from "../../lib/photoRepository";
 
 export const metadata = {
   title: "Contact",
+  description: "Contacter Jerrypicsart pour une date, une commande editoriale ou une prestation evenementielle.",
 };
 
-export default function ContactPage() {
-  return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 pt-10 md:px-8">
-      <p className="text-sm uppercase tracking-[0.2em] text-ink/70">Contact</p>
-      <h1 className="font-serif text-4xl md:text-6xl">Parlons de votre prochain evenement</h1>
-      <p className="max-w-2xl text-ink/75">
-        Indique le type de prestation, la date et le lieu pour recevoir une reponse plus rapide et mieux ciblee.
-      </p>
+function findByTitle(photos, titles, excludeIds = []) {
+  const excluded = new Set(excludeIds);
 
-      <ContactForm />
-    </div>
-  );
+  for (const title of titles) {
+    const match = photos.find((photo) => !excluded.has(photo.id) && photo.title === title);
+    if (match) return match;
+  }
+
+  return photos.find((photo) => !excluded.has(photo.id)) || null;
+}
+
+function findByCategory(photos, categories, excludeIds = []) {
+  const excluded = new Set(excludeIds);
+
+  for (const category of categories) {
+    const match = photos.find((photo) => !excluded.has(photo.id) && photo.category === category);
+    if (match) return match;
+  }
+
+  return photos.find((photo) => !excluded.has(photo.id)) || null;
+}
+
+export default async function ContactPage() {
+  let photos = [];
+
+  try {
+    photos = (await getPublicPhotos({ limit: 18 })).map(enhancePhotoPresentation);
+  } catch {
+    photos = [];
+  }
+
+  const leadPhoto =
+    findByTitle(photos, ["Couple et cabriolet", "Voile et regard", "Ouverture de defile", "Portrait couture"]) ||
+    null;
+  const secondaryPhoto =
+    findByCategory(photos, ["Fashion Week", "Mariage"], [leadPhoto?.id]) ||
+    findByTitle(photos, ["Portrait couture", "Entree de reception"], [leadPhoto?.id]) ||
+    null;
+
+  return <ContactExperience leadPhoto={leadPhoto} secondaryPhoto={secondaryPhoto} />;
 }
