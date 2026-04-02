@@ -23,8 +23,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
+    <html lang="fr" suppressHydrationWarning>
+      <body className={`${display.variable} ${body.variable} antialiased`} suppressHydrationWarning>
         <div className="relative min-h-screen overflow-x-hidden">
           <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_70%_30%,rgba(188,125,79,0.18),transparent_42%)]" />
           <Navbar />

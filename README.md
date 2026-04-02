@@ -35,6 +35,7 @@ cp .env.example .env.local
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 - `ADMIN_SESSION_SECRET`
+- `ADMIN_API_KEY` (pour l'accès programmatique aux messages de contact)
 
 Le formulaire Contact envoie un email via Resend vers `CONTACT_TO_EMAIL` et envoie aussi un accusé de reception automatique au client.
 
@@ -73,6 +74,9 @@ Donc les nouvelles presta apparaissent automatiquement en haut.
 ## API
 
 - Public: `GET /api/photos?category=...&limit=...`
+- Contact:
+  - `POST /api/contact` (envoi d'un message)
+  - `GET /api/contact` (nécessite header `x-admin-key`)
 - Admin auth:
   - `POST /api/admin/login`
   - `POST /api/admin/logout`
@@ -81,3 +85,12 @@ Donc les nouvelles presta apparaissent automatiquement en haut.
   - `POST /api/admin/photos`
   - `PATCH /api/admin/photos`
   - `DELETE /api/admin/photos?id=...`
+
+## Sécurité
+
+> [!CAUTION]
+> Ne jamais versionner les fichiers `.env.local` ou toute clé privée sur un dépôt public.
+
+- Utilisez des secrets longs et complexes pour `ADMIN_SESSION_SECRET` et `ADMIN_API_KEY`.
+- Les accès admin utilisent des signatures HMAC sécurisées pour les sessions.
+- Le stockage Supabase est protégé par RLS (Row Level Security), assurez-vous que `supabase/schema.sql` est bien appliqué.

@@ -84,7 +84,6 @@ function GalleryCard({
           {photo.category}
         </span>
         <div className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-paper/52">Image choisie</p>
           <p className="max-w-[18rem] font-serif text-[clamp(1.5rem,2.6vw,2.5rem)] leading-[0.95] text-paper">
             {photo.title}
           </p>

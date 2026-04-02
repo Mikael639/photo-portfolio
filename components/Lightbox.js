@@ -55,9 +55,6 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             onClick={(event) => event.stopPropagation()}
           >
             <div className="absolute right-4 top-4 z-20 flex items-center gap-2 md:right-5 md:top-5">
-              <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-white/70">
-                {currentLabel}
-              </span>
               <button
                 type="button"
                 onClick={onClose}

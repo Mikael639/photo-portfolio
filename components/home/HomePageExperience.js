@@ -98,7 +98,6 @@ function PhotoTile({ photo, href = "/gallery", className = "", sizes, delay = 0,
             {photo.category}
           </span>
           <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-paper/55">Image choisie</p>
             <p className="max-w-[16rem] font-serif text-2xl leading-tight text-paper">{photo.title}</p>
           </div>
         </div>
@@ -174,7 +173,7 @@ export default function HomePageExperience({
           </AnimatePresence>
         </div>
 
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.45),rgba(12,10,8,0.25)_28%,rgba(12,10,8,0.72)_72%,rgba(12,10,8,0.92)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.55),rgba(12,10,8,0.4)_28%,rgba(12,10,8,0.72)_72%,rgba(12,10,8,0.92)_100%)]" />
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(circle_at_65%_32%,rgba(255,255,255,0.12),transparent_34%)]"
           animate={reduceMotion ? undefined : { opacity: [0.1, 0.18, 0.12] }}
@@ -184,46 +183,92 @@ export default function HomePageExperience({
 
         <div className="relative mx-auto grid min-h-screen max-w-7xl gap-10 px-4 pb-10 pt-32 md:px-8 md:pb-14 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            transition={reduceMotion ? undefined : { duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion ? undefined : "show"}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+              },
+            }}
             className="max-w-4xl text-paper"
           >
-            <p className="text-[11px] uppercase tracking-[0.32em] text-paper/66">Jerrypicsart portfolio editorial</p>
-            <h1 className="mt-5 max-w-5xl font-serif text-[clamp(3.5rem,9vw,7.6rem)] leading-[0.9] tracking-[-0.05em]">
+            <motion.p
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="text-[11px] uppercase tracking-[0.32em] text-paper/70 font-medium"
+            >
+              Jerrypicsart portfolio editorial
+            </motion.p>
+            <motion.h1
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="mt-5 max-w-5xl font-serif text-[clamp(3.5rem,9vw,7.6rem)] leading-[0.9] tracking-[-0.05em]"
+              style={{ textShadow: "0 12px 48px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4)" }}
+            >
               Des images qui donnent de la tenue a l&apos;instant.
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-paper/78 md:text-lg">
+            </motion.h1>
+            <motion.p
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="mt-6 max-w-xl text-base leading-relaxed text-paper/85 md:text-lg"
+              style={{ textShadow: "0 4px 24px rgba(0,0,0,0.8)" }}
+            >
               Mode, mariages et evenements saisis avec la meme exigence de cadre, de lumiere et de presence.
-            </p>
+            </motion.p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="mt-8 flex flex-wrap gap-3"
+            >
               <Link
                 href="/gallery"
-                className="rounded-full bg-paper px-6 py-3 text-sm font-medium uppercase tracking-[0.18em] text-ink transition hover:bg-accent hover:text-paper"
+                className="rounded-full bg-paper px-6 py-3 text-sm font-medium uppercase tracking-[0.18em] text-ink transition hover:bg-accent hover:text-paper shadow-xl"
               >
                 Explorer l&apos;edit
               </Link>
               <Link
                 href="/contact"
-                className="rounded-full border border-paper/35 px-6 py-3 text-sm font-medium uppercase tracking-[0.18em] text-paper transition hover:border-paper hover:bg-paper/10"
+                className="rounded-full border border-paper/40 px-6 py-3 text-sm font-medium uppercase tracking-[0.18em] text-paper backdrop-blur-sm transition hover:border-paper hover:bg-paper/10"
               >
                 Parler d&apos;une date
               </Link>
-            </div>
+            </motion.div>
 
-            <div className="mt-10 flex flex-wrap gap-x-4 gap-y-3 text-[11px] uppercase tracking-[0.24em] text-paper/62">
+            <motion.div
+              variants={{
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="mt-10 flex flex-wrap gap-x-4 gap-y-3 text-[11px] uppercase tracking-[0.24em] text-paper/70 font-medium"
+            >
               {categories.map((category) => (
                 <span key={category}>{category}</span>
               ))}
-            </div>
+            </motion.div>
 
-            <div className="mt-10 flex flex-wrap items-center gap-4 text-[11px] uppercase tracking-[0.24em] text-paper/55">
-              <span className="h-px w-16 bg-paper/24" />
+            <motion.div
+              variants={{
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } },
+              }}
+              className="mt-10 flex flex-wrap items-center gap-4 text-[11px] uppercase tracking-[0.24em] text-paper/60"
+            >
+              <span className="h-px w-16 bg-paper/30" />
               <span>
                 {activeHeroPhoto.category} / {activeHeroPhoto.title}
               </span>
-            </div>
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -250,7 +295,7 @@ export default function HomePageExperience({
               </div>
             ))}
 
-            <div className="rounded-[1.8rem] border border-white/12 bg-black/28 p-5 text-paper/82 backdrop-blur-md">
+            <div className="rounded-[1.8rem] border border-white/12 bg-black/45 p-5 text-paper/90 backdrop-blur-md shadow-2xl">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-paper/58">Direction</p>
                 {cinematicPhotos.length > 1 ? (
