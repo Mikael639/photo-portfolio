@@ -43,6 +43,9 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visionneuse d'images"
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/88 p-4 backdrop-blur-sm md:p-6"
           onClick={onClose}
         >
@@ -55,6 +58,9 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             onClick={(event) => event.stopPropagation()}
           >
             <div className="absolute right-4 top-4 z-20 flex items-center gap-2 md:right-5 md:top-5">
+              <div className="rounded-full border border-white/14 bg-white/8 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white/72">
+                {currentLabel}
+              </div>
               <button
                 type="button"
                 onClick={onClose}

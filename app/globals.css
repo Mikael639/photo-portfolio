@@ -44,6 +44,29 @@ button {
   cursor: pointer;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor body,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button,
+  html.has-custom-cursor [role="button"],
+  html.has-custom-cursor summary,
+  html.has-custom-cursor label[for],
+  html.has-custom-cursor input[type="submit"],
+  html.has-custom-cursor input[type="button"],
+  html.has-custom-cursor input[type="checkbox"],
+  html.has-custom-cursor input[type="radio"],
+  html.has-custom-cursor select {
+    cursor: none;
+  }
+
+  html.has-custom-cursor input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+  html.has-custom-cursor textarea,
+  html.has-custom-cursor [contenteditable="true"] {
+    cursor: text;
+  }
+}
+
 .page-shell {
   position: relative;
   isolation: isolate;

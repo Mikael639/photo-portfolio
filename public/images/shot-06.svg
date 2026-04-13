@@ -1,8 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
-  <defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2e220f"/><stop offset="100%" stop-color="#b89855"/></linearGradient></defs>
+  <defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f6f3eb"/><stop offset="100%" stop-color="#d9d2c5"/></linearGradient></defs>
   <rect width="1200" height="1600" fill="url(#g6)"/>
-  <rect x="180" y="280" width="200" height="960" fill="#f2dba7" opacity="0.24"/>
-  <rect x="460" y="420" width="200" height="820" fill="#f2dba7" opacity="0.18"/>
-  <rect x="740" y="180" width="200" height="1060" fill="#f2dba7" opacity="0.12"/>
-  <text x="90" y="1480" fill="#fff6df" font-size="82" font-family="serif">SHOT 06</text>
+  <text x="90" y="1480" fill="#241a14" font-size="82" font-family="serif">SHOT 06</text>
 </svg>

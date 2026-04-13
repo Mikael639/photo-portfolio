@@ -3,11 +3,15 @@ import path from "node:path";
 import HomePageExperience from "../components/home/HomePageExperience";
 import { getPhotoObjectPosition } from "../lib/photoPresentation";
 import { getPublicPhotos } from "../lib/photoRepository";
+import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 
 export const metadata = {
   title: "Accueil",
   description:
     "Portfolio photo editorial de Jerrypicsart pour fashion week, mariages, eglises et concerts.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 const fallbackByCategory = {
@@ -227,16 +231,45 @@ export default async function HomePage() {
     identityPhoto || heroPhoto
   )[0];
   const categories = Array.from(new Set(photos.map((photo) => photo.category).filter(Boolean))).slice(0, 4);
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: siteConfig.name,
+      url: getSiteUrl(),
+      inLanguage: "fr-FR",
+      description: siteConfig.description,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "@id": `${getSiteUrl()}/#studio`,
+      name: siteConfig.name,
+      url: getSiteUrl(),
+      description: siteConfig.description,
+      image: heroPhoto?.src?.startsWith("http") ? heroPhoto.src : toAbsoluteUrl(heroPhoto?.src || "/images/shot-01.svg"),
+      serviceType: categories.length ? categories : siteConfig.categoryLabels,
+      knowsAbout: siteConfig.categoryLabels,
+    },
+  ];
 
   return (
-    <HomePageExperience
-      heroPhoto={heroPhoto}
-      supportingPhotos={supportingPhotos}
-      featuredPhotos={featuredPhotos}
-      identityPhoto={identityPhoto}
-      servicesBackground={servicesBackground}
-      closingPhoto={closingPhoto}
-      categories={categories}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
+      <HomePageExperience
+        heroPhoto={heroPhoto}
+        supportingPhotos={supportingPhotos}
+        featuredPhotos={featuredPhotos}
+        identityPhoto={identityPhoto}
+        servicesBackground={servicesBackground}
+        closingPhoto={closingPhoto}
+        categories={categories}
+      />
+    </>
   );
 }
