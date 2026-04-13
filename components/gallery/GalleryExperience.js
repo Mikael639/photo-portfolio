@@ -3,8 +3,10 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import Lightbox from "../Lightbox";
+import MagneticElement from "../MagneticElement";
 import { enhancePhotoPresentation } from "../../lib/photoPresentation";
 
 const collectionStories = {
@@ -23,30 +25,33 @@ function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   }
 
   return {
-    initial: { opacity: 0, y: 24 },
+    initial: { opacity: 0, y: 32 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, amount },
     transition: {
-      duration: 0.68,
+      duration: 0.8,
       delay,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.16, 1, 0.3, 1],
     },
   };
 }
 
 function FilterButton({ category, isActive, onClick }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-4 py-2 text-sm uppercase tracking-[0.16em] transition md:px-5 ${
-        isActive
-          ? "border-ink bg-ink text-paper shadow-[0_10px_30px_rgba(12,10,8,0.12)]"
-          : "border-line/30 bg-white/60 text-ink/72 hover:border-ink/40 hover:text-ink"
-      }`}
-    >
-      {category}
-    </button>
+    <MagneticElement strength={0.15}>
+      <button
+        type="button"
+        aria-pressed={isActive}
+        onClick={onClick}
+        className={`rounded-full border px-5 py-2.5 text-sm uppercase tracking-[0.16em] transition-all duration-300 md:px-6 ${
+          isActive
+            ? "border-ink bg-ink text-paper shadow-[0_12px_40px_rgba(12,10,8,0.18)]"
+            : "border-line/20 bg-white/40 text-ink/60 hover:border-ink/40 hover:text-ink hover:bg-white"
+        }`}
+      >
+        {category}
+      </button>
+    </MagneticElement>
   );
 }
 
@@ -60,14 +65,35 @@ function GalleryCard({
   reduceMotion,
   delay = 0,
 }) {
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    if (reduceMotion) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - left) / width;
+    const y = (e.clientY - top) / height;
+
+    const rX = (y - 0.5) * 10;
+    const rY = (x - 0.5) * -10;
+    setRotate({ x: rX, y: rY });
+  };
+
+  const handleMouseLeave = () => {
+    setRotate({ x: 0, y: 0 });
+  };
+
   return (
     <motion.button
       type="button"
       onClick={() => onOpen(index)}
-      className={`group relative block w-full overflow-hidden rounded-[2rem] border border-line/15 bg-ink text-left shadow-[0_24px_80px_rgba(12,10,8,0.1)] ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`group relative block w-full overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink text-left shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
       {...getRevealProps(reduceMotion, delay)}
-      whileHover={reduceMotion ? undefined : { y: -4 }}
-      transition={reduceMotion ? undefined : { duration: 0.3, ease: "easeOut" }}
+      style={{
+        perspective: 1200,
+        transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+      }}
     >
       <Image
         src={photo.src}
@@ -75,16 +101,16 @@ function GalleryCard({
         fill
         priority={priority}
         sizes={sizes}
-        className="object-cover transition duration-700 ease-out group-hover:scale-[1.025]"
+        className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.08]"
         style={{ objectPosition: photo.objectPosition || "center center" }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.08),rgba(12,10,8,0.18)_45%,rgba(12,10,8,0.82))]" />
-      <div className="relative flex h-full flex-col justify-between p-5 md:p-6">
-        <span className="w-fit rounded-full border border-white/14 bg-black/18 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-paper/68 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
+        <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
           {photo.category}
         </span>
-        <div className="space-y-1.5">
-          <p className="max-w-[18rem] font-serif text-[clamp(1.5rem,2.6vw,2.5rem)] leading-[0.95] text-paper">
+        <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+          <p className="max-w-[20rem] font-serif text-[clamp(1.8rem,3vw,3rem)] leading-[0.92] tracking-[-0.04em] text-paper">
             {photo.title}
           </p>
         </div>
@@ -95,11 +121,11 @@ function GalleryCard({
 
 function LoadingGrid() {
   return (
-    <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
+    <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
       {Array.from({ length: 8 }, (_, index) => (
         <div
           key={`loading-${index}`}
-          className={`mb-5 break-inside-avoid rounded-[2rem] border border-line/15 bg-white/60 ${
+          className={`mb-6 break-inside-avoid rounded-[2.2rem] border border-line/10 bg-white/40 ${
             index % 3 === 0 ? "h-[22rem]" : index % 3 === 1 ? "h-[28rem]" : "h-[24rem]"
           } animate-pulse`}
         />
@@ -108,14 +134,26 @@ function LoadingGrid() {
   );
 }
 
-export default function GalleryExperience({ initialPhotos, categories }) {
+export default function GalleryExperience({ initialPhotos, initialFilteredPhotos, initialCategory, categories }) {
   const reduceMotion = useReducedMotion();
-  const [activeFilter, setActiveFilter] = useState("Tout");
+  const pathname = usePathname();
+  const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState(initialCategory || "Tout");
   const [activeIndex, setActiveIndex] = useState(null);
-  const [photos, setPhotos] = useState(initialPhotos);
+  const [photos, setPhotos] = useState(initialFilteredPhotos || initialPhotos);
   const [status, setStatus] = useState("success");
   const [errorMessage, setErrorMessage] = useState("");
-  const cacheRef = useRef(new Map([["Tout", initialPhotos]]));
+  const cacheRef = useRef(
+    new Map([
+      ["Tout", initialPhotos],
+      [initialCategory || "Tout", initialFilteredPhotos || initialPhotos],
+    ])
+  );
+
+  useEffect(() => {
+    setActiveFilter(initialCategory || "Tout");
+    setPhotos(initialFilteredPhotos || initialPhotos);
+  }, [initialCategory, initialFilteredPhotos, initialPhotos]);
 
   useEffect(() => {
     let isMounted = true;
@@ -185,18 +223,18 @@ export default function GalleryExperience({ initialPhotos, categories }) {
   const collectionStory = collectionStories[activeFilter] || collectionStories.Tout;
 
   return (
-    <div data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-10 px-4 pb-16 pt-10 md:px-8 md:space-y-14">
-      <header className="space-y-4">
-        <motion.div className="max-w-4xl space-y-4" {...getRevealProps(reduceMotion)}>
-          <p className="text-[11px] uppercase tracking-[0.28em] text-ink/52">Galerie</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.94] tracking-[-0.04em] md:text-7xl">
+    <div data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
+      <header className="space-y-6">
+        <motion.div className="max-w-4xl space-y-5" {...getRevealProps(reduceMotion)}>
+          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">Galerie</p>
+          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl">
             Une collection pensee comme un edit continu.
           </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-ink/72 md:text-lg">{collectionStory}</p>
+          <p className="max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">{collectionStory}</p>
         </motion.div>
       </header>
 
-      <motion.div className="flex flex-wrap gap-2.5" {...getRevealProps(reduceMotion, 0.08)}>
+      <motion.div className="flex flex-wrap gap-4" {...getRevealProps(reduceMotion, 0.1)}>
         {categories.map((category) => (
           <FilterButton
             key={category}
@@ -206,6 +244,14 @@ export default function GalleryExperience({ initialPhotos, categories }) {
               startTransition(() => {
                 setActiveFilter(category);
                 setActiveIndex(null);
+
+                const params = new URLSearchParams();
+                if (category !== "Tout") {
+                  params.set("category", category);
+                }
+
+                const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                router.replace(nextUrl, { scroll: false });
               });
             }}
           />
@@ -213,20 +259,20 @@ export default function GalleryExperience({ initialPhotos, categories }) {
       </motion.div>
 
       {status === "error" ? (
-        <div className="rounded-[2rem] border border-red-200 bg-red-50/80 p-6 text-red-800">
-          <p className="text-[11px] uppercase tracking-[0.24em]">Erreur</p>
-          <p className="mt-3 font-serif text-2xl">La galerie n&apos;a pas pu se charger.</p>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed">{errorMessage}</p>
+        <div className="rounded-[2.2rem] border border-red-200 bg-red-50/80 p-8 text-red-800">
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em]">Erreur</p>
+          <p className="mt-4 font-serif text-3xl">La galerie n&apos;a pas pu se charger.</p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed">{errorMessage}</p>
         </div>
       ) : null}
 
       {status === "loading" ? <LoadingGrid /> : null}
 
       {status === "success" && photos.length === 0 ? (
-        <div className="rounded-[2rem] border border-line/15 bg-white/60 p-8 text-center shadow-[0_24px_80px_rgba(12,10,8,0.04)]">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-ink/50">Galerie vide</p>
-          <p className="mt-4 font-serif text-3xl">Aucune image dans cette collection pour l&apos;instant.</p>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ink/68">
+        <div className="rounded-[2.5rem] border border-line/12 bg-white/60 p-12 text-center shadow-[0_32px_96px_rgba(12,10,8,0.06)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-ink/40">Galerie vide</p>
+          <p className="mt-6 font-serif text-4xl">Aucune image dans cette collection.</p>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink/60">
             Ajoute ou publie des photos depuis l&apos;admin pour faire vivre cette section.
           </p>
         </div>
@@ -234,48 +280,52 @@ export default function GalleryExperience({ initialPhotos, categories }) {
 
       {status === "success" && leadPhoto ? (
         <>
-          <section className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+          <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <GalleryCard
               photo={leadPhoto}
               index={0}
               onOpen={setActiveIndex}
               sizes="(max-width: 1280px) 100vw, 58vw"
-              className="min-h-[28rem] lg:min-h-[42rem]"
+              className="min-h-[30rem] lg:min-h-[44rem]"
               priority
               reduceMotion={reduceMotion}
             />
 
-            <div className="grid gap-5">
+            <div className="grid gap-6">
               <motion.div
-                className="rounded-[2rem] border border-line/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.62))] p-6 shadow-[0_24px_80px_rgba(12,10,8,0.06)] md:p-8"
-                {...getRevealProps(reduceMotion, 0.06)}
+                className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.65))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-10"
+                {...getRevealProps(reduceMotion, 0.08)}
               >
-                <p className="text-[11px] uppercase tracking-[0.26em] text-ink/50">Edit maison</p>
-                <h2 className="mt-4 max-w-lg font-serif text-3xl leading-[1.02] tracking-[-0.03em] md:text-4xl">
-                  La galerie commence comme une prise de position, puis s&apos;ouvre sur l&apos;ensemble du travail.
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Edit maison</p>
+                <h2 className="mt-5 max-w-lg font-serif text-3xl leading-[1] tracking-[-0.04em] md:text-5xl">
+                  La galerie commence comme une prise de position.
                 </h2>
-                <p className="mt-4 max-w-xl text-base leading-relaxed text-ink/72">
-                  Les premieres images donnent le ton, puis la grille laisse les series, les silhouettes et les
+                <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70 md:text-xl">
+                  Les premieres images donnent le ton, puis la grille laisse les series et les
                   moments plus documentaires dialoguer librement.
                 </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href="/contact"
-                    className="rounded-full bg-ink px-5 py-2.5 text-sm uppercase tracking-[0.18em] text-paper transition hover:bg-accent"
-                  >
-                    Demander une date
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setActiveIndex(0)}
-                    className="rounded-full border border-line/20 px-5 py-2.5 text-sm uppercase tracking-[0.18em] text-ink transition hover:border-ink"
-                  >
-                    Ouvrir l&apos;image
-                  </button>
+                <div className="mt-10 flex flex-wrap gap-4">
+                  <MagneticElement strength={0.2}>
+                    <Link
+                      href="/contact"
+                      className="inline-block rounded-full bg-ink px-7 py-3.5 text-sm font-bold uppercase tracking-[0.2em] text-paper transition-colors hover:bg-accent"
+                    >
+                      Demander une date
+                    </Link>
+                  </MagneticElement>
+                  <MagneticElement strength={0.15}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveIndex(0)}
+                      className="rounded-full border border-line/20 px-7 py-3.5 text-sm font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
+                    >
+                      Ouvrir l&apos;image
+                    </button>
+                  </MagneticElement>
                 </div>
               </motion.div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-2">
                 {secondaryPhotos.map(({ photo, index }, itemIndex) => (
                   <GalleryCard
                     key={photo.id}
@@ -283,33 +333,33 @@ export default function GalleryExperience({ initialPhotos, categories }) {
                     index={index}
                     onOpen={setActiveIndex}
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 24vw"
-                    className="min-h-[20rem] md:min-h-[24rem]"
+                    className="min-h-[22rem] md:min-h-[26rem]"
                     reduceMotion={reduceMotion}
-                    delay={0.1 + itemIndex * 0.05}
+                    delay={0.15 + itemIndex * 0.08}
                   />
                 ))}
               </div>
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-10">
             <motion.div
-              className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
-              {...getRevealProps(reduceMotion, 0.08)}
+              className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
+              {...getRevealProps(reduceMotion, 0.1)}
             >
-              <div className="space-y-2">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-ink/50">Grille complete</p>
-                <p className="font-serif text-3xl leading-tight md:text-4xl">
+              <div className="space-y-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Grille complete</p>
+                <p className="max-w-2xl font-serif text-4xl leading-tight md:text-5xl">
                   Toutes les images publiees, sans filtre narratif.
                 </p>
               </div>
-              <p className="max-w-xl text-sm leading-relaxed text-ink/68">
+              <p className="max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
                 Une fois l&apos;edit pose, la grille laisse apparaitre le reste de la collection avec une lecture plus
                 libre.
               </p>
             </motion.div>
 
-            <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
+            <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
               {galleryGridPhotos.map(({ photo, index }, itemIndex) => (
                 <GalleryCard
                   key={photo.id}
@@ -317,15 +367,15 @@ export default function GalleryExperience({ initialPhotos, categories }) {
                   index={index}
                   onOpen={setActiveIndex}
                   sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                  className={`mb-5 min-h-[18rem] break-inside-avoid ${
+                  className={`mb-6 min-h-[20rem] break-inside-avoid ${
                     itemIndex % 3 === 0
-                      ? "h-[22rem] md:h-[26rem]"
+                      ? "h-[22rem] md:h-[28rem]"
                       : itemIndex % 3 === 1
-                        ? "h-[28rem] md:h-[34rem]"
-                        : "h-[24rem] md:h-[30rem]"
+                        ? "h-[28rem] md:h-[36rem]"
+                        : "h-[24rem] md:h-[32rem]"
                   }`}
                   reduceMotion={reduceMotion}
-                  delay={Math.min(itemIndex * 0.025, 0.24)}
+                  delay={Math.min(itemIndex * 0.03, 0.28)}
                 />
               ))}
             </div>

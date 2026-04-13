@@ -5,6 +5,9 @@ import { getPublicPhotos } from "../../lib/photoRepository";
 export const metadata = {
   title: "Contact",
   description: "Contacter Jerrypicsart pour une date, une commande editoriale ou une prestation evenementielle.",
+  alternates: {
+    canonical: "/contact",
+  },
 };
 
 function findByTitle(photos, titles, excludeIds = []) {

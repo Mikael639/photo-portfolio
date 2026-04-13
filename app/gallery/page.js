@@ -5,6 +5,9 @@ import { getPublicPhotos } from "../../lib/photoRepository";
 export const metadata = {
   title: "Galerie",
   description: "Galerie editoriale de Jerrypicsart entre mode, mariage, eglise et concert.",
+  alternates: {
+    canonical: "/gallery",
+  },
 };
 
 const defaultCategories = ["Fashion Week", "Mariage", "Eglise", "Concert"];
@@ -22,7 +25,13 @@ function buildCategories(photos) {
   return ["Tout", ...orderedCategories];
 }
 
-export default async function GalleryPage() {
+function filterPhotosByCategory(photos, category) {
+  if (!category || category === "Tout") return photos;
+  return photos.filter((photo) => photo.category === category);
+}
+
+export default async function GalleryPage({ searchParams }) {
+  const resolvedSearchParams = (await searchParams) || {};
   let initialPhotos = [];
 
   try {
@@ -31,6 +40,16 @@ export default async function GalleryPage() {
     initialPhotos = [];
   }
 
-  return <GalleryExperience initialPhotos={initialPhotos} categories={buildCategories(initialPhotos)} />;
-}
+  const categories = buildCategories(initialPhotos);
+  const requestedCategory = typeof resolvedSearchParams.category === "string" ? resolvedSearchParams.category : "Tout";
+  const initialCategory = categories.includes(requestedCategory) ? requestedCategory : "Tout";
 
+  return (
+    <GalleryExperience
+      initialPhotos={initialPhotos}
+      initialCategory={initialCategory}
+      initialFilteredPhotos={filterPhotosByCategory(initialPhotos, initialCategory)}
+      categories={categories}
+    />
+  );
+}

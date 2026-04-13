@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 const categories = ["Fashion Week", "Mariage", "Eglise", "Concert", "Autre"];
+const categoryFilters = ["Toutes", ...categories];
 const roleOptions = ["hero", "featured", "servicesBackground"];
 const maxBulkUploadCount = 12;
 
@@ -26,6 +28,10 @@ export default function AdminPhotosPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Toutes");
+  const [publishFilter, setPublishFilter] = useState("all");
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   async function loadAdminPhotos() {
     const response = await fetch("/api/admin/photos", { cache: "no-store" });
@@ -42,7 +48,16 @@ export default function AdminPhotosPage() {
   useEffect(() => {
     async function bootstrap() {
       setIsCheckingAuth(true);
+
       try {
+        const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" });
+        const sessionResult = await sessionResponse.json();
+
+        if (!sessionResponse.ok || !sessionResult.ok || !sessionResult.authenticated) {
+          setIsAuthenticated(false);
+          return;
+        }
+
         await loadAdminPhotos();
         setIsAuthenticated(true);
       } catch {
@@ -56,6 +71,25 @@ export default function AdminPhotosPage() {
   }, []);
 
   const totalPublished = useMemo(() => photos.filter((photo) => photo.isPublished).length, [photos]);
+  const totalDrafts = useMemo(() => photos.filter((photo) => !photo.isPublished).length, [photos]);
+  const filteredPhotos = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return photos.filter((photo) => {
+      const matchesCategory = categoryFilter === "Toutes" ? true : photo.category === categoryFilter;
+      const matchesPublishState =
+        publishFilter === "all" ? true : publishFilter === "published" ? photo.isPublished : !photo.isPublished;
+      const matchesQuery = !normalizedQuery
+        ? true
+        : [photo.title, photo.alt, photo.category, ...(photo.roles || [])]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedQuery);
+
+      return matchesCategory && matchesPublishState && matchesQuery;
+    });
+  }, [categoryFilter, photos, publishFilter, searchQuery]);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -141,6 +175,7 @@ export default function AdminPhotosPage() {
     }
 
     setUploadForm(initialUploadForm);
+    setFileInputKey((current) => current + 1);
     await loadAdminPhotos();
     setStatusMessage(`${result.total || uploadForm.files.length} photo(s) ajoutee(s).`);
     setIsUploading(false);
@@ -163,6 +198,7 @@ export default function AdminPhotosPage() {
     }
 
     await loadAdminPhotos();
+    setStatusMessage("Photo mise a jour.");
   }
 
   async function deletePhoto(id) {
@@ -206,6 +242,7 @@ export default function AdminPhotosPage() {
             <input
               value={authForm.username}
               onChange={(event) => setAuthForm((current) => ({ ...current, username: event.target.value }))}
+              autoComplete="username"
               className="w-full rounded-lg border border-line/30 bg-paper px-3 py-2 outline-none focus:border-accent"
               required
             />
@@ -216,6 +253,7 @@ export default function AdminPhotosPage() {
               type="password"
               value={authForm.password}
               onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))}
+              autoComplete="current-password"
               className="w-full rounded-lg border border-line/30 bg-paper px-3 py-2 outline-none focus:border-accent"
               required
             />
@@ -235,7 +273,7 @@ export default function AdminPhotosPage() {
         <div>
           <h1 className="font-serif text-4xl">Admin Photos</h1>
           <p className="text-sm text-ink/70">
-            Total: {photos.length} | Publiees: {totalPublished}
+            Total: {photos.length} | Publiees: {totalPublished} | Brouillons: {totalDrafts}
           </p>
         </div>
         <button
@@ -249,6 +287,9 @@ export default function AdminPhotosPage() {
 
       <form onSubmit={handleUpload} className="space-y-4 rounded-2xl border border-line/25 bg-white/60 p-5">
         <h2 className="font-serif text-2xl">Ajouter une photo</h2>
+        <p className="text-sm text-ink/65">
+          Prepare la categorie, les roles editoriaux et l&apos;etat de publication avant l&apos;envoi.
+        </p>
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2">
@@ -284,6 +325,7 @@ export default function AdminPhotosPage() {
           <label className="space-y-2">
             <span className="text-sm">Images (max 12)</span>
             <input
+              key={fileInputKey}
               type="file"
               multiple
               accept="image/*"
@@ -344,10 +386,54 @@ export default function AdminPhotosPage() {
       {statusMessage ? <p className="text-sm text-emerald-700">{statusMessage}</p> : null}
       {errorMessage ? <p className="text-sm text-red-700">{errorMessage}</p> : null}
 
+      <div className="grid gap-4 rounded-2xl border border-line/25 bg-white/55 p-4 md:grid-cols-[minmax(0,1.3fr)_220px_220px]">
+        <label className="space-y-2">
+          <span className="text-xs uppercase tracking-[0.2em] text-ink/55">Recherche</span>
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Titre, alt, categorie, role..."
+            className="w-full rounded-lg border border-line/25 bg-paper px-3 py-2 outline-none focus:border-accent"
+          />
+        </label>
+        <label className="space-y-2">
+          <span className="text-xs uppercase tracking-[0.2em] text-ink/55">Categorie</span>
+          <select
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value)}
+            className="w-full rounded-lg border border-line/25 bg-paper px-3 py-2 outline-none focus:border-accent"
+          >
+            {categoryFilters.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2">
+          <span className="text-xs uppercase tracking-[0.2em] text-ink/55">Etat</span>
+          <select
+            value={publishFilter}
+            onChange={(event) => setPublishFilter(event.target.value)}
+            className="w-full rounded-lg border border-line/25 bg-paper px-3 py-2 outline-none focus:border-accent"
+          >
+            <option value="all">Tous</option>
+            <option value="published">Publiees</option>
+            <option value="draft">Brouillons</option>
+          </select>
+        </label>
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-line/25 bg-white/60">
-        <table className="w-full text-left text-sm">
+        <div className="flex items-center justify-between border-b border-line/15 px-4 py-3 text-sm text-ink/65">
+          <p>{filteredPhotos.length} photo(s) affichee(s)</p>
+          <p>Les changements se sauvegardent au blur ou au clic.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-paper/90">
             <tr>
+              <th className="px-4 py-3">Apercu</th>
               <th className="px-4 py-3">Titre</th>
               <th className="px-4 py-3">Categorie</th>
               <th className="px-4 py-3">Roles</th>
@@ -357,11 +443,50 @@ export default function AdminPhotosPage() {
             </tr>
           </thead>
           <tbody>
-            {photos.map((photo) => (
+            {filteredPhotos.map((photo) => (
               <tr key={photo.id} className="border-t border-line/20">
                 <td className="px-4 py-3">
-                  <p className="font-semibold">{photo.title}</p>
-                  <p className="text-xs text-ink/65">{photo.alt}</p>
+                  <a
+                    href={photo.src}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block h-16 w-16 overflow-hidden rounded-xl border border-line/20 bg-paper"
+                  >
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt || photo.title}
+                      width={64}
+                      height={64}
+                      unoptimized
+                      className="h-full w-full object-cover"
+                    />
+                  </a>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="grid gap-2">
+                    <input
+                      defaultValue={photo.title}
+                      onBlur={(event) => {
+                        const nextTitle = event.target.value.trim();
+                        if (nextTitle && nextTitle !== photo.title) {
+                          updatePhoto(photo.id, { title: nextTitle });
+                        }
+                      }}
+                      className="w-full rounded-md border border-line/30 bg-paper px-2 py-1 font-semibold"
+                      disabled={busyId === photo.id}
+                    />
+                    <input
+                      defaultValue={photo.alt}
+                      onBlur={(event) => {
+                        const nextAlt = event.target.value.trim();
+                        if (nextAlt !== photo.alt) {
+                          updatePhoto(photo.id, { alt: nextAlt });
+                        }
+                      }}
+                      className="w-full rounded-md border border-line/20 bg-paper px-2 py-1 text-xs text-ink/70"
+                      disabled={busyId === photo.id}
+                    />
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <select
@@ -408,19 +533,30 @@ export default function AdminPhotosPage() {
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => deletePhoto(photo.id)}
-                    className="rounded-full border border-red-300 px-3 py-1 text-red-700 hover:bg-red-50"
-                    disabled={busyId === photo.id}
-                  >
-                    Supprimer
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={photo.src}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full border border-line/25 px-3 py-1 hover:border-ink"
+                    >
+                      Ouvrir
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => deletePhoto(photo.id)}
+                      className="rounded-full border border-red-300 px-3 py-1 text-red-700 hover:bg-red-50"
+                      disabled={busyId === photo.id}
+                    >
+                      Supprimer
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

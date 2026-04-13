@@ -25,6 +25,7 @@ cp .env.example .env.local
 3. Remplir les variables dans `.env.local`:
 
 - `RESEND_API_KEY`
+- `NEXT_PUBLIC_SITE_URL` (optionnel mais recommande pour les metadata, le sitemap et le partage social)
 - `CONTACT_TO_EMAIL`
 - `CONTACT_FROM_EMAIL`
 - `CONTACT_AUTO_REPLY_SUBJECT` (optionnel)
