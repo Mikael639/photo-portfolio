@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import MagneticElement from "../MagneticElement";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const principles = [
   {
@@ -91,14 +93,37 @@ function PhotoPanel({ photo, className = "", sizes, reduceMotion }) {
 
 export default function AboutExperience({ leadPhoto, secondaryPhoto, atmospherePhoto }) {
   const reduceMotion = useReducedMotion();
+  const headline = "Une ecriture visuelle sobre et precise.";
+  const headlineRef = useRef(null);
+
+  useGSAP(() => {
+    if (reduceMotion) return;
+    
+    gsap.fromTo(
+      ".word-stagger",
+      { y: 60, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power3.out",
+        stagger: 0.05,
+        delay: 0.5, // wait for page transition
+      }
+    );
+  }, { scope: headlineRef });
 
   return (
-    <div data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
+    <div ref={headlineRef} data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
       <section className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
         <motion.div className="space-y-6" {...getRevealProps(reduceMotion)}>
           <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">A propos</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl">
-            Une ecriture visuelle sobre et precise.
+          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl flex flex-wrap gap-x-[0.2em] gap-y-2">
+            {headline.split(" ").map((word, i) => (
+              <span key={i} className="overflow-hidden inline-flex">
+                <span className="word-stagger inline-block">{word}</span>
+              </span>
+            ))}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-ink/75 md:text-xl">
             Jerrypicsart photographie la mode, le mariage et l&apos;evenementiel avec une meme intention: donner de la

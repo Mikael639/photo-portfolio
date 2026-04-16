@@ -21,6 +21,8 @@ const textInputSelector = [
   "[contenteditable='true']",
 ].join(", ");
 
+const galleryItemSelector = "[data-cursor='gallery-item']";
+
 function getCursorMode(target) {
   if (!(target instanceof Element)) {
     return "default";
@@ -28,6 +30,10 @@ function getCursorMode(target) {
 
   if (target.closest(textInputSelector)) {
     return "hidden";
+  }
+
+  if (target.closest(galleryItemSelector)) {
+    return "gallery-item";
   }
 
   if (target.closest(interactiveSelector)) {
@@ -150,7 +156,13 @@ export default function CustomCursor() {
   if (!isEnabled) return null;
 
   const isInteractive = cursorMode === "interactive";
+  const isGalleryItem = cursorMode === "gallery-item";
   const shouldHide = !isVisible || cursorMode === "hidden";
+  
+  // Adjusted sizes for the gallery item to fit the text "VOIR"
+  const ringSize = isGalleryItem ? 80 : isInteractive ? 46 : 28;
+  const glowSize = isGalleryItem ? 100 : isInteractive ? 72 : 40;
+  const dotSize = isGalleryItem ? 0 : isInteractive ? 6 : 4;
 
   return (
     <motion.div
@@ -186,10 +198,13 @@ export default function CustomCursor() {
         <motion.div
           className="absolute rounded-full blur-[16px]"
           animate={{
-            width: isInteractive ? 64 : 42,
-            height: isInteractive ? 64 : 42,
-            backgroundColor: isInteractive ? "rgba(217, 180, 155, 0.28)" : "rgba(255, 255, 255, 0.18)",
-            opacity: isPressed ? 0.3 : isInteractive ? 0.75 : 0.58,
+            width: glowSize,
+            height: glowSize,
+            background: isInteractive || isGalleryItem
+              ? "radial-gradient(circle, rgba(231,211,190,0.42) 0%, rgba(185,143,111,0.18) 44%, rgba(185,143,111,0) 74%)"
+              : "radial-gradient(circle, rgba(35,29,25,0.12) 0%, rgba(35,29,25,0.05) 52%, rgba(35,29,25,0) 76%)",
+            opacity: isPressed ? 0.22 : (isInteractive || isGalleryItem) ? 0.72 : 0.42,
+            scale: (isInteractive || isGalleryItem) ? (isPressed ? 0.94 : 1.03) : 1,
           }}
           transition={{
             type: "spring",
@@ -202,13 +217,14 @@ export default function CustomCursor() {
         <motion.div
           className="absolute rounded-full border"
           animate={{
-            width: isInteractive ? 42 : 28,
-            height: isInteractive ? 42 : 28,
-            borderColor: isInteractive ? "rgba(143, 90, 58, 0.32)" : "rgba(255, 255, 255, 0.52)",
-            backgroundColor: isInteractive ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.02)",
-            boxShadow: isInteractive
-              ? "0 0 0 1px rgba(255,255,255,0.08), 0 8px 30px rgba(12,10,8,0.08)"
-              : "0 0 0 1px rgba(255,255,255,0.04), 0 6px 24px rgba(12,10,8,0.05)",
+            width: ringSize,
+            height: ringSize,
+            borderColor: (isInteractive || isGalleryItem) ? "rgba(167, 126, 97, 0.96)" : "rgba(35, 29, 25, 0.72)",
+            backgroundColor: isGalleryItem ? "rgba(167, 126, 97, 0.96)" : isInteractive ? "rgba(245, 239, 230, 0.08)" : "rgba(245, 239, 230, 0.18)",
+            boxShadow: (isInteractive || isGalleryItem)
+              ? "0 0 0 1px rgba(245,239,230,0.58), 0 10px 28px rgba(12,10,8,0.16)"
+              : "0 0 0 1px rgba(245,239,230,0.6), 0 6px 20px rgba(12,10,8,0.08)",
+            scale: (isInteractive || isGalleryItem) ? (isPressed ? 0.96 : 1.02) : 1,
           }}
           transition={{
             type: "spring",
@@ -221,11 +237,12 @@ export default function CustomCursor() {
         <motion.div
           className="absolute rounded-full"
           animate={{
-            width: isInteractive ? 4 : 3,
-            height: isInteractive ? 4 : 3,
-            backgroundColor: isInteractive ? "rgba(143, 90, 58, 0.72)" : "rgba(255, 255, 255, 0.92)",
-            scale: isPressed ? 0.7 : 1,
-            opacity: isInteractive ? 0.9 : 0.72,
+            width: dotSize,
+            height: dotSize,
+            backgroundColor: isInteractive ? "rgba(170, 129, 99, 0.98)" : "rgba(35, 29, 25, 0.94)",
+            scale: isPressed ? 0.78 : 1,
+            opacity: isGalleryItem ? 0 : isInteractive ? 0.96 : 0.9,
+            boxShadow: isInteractive ? "0 0 10px rgba(226,198,173,0.34)" : "none",
           }}
           transition={{
             type: "spring",
@@ -234,6 +251,35 @@ export default function CustomCursor() {
             mass: 0.14,
           }}
         />
+
+        {isGalleryItem && (
+          <motion.div
+            className="absolute flex items-center justify-center pointer-events-none"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+          >
+            <span className="text-[10px] font-bold text-paper tracking-[0.2em] leading-none uppercase">Voir</span>
+          </motion.div>
+        )}
+
+        {(isInteractive || isGalleryItem) ? (
+          <motion.div
+            className="absolute rounded-full border border-[rgba(245,239,230,0.45)]"
+            animate={{
+              width: isPressed ? 56 : 62,
+              height: isPressed ? 56 : 62,
+              opacity: isPressed ? 0.12 : 0.2,
+              scale: isPressed ? 0.96 : 1.02,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 240,
+              damping: 22,
+              mass: 0.22,
+            }}
+          />
+        ) : null}
       </motion.div>
     </motion.div>
   );

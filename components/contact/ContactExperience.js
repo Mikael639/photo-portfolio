@@ -5,7 +5,9 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import ContactForm from "../ContactForm";
 import MagneticElement from "../MagneticElement";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const notes = [
   {
@@ -95,14 +97,37 @@ function PhotoPanel({ photo, className = "", sizes, reduceMotion }) {
 
 export default function ContactExperience({ leadPhoto, secondaryPhoto }) {
   const reduceMotion = useReducedMotion();
+  const headline = "Parlons d'une date ou d'une serie.";
+  const headlineRef = useRef(null);
+
+  useGSAP(() => {
+    if (reduceMotion) return;
+    
+    gsap.fromTo(
+      ".word-stagger",
+      { y: 60, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power3.out",
+        stagger: 0.05,
+        delay: 0.5,
+      }
+    );
+  }, { scope: headlineRef });
 
   return (
-    <div data-page="contact" className="page-shell mx-auto max-w-7xl space-y-16 px-4 pb-20 pt-12 md:space-y-24 md:px-8">
+    <div ref={headlineRef} data-page="contact" className="page-shell mx-auto max-w-7xl space-y-16 px-4 pb-20 pt-12 md:space-y-24 md:px-8">
       <section className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
         <motion.div className="space-y-6" {...getRevealProps(reduceMotion)}>
           <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">Contact</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl">
-            Parlons d&apos;une date ou d&apos;une serie.
+          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl flex flex-wrap gap-x-[0.2em] gap-y-2">
+            {headline.split(" ").map((word, i) => (
+              <span key={i} className="overflow-hidden inline-flex">
+                <span className="word-stagger inline-block">{word}</span>
+              </span>
+            ))}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-ink/75 md:text-xl">
             Quelques lignes claires suffisent pour poser la bonne direction. Le formulaire ci-dessous reste la facon la

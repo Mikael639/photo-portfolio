@@ -55,6 +55,7 @@ npm run dev
 
 - URL: `/admin/photos`
 - Login avec `ADMIN_USERNAME` + `ADMIN_PASSWORD`
+- L'interface admin charge maintenant la session et les photos initiales cote serveur, puis utilise des Server Actions pour les operations principales
 - Actions disponibles:
   - upload simple ou multiple (max 12 photos/envoi, 15MB max/fichier)
   - categorie

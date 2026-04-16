@@ -106,3 +106,18 @@ button {
     radial-gradient(circle at 20% 24%, rgba(232, 214, 194, 0.7) 0%, transparent 30%),
     radial-gradient(circle at 80% 22%, rgba(210, 223, 229, 0.56) 0%, transparent 26%);
 }
+
+/* Optimisation de la netteté des images */
+.sharpen-img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.05) brightness(1.02);
+}
+
+.noise-under-text {
+  isolation: isolate;
+}
+
+.noise-under-text > * {
+  z-index: 10;
+}

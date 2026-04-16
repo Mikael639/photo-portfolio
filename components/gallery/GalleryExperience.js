@@ -1,13 +1,19 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lightbox from "../Lightbox";
 import MagneticElement from "../MagneticElement";
-import { enhancePhotoPresentation } from "../../lib/photoPresentation";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const collectionStories = {
   Tout: "Une lecture continue entre mode, mariages, ceremonies et moments de scene.",
@@ -88,6 +94,7 @@ function GalleryCard({
       onClick={() => onOpen(index)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      data-cursor="gallery-item"
       className={`group relative block w-full overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink text-left shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
       {...getRevealProps(reduceMotion, delay)}
       style={{
@@ -101,8 +108,9 @@ function GalleryCard({
         fill
         priority={priority}
         sizes={sizes}
-        className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.08]"
+        className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
         style={{ objectPosition: photo.objectPosition || "center center" }}
+        quality={85}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
@@ -119,96 +127,31 @@ function GalleryCard({
   );
 }
 
-function LoadingGrid() {
-  return (
-    <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
-      {Array.from({ length: 8 }, (_, index) => (
-        <div
-          key={`loading-${index}`}
-          className={`mb-6 break-inside-avoid rounded-[2.2rem] border border-line/10 bg-white/40 ${
-            index % 3 === 0 ? "h-[22rem]" : index % 3 === 1 ? "h-[28rem]" : "h-[24rem]"
-          } animate-pulse`}
-        />
-      ))}
-    </div>
-  );
-}
-
-export default function GalleryExperience({ initialPhotos, initialFilteredPhotos, initialCategory, categories }) {
+export default function GalleryExperience({ photos, activeCategory, categories }) {
   const reduceMotion = useReducedMotion();
   const pathname = usePathname();
   const router = useRouter();
-  const [activeFilter, setActiveFilter] = useState(initialCategory || "Tout");
+  const activeFilter = activeCategory || "Tout";
   const [activeIndex, setActiveIndex] = useState(null);
-  const [photos, setPhotos] = useState(initialFilteredPhotos || initialPhotos);
-  const [status, setStatus] = useState("success");
-  const [errorMessage, setErrorMessage] = useState("");
-  const cacheRef = useRef(
-    new Map([
-      ["Tout", initialPhotos],
-      [initialCategory || "Tout", initialFilteredPhotos || initialPhotos],
-    ])
-  );
+  const containerRef = useRef(null);
 
-  useEffect(() => {
-    setActiveFilter(initialCategory || "Tout");
-    setPhotos(initialFilteredPhotos || initialPhotos);
-  }, [initialCategory, initialFilteredPhotos, initialPhotos]);
+  useGSAP(() => {
+    if (reduceMotion) return;
 
-  useEffect(() => {
-    let isMounted = true;
-
-    if (cacheRef.current.has(activeFilter)) {
-      const cachedPhotos = cacheRef.current.get(activeFilter) || [];
-      setPhotos(cachedPhotos);
-      setStatus("success");
-      setErrorMessage("");
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    async function loadPhotos() {
-      setStatus("loading");
-      setErrorMessage("");
-
-      try {
-        const params = new URLSearchParams();
-        if (activeFilter !== "Tout") {
-          params.set("category", activeFilter);
-        }
-
-        const response = await fetch(`/api/photos?${params.toString()}`, {
-          method: "GET",
-          cache: "no-store",
-        });
-        const result = await response.json();
-
-        if (!response.ok || !result.ok) {
-          throw new Error(result.message || "Impossible de charger la galerie.");
-        }
-
-        const nextPhotos = (result.data || []).map(enhancePhotoPresentation);
-        cacheRef.current.set(activeFilter, nextPhotos);
-
-        if (isMounted) {
-          setPhotos(nextPhotos);
-          setStatus("success");
-        }
-      } catch (error) {
-        if (isMounted) {
-          setStatus("error");
-          setErrorMessage(error.message || "Erreur reseau.");
-        }
-      }
-    }
-
-    loadPhotos();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeFilter]);
+    const parralaxImages = gsap.utils.toArray(".parallax-gallery-img");
+    parralaxImages.forEach((img) => {
+      gsap.to(img, {
+        yPercent: 18,
+        ease: "none",
+        scrollTrigger: {
+          trigger: img.parentElement,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    });
+  }, { scope: containerRef, dependencies: [activeFilter, photos] });
 
   const leadPhoto = photos[0] || null;
   const secondaryPhotos = useMemo(
@@ -223,7 +166,7 @@ export default function GalleryExperience({ initialPhotos, initialFilteredPhotos
   const collectionStory = collectionStories[activeFilter] || collectionStories.Tout;
 
   return (
-    <div data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
+    <div ref={containerRef} data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
       <header className="space-y-6">
         <motion.div className="max-w-4xl space-y-5" {...getRevealProps(reduceMotion)}>
           <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">Galerie</p>
@@ -242,7 +185,6 @@ export default function GalleryExperience({ initialPhotos, initialFilteredPhotos
             isActive={category === activeFilter}
             onClick={() => {
               startTransition(() => {
-                setActiveFilter(category);
                 setActiveIndex(null);
 
                 const params = new URLSearchParams();
@@ -258,17 +200,7 @@ export default function GalleryExperience({ initialPhotos, initialFilteredPhotos
         ))}
       </motion.div>
 
-      {status === "error" ? (
-        <div className="rounded-[2.2rem] border border-red-200 bg-red-50/80 p-8 text-red-800">
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em]">Erreur</p>
-          <p className="mt-4 font-serif text-3xl">La galerie n&apos;a pas pu se charger.</p>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed">{errorMessage}</p>
-        </div>
-      ) : null}
-
-      {status === "loading" ? <LoadingGrid /> : null}
-
-      {status === "success" && photos.length === 0 ? (
+      {photos.length === 0 ? (
         <div className="rounded-[2.5rem] border border-line/12 bg-white/60 p-12 text-center shadow-[0_32px_96px_rgba(12,10,8,0.06)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-ink/40">Galerie vide</p>
           <p className="mt-6 font-serif text-4xl">Aucune image dans cette collection.</p>
@@ -278,7 +210,7 @@ export default function GalleryExperience({ initialPhotos, initialFilteredPhotos
         </div>
       ) : null}
 
-      {status === "success" && leadPhoto ? (
+      {leadPhoto ? (
         <>
           <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <GalleryCard
