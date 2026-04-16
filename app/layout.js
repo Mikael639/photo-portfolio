@@ -3,6 +3,8 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import CustomCursor from "../components/CustomCursor";
 import PageTransition from "../components/PageTransition";
+import SmoothScroll from "../components/SmoothScroll";
+import NoiseOverlay from "../components/NoiseOverlay";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 
 const display = Playfair_Display({
@@ -71,14 +73,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <div className="relative min-h-screen overflow-x-hidden">
-          <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_70%_30%,rgba(188,125,79,0.18),transparent_42%)]" />
-          <CustomCursor />
-          <Navbar />
-          <PageTransition>
-            <main className="w-full pb-16 pt-20">{children}</main>
-          </PageTransition>
-        </div>
+        <SmoothScroll>
+          <div className="relative min-h-screen overflow-x-hidden">
+            <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_70%_30%,rgba(188,125,79,0.18),transparent_42%)]" />
+            <NoiseOverlay />
+            <CustomCursor />
+            <Navbar />
+            <PageTransition>
+              <main className="w-full pb-16 pt-20">{children}</main>
+            </PageTransition>
+          </div>
+        </SmoothScroll>
       </body>
     </html>
   );

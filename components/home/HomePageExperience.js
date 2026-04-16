@@ -3,135 +3,16 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MagneticElement from "../MagneticElement";
-import { useEffect, useMemo, useState } from "react";
+import { MotionBlock, PhotoTile, SectionHeading, specialties, getRevealProps, wordRevealVariant } from "./homeShared";
 
-const specialties = [
-  {
-    title: "Fashion Week",
-    focus: "Runway, backstage, street style",
-    description: "Un regard net et éditorial pour garder l'allure, le rythme et la tension d'un défilé.",
-  },
-  {
-    title: "Mariage",
-    focus: "Préparation, cérémonie, réception",
-    description: "Un reportage sobre et sensible, construit pour tenir dans le temps sans surjouer l'émotion.",
-  },
-  {
-    title: "Église",
-    focus: "Office, chorale, rassemblement",
-    description: "Une présence discrète pour traduire la lumière, la ferveur et la dimension collective.",
-  },
-  {
-    title: "Concert",
-    focus: "Scène, public, communication",
-    description: "Des images fortes et lisibles, pensées autant pour l'ambiance que pour la diffusion.",
-  },
-];
-
-function getRevealProps(reduceMotion, delay = 0, amount = 0.24) {
-  if (reduceMotion) {
-    return {
-      viewport: { once: true, amount },
-    };
-  }
-
-  return {
-    initial: { opacity: 0, y: 32 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount },
-    transition: {
-      duration: 0.8,
-      delay,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  };
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
-
-function MotionBlock({ children, className = "", delay = 0, amount = 0.24, reduceMotion }) {
-  return (
-    <motion.div className={className} {...getRevealProps(reduceMotion, delay, amount)}>
-      {children}
-    </motion.div>
-  );
-}
-
-function SectionHeading({ eyebrow, title, description, action, reduceMotion }) {
-  return (
-    <MotionBlock
-      reduceMotion={reduceMotion}
-      amount={0.3}
-      className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
-    >
-      <div className="max-w-3xl space-y-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.34em] text-ink/50">{eyebrow}</p>
-        <h2 className="font-serif text-5xl leading-[0.94] tracking-[-0.04em] md:text-7xl">{title}</h2>
-        <p className="max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">{description}</p>
-      </div>
-      {action}
-    </MotionBlock>
-  );
-}
-
-function PhotoTile({ photo, href = "/gallery", className = "", sizes, delay = 0, reduceMotion }) {
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e) => {
-    if (reduceMotion) return;
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - left) / width;
-    const y = (e.clientY - top) / height;
-
-    const rX = (y - 0.5) * 8;
-    const rY = (x - 0.5) * -8;
-    setRotate({ x: rX, y: rY });
-  };
-
-  const handleMouseLeave = () => {
-    setRotate({ x: 0, y: 0 });
-  };
-
-  return (
-    <motion.div
-      className={className}
-      {...getRevealProps(reduceMotion, delay, 0.18)}
-      style={{ perspective: 1200 }}
-    >
-      <Link
-        href={href}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="group relative block h-full min-h-[18rem] overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink shadow-[0_32px_120px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out"
-        style={{
-          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-        }}
-      >
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          sizes={sizes}
-          className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.08]"
-          style={{ objectPosition: photo.objectPosition || "center center" }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0),rgba(12,10,8,0.85))] transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
-          <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
-            {photo.category}
-          </span>
-          <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-            <p className="max-w-[18rem] font-serif text-3xl leading-tight text-paper">{photo.title}</p>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
-
-const wordRevealVariant = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } },
-};
 
 export default function HomePageExperience({
   heroPhoto,
@@ -141,6 +22,7 @@ export default function HomePageExperience({
   servicesBackground,
   closingPhoto,
   categories,
+  cinematicPool = [],
 }) {
   const reduceMotion = useReducedMotion();
   const secondaryFeatured = featuredPhotos.slice(1, 4);
@@ -149,11 +31,9 @@ export default function HomePageExperience({
     const seen = new Set();
     const orderedPhotos = [
       heroPhoto,
+      ...cinematicPool,
       ...supportingPhotos,
       ...featuredPhotos,
-      identityPhoto,
-      servicesBackground,
-      closingPhoto,
     ];
 
     return orderedPhotos
@@ -162,43 +42,94 @@ export default function HomePageExperience({
         seen.add(photo.id);
         return true;
       })
-      .slice(0, 6);
-  }, [closingPhoto, featuredPhotos, heroPhoto, identityPhoto, servicesBackground, supportingPhotos]);
+      .slice(0, 18); // Increase variety to 18 photos
+  }, [cinematicPool, featuredPhotos, heroPhoto, supportingPhotos]);
+  const [shuffledPhotos, setShuffledPhotos] = useState(cinematicPhotos);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
-  const activeHeroPhoto = cinematicPhotos[activeHeroIndex] || heroPhoto;
+  const activeHeroPhoto = shuffledPhotos[activeHeroIndex] || heroPhoto;
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (reduceMotion || cinematicPhotos.length < 2) return;
+    // Shuffle the photos on client-side only to avoid hydration mismatch
+    const shuffle = (array) => {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    };
+
+    const randomized = shuffle(cinematicPhotos);
+    setShuffledPhotos(randomized);
+    // Start at a random index
+    setActiveHeroIndex(Math.floor(Math.random() * randomized.length));
+  }, [cinematicPhotos]);
+
+  useGSAP(() => {
+    if (reduceMotion) return;
+
+    // Background color transition based on scroll position
+    const sections = gsap.utils.toArray("section.color-transition-section");
+    sections.forEach((section) => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top center",
+        end: "bottom center",
+        onEnter: () => gsap.to(document.body, { backgroundColor: "#0c0a08", duration: 1 }), // ink
+        onLeaveBack: () => gsap.to(document.body, { backgroundColor: "#fefdfa", duration: 1 }), // paper
+      });
+    });
+
+    // Parallax effects
+    const parralaxImages = gsap.utils.toArray(".parallax-img");
+    parralaxImages.forEach((img) => {
+      gsap.to(img, {
+        yPercent: 15,
+        ease: "none",
+        scrollTrigger: {
+          trigger: img.parentElement,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    });
+  }, { scope: containerRef });
+
+  useEffect(() => {
+    if (reduceMotion || shuffledPhotos.length < 2) return;
 
     const interval = window.setInterval(() => {
-      setActiveHeroIndex((currentIndex) => (currentIndex + 1) % cinematicPhotos.length);
+      setActiveHeroIndex((currentIndex) => (currentIndex + 1) % shuffledPhotos.length);
     }, 8400);
 
     return () => window.clearInterval(interval);
-  }, [cinematicPhotos.length, reduceMotion]);
+  }, [shuffledPhotos.length, reduceMotion]);
 
   const heroHeadline = "Des images qui donnent de la tenue a l'instant.";
 
   return (
-    <div data-page="home" className="page-shell -mt-20 space-y-32 pb-16 md:space-y-48">
+    <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-32 pb-16 md:space-y-48">
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="absolute inset-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeHeroPhoto.id}
               className="absolute inset-0"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.15, filter: "blur(10px)" }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.95, filter: "blur(5px)" }}
-              transition={reduceMotion ? undefined : { duration: 2.8, ease: [0.16, 1, 0.3, 1] }}
+              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
+              transition={reduceMotion ? undefined : { duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
             >
               <Image
                 src={activeHeroPhoto.src}
                 alt={activeHeroPhoto.alt}
                 fill
                 priority
+                unoptimized={true}
                 sizes="100vw"
-                className="object-cover"
+                className="object-cover sharpen-img"
                 style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
               />
             </motion.div>
@@ -231,7 +162,7 @@ export default function HomePageExperience({
               variants={wordRevealVariant}
               className="text-[11px] font-semibold uppercase tracking-[0.4em] text-paper/60"
             >
-              Jerrypicsart portfolio éditorial
+              Jerrypicsart portfolio editorial
             </motion.p>
 
             <motion.h1
@@ -252,7 +183,7 @@ export default function HomePageExperience({
               className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-xl"
               style={{ textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}
             >
-              Mode, mariages et événements saisis avec la même exigence de cadre, de lumière et de présence.
+              Mode, mariages et evenements saisis avec la meme exigence de cadre, de lumiere et de presence.
             </motion.p>
 
             <motion.div variants={wordRevealVariant} className="mt-10 flex flex-wrap gap-5">
@@ -261,7 +192,7 @@ export default function HomePageExperience({
                   href="/gallery"
                   className="inline-block rounded-full bg-paper px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-ink transition-colors hover:bg-accent hover:text-paper shadow-2xl"
                 >
-                  Explorer l&apos;édit
+                  Explorer l&apos;edit
                 </Link>
               </MagneticElement>
               <MagneticElement strength={0.15}>
@@ -316,8 +247,9 @@ export default function HomePageExperience({
                   alt={photo.alt}
                   fill
                   sizes="(max-width: 1024px) 50vw, 22vw"
-                  className="object-cover transition-transform duration-1000 hover:scale-110"
+                  className="parallax-img object-cover sharpen-img transition-transform duration-1000 hover:scale-110 scale-[1.08]"
                   style={{ objectPosition: photo.objectPosition || "center center" }}
+                  quality={90}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.78))]" />
                 <div className="absolute inset-x-0 bottom-0 p-6 text-paper">
@@ -330,25 +262,24 @@ export default function HomePageExperience({
             <div className="rounded-[2.2rem] border border-white/10 bg-black/40 p-6 text-paper/90 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Direction</p>
-                {cinematicPhotos.length > 1 ? (
+                {shuffledPhotos.length > 1 ? (
                   <div className="flex items-center gap-2">
-                    {cinematicPhotos.slice(0, 5).map((photo, index) => (
+                    {shuffledPhotos.slice(0, 5).map((photo, index) => (
                       <button
                         key={photo.id}
                         type="button"
                         aria-label={`Afficher ${photo.title}`}
                         onClick={() => setActiveHeroIndex(index)}
-                        className={`h-1.5 rounded-full transition-all duration-500 ${
-                          activeHeroIndex === index ? "w-6 bg-paper/90" : "w-1.5 bg-paper/20 hover:bg-paper/40"
-                        }`}
+                        className={`h-1.5 rounded-full transition-all duration-500 ${activeHeroIndex === index ? "w-6 bg-paper/90" : "w-1.5 bg-paper/20 hover:bg-paper/40"
+                          }`}
                       />
                     ))}
                   </div>
                 ) : null}
               </div>
-              <p className="mt-4 font-serif text-2xl leading-tight text-paper">Luxe discret, intensité juste.</p>
+              <p className="mt-4 font-serif text-2xl leading-tight text-paper">Luxe discret, intensite juste.</p>
               <p className="mt-4 text-sm leading-relaxed text-paper/70">
-                Des silhouettes fortes, des réceptions vivantes et une retouche qui reste au service des personnes, des
+                Des silhouettes fortes, des receptions vivantes et une retouche qui reste au service des personnes, des
                 lieux et du rythme.
               </p>
             </div>
@@ -358,9 +289,9 @@ export default function HomePageExperience({
 
       <section className="mx-auto max-w-7xl space-y-12 px-4 md:px-8">
         <SectionHeading
-          eyebrow="Sélection"
-          title="Mode et réceptions, pensées comme un même édit."
-          description="Les images fortes alternent allure, présence et célébration pour donner une lecture plus complète du regard."
+          eyebrow="Selection"
+          title="Mode et receptions, pensees comme un meme edit."
+          description="Les images fortes alternent allure, presence et celebration pour donner une lecture plus complete du regard."
           action={
             <MagneticElement strength={0.2}>
               <Link
@@ -388,13 +319,13 @@ export default function HomePageExperience({
               delay={0.1}
               className="rounded-[2.4rem] border border-line/10 bg-white/40 p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-sm md:p-10"
             >
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Édit maison</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Edit maison</p>
               <h3 className="mt-5 max-w-lg font-serif text-3xl leading-[1.02] tracking-[-0.04em] md:text-5xl">
-                Une signature qui mélange allure et humanité.
+                Une signature qui melange allure et humanite.
               </h3>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                L&apos;enjeu n&apos;est pas de tout montrer, mais de faire sentir à la fois la précision mode et la
-                chaleur des moments partagés.
+                L&apos;enjeu n&apos;est pas de tout montrer, mais de faire sentir a la fois la precision mode et la
+                chaleur des moments partages.
               </p>
             </MotionBlock>
 
@@ -433,7 +364,7 @@ export default function HomePageExperience({
                 Laisser aux portraits la place de respirer.
               </h3>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                Quand une image repose sur un visage ou une silhouette, elle gagne à rester dans un cadre
+                Quand une image repose sur un visage ou une silhouette, elle gagne a rester dans un cadre
                 plus vertical et plus calme.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
@@ -442,7 +373,7 @@ export default function HomePageExperience({
                     href="/gallery"
                     className="inline-block rounded-full border border-line/20 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
                   >
-                    Voir l&apos;édit complet
+                    Voir l&apos;edit complet
                   </Link>
                 </MagneticElement>
                 <MagneticElement strength={0.2}>
@@ -450,7 +381,7 @@ export default function HomePageExperience({
                     href="/contact"
                     className="inline-block rounded-full bg-ink px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-paper transition-colors hover:bg-accent"
                   >
-                    Réserver une date
+                    Reserver une date
                   </Link>
                 </MagneticElement>
               </div>
@@ -459,21 +390,21 @@ export default function HomePageExperience({
         ) : null}
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 md:px-8">
+      <section className="mx-auto max-w-7xl px-4 md:px-8 color-transition-section">
         <div className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <MotionBlock reduceMotion={reduceMotion} className="space-y-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-ink/40">Approche</p>
             <h2 className="max-w-2xl font-serif text-5xl leading-[0.96] tracking-[-0.04em] md:text-7xl">
-              De la silhouette au moment partagé.
+              De la silhouette au moment partage.
             </h2>
             <div className="space-y-6">
               <p className="max-w-xl text-base leading-relaxed text-ink/75 md:text-xl">
-                Jerrypicsart travaille la mode et l&apos;événement avec une même ligne: de la tenue, de la
-                clarté et une vraie sensation de présence.
+                Jerrypicsart travaille la mode et l&apos;evenement avec une meme ligne: de la tenue, de la
+                clarte et une vraie sensation de presence.
               </p>
               <p className="max-w-xl text-base leading-relaxed text-ink/55 md:text-lg">
-                Chaque série cherche l&apos;équilibre entre désirabilité, respiration dans le cadre et finition
-                éditoriale.
+                Chaque serie cherche l&apos;equilibre entre desirabilite, respiration dans le cadre et finition
+                editoriale.
               </p>
             </div>
 
@@ -507,13 +438,14 @@ export default function HomePageExperience({
               alt={identityPhoto.alt}
               fill
               sizes="(max-width: 1024px) 100vw, 54vw"
-              className="object-cover transition-transform duration-[2s] hover:scale-105"
+              className="parallax-img object-cover transition-transform duration-[2s] hover:scale-[1.05] scale-[1.15]"
               style={{ objectPosition: identityPhoto.objectPosition || "center center" }}
+              quality={90}
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.72))]" />
             <div className="absolute bottom-6 right-6 max-w-xs rounded-[1.8rem] border border-white/12 bg-black/40 p-6 text-paper shadow-2xl backdrop-blur-md md:bottom-10 md:right-10 md:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Intention</p>
-              <p className="mt-3 font-serif text-2xl leading-tight">L&apos;élégance vient du rythme, jamais du décoratif.</p>
+              <p className="mt-3 font-serif text-2xl leading-tight">L&apos;elegance vient du rythme, jamais du decoratif.</p>
             </div>
           </MotionBlock>
         </div>
@@ -526,8 +458,9 @@ export default function HomePageExperience({
             alt={servicesBackground.alt}
             fill
             sizes="100vw"
-            className="object-cover opacity-60 transition-transform duration-[3s] hover:scale-110"
+            className="parallax-img object-cover opacity-60 transition-transform duration-[3s] hover:scale-[1.10] scale-[1.15]"
             style={{ objectPosition: servicesBackground.objectPosition || "center center" }}
+            quality={90}
           />
           <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(12,10,8,0.95),rgba(12,10,8,0.75)_50%,rgba(12,10,8,0.9))]" />
 
@@ -535,10 +468,10 @@ export default function HomePageExperience({
             <MotionBlock reduceMotion={reduceMotion} className="space-y-6">
               <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-white/40">Expertises</p>
               <h2 className="max-w-xl font-serif text-4xl leading-[0.96] tracking-[-0.04em] md:text-6xl">
-                Là où l&apos;image doit être à la fois belle, utile et mémorable.
+                La ou l&apos;image doit etre a la fois belle, utile et memorable.
               </h2>
               <p className="max-w-md text-base leading-relaxed text-paper/60 md:text-lg">
-                De la Fashion Week aux réceptions privées, la même exigence visuelle s&apos;applique : clarté et
+                De la Fashion Week aux receptions privees, la meme exigence visuelle s&apos;applique : clarte et
                 sens du moment.
               </p>
             </MotionBlock>
@@ -575,7 +508,7 @@ export default function HomePageExperience({
               Travaillons ensemble.
             </h2>
             <p className="max-w-2xl text-base leading-relaxed text-paper/70 md:text-xl">
-              Brief court ou projet complexe : parlons de votre vision et des besoins de votre série.
+              Brief court ou projet complexe : parlons de votre vision et des besoins de votre serie.
             </p>
             <div className="flex flex-wrap gap-5 pt-4">
               <MagneticElement strength={0.25}>
@@ -591,7 +524,7 @@ export default function HomePageExperience({
                   href="/gallery"
                   className="inline-block rounded-full border border-white/20 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.2em] text-paper backdrop-blur-sm transition-all hover:bg-white/10"
                 >
-                  Parcourir l&apos;édit
+                  Parcourir l&apos;edit
                 </Link>
               </MagneticElement>
             </div>
@@ -603,12 +536,12 @@ export default function HomePageExperience({
               delay={0.2}
               className="rounded-[2.2rem] border border-white/10 bg-white/5 p-8 text-paper/80 backdrop-blur-xl"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">Délais</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">Delais</p>
               <p className="mt-4 font-serif text-2xl leading-tight text-white">
-                Réponse sous 24h à 48h.
+                Reponse sous 24h a 48h.
               </p>
               <p className="mt-4 text-sm leading-relaxed text-white/60">
-                La clarté du brief permet d&apos;aller droit à l&apos;essentiel pour fixer une date.
+                La clarte du brief permet d&apos;aller droit a l&apos;essentiel pour fixer une date.
               </p>
             </MotionBlock>
 

@@ -269,6 +269,7 @@ export default async function HomePage() {
         servicesBackground={servicesBackground}
         closingPhoto={closingPhoto}
         categories={categories}
+        cinematicPool={photos}
       />
     </>
   );

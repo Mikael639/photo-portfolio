@@ -32,23 +32,31 @@ function filterPhotosByCategory(photos, category) {
 
 export default async function GalleryPage({ searchParams }) {
   const resolvedSearchParams = (await searchParams) || {};
+  const requestedCategory = typeof resolvedSearchParams.category === "string" ? resolvedSearchParams.category : "Tout";
+  const categoryFilter = requestedCategory === "Tout" ? undefined : requestedCategory;
+  let allPhotos = [];
   let initialPhotos = [];
 
   try {
-    initialPhotos = (await getPublicPhotos()).map(enhancePhotoPresentation);
+    const [allResults, filteredResults] = await Promise.all([
+      getPublicPhotos(),
+      getPublicPhotos({ category: categoryFilter }),
+    ]);
+
+    allPhotos = allResults.map(enhancePhotoPresentation);
+    initialPhotos = filteredResults.map(enhancePhotoPresentation);
   } catch {
+    allPhotos = [];
     initialPhotos = [];
   }
 
-  const categories = buildCategories(initialPhotos);
-  const requestedCategory = typeof resolvedSearchParams.category === "string" ? resolvedSearchParams.category : "Tout";
+  const categories = buildCategories(allPhotos);
   const initialCategory = categories.includes(requestedCategory) ? requestedCategory : "Tout";
 
   return (
     <GalleryExperience
-      initialPhotos={initialPhotos}
-      initialCategory={initialCategory}
-      initialFilteredPhotos={filterPhotosByCategory(initialPhotos, initialCategory)}
+      photos={filterPhotosByCategory(initialPhotos, initialCategory)}
+      activeCategory={initialCategory}
       categories={categories}
     />
   );
