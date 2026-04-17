@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-import { siteConfig } from "../lib/siteConfig";
+import { siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
+import { getPublicPhotos } from "../lib/photoRepository";
 
 export const alt = `${siteConfig.name} portfolio photo`;
 export const size = {
@@ -8,7 +9,16 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
+  let bgImg = null;
+  try {
+    const photos = await getPublicPhotos({ limit: 1 });
+    const heroPhoto = photos[0];
+    if (heroPhoto) {
+      bgImg = heroPhoto.src.startsWith('http') ? heroPhoto.src : toAbsoluteUrl(heroPhoto.src);
+    }
+  } catch (err) {}
+
   return new ImageResponse(
     (
       <div
@@ -18,14 +28,21 @@ export default function OpengraphImage() {
           display: "flex",
           position: "relative",
           overflow: "hidden",
-          background:
-            "radial-gradient(circle at 18% 24%, rgba(233, 215, 194, 0.94), transparent 34%), radial-gradient(circle at 84% 18%, rgba(216, 226, 231, 0.82), transparent 26%), linear-gradient(135deg, #f8f3eb 0%, #efe7db 52%, #e8ddd1 100%)",
-          color: "#171310",
-          padding: "56px 68px",
+          background: bgImg 
+            ? "#171310" // fallback
+            : "radial-gradient(circle at 18% 24%, rgba(233, 215, 194, 0.94), transparent 34%), radial-gradient(circle at 84% 18%, rgba(216, 226, 231, 0.82), transparent 26%), linear-gradient(135deg, #f8f3eb 0%, #efe7db 52%, #e8ddd1 100%)",
+          color: bgImg ? "#ffffff" : "#171310",
           flexDirection: "column",
           justifyContent: "space-between",
         }}
       >
+        {bgImg && (
+          <img 
+            src={bgImg} 
+            alt="background" 
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} 
+          />
+        )}
         <div
           style={{
             display: "flex",

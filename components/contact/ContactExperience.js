@@ -187,6 +187,36 @@ export default function ContactExperience({ leadPhoto, secondaryPhoto }) {
               reduceMotion={reduceMotion}
             />
           </motion.div>
+
+          <motion.div
+            className="rounded-[2.2rem] border border-line/12 bg-[var(--paper)] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.04)] backdrop-blur-sm"
+            {...getRevealProps(reduceMotion, 0.2)}
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40 mb-6">Questions frequentes</p>
+            <div className="space-y-4">
+              <details className="group cursor-pointer border-b border-line/10 pb-4">
+                <summary className="font-serif text-xl font-medium tracking-tight text-ink flex justify-between items-center outline-none">
+                  Quels sont vos delais ?
+                  <span className="text-ink/40 group-open:rotate-180 transition-transform">↓</span>
+                </summary>
+                <p className="mt-3 text-sm text-ink/70 leading-relaxed opacity-0 group-open:opacity-100 transition-opacity duration-300">Les premieres images (preview) sont envoyees sous 48h. L edit complet est livre en 2 a 3 semaines.</p>
+              </details>
+              <details className="group cursor-pointer border-b border-line/10 pb-4">
+                <summary className="font-serif text-xl font-medium tracking-tight text-ink flex justify-between items-center outline-none">
+                  Shootez-vous a l etranger ?
+                  <span className="text-ink/40 group-open:rotate-180 transition-transform">↓</span>
+                </summary>
+                <p className="mt-3 text-sm text-ink/70 leading-relaxed opacity-0 group-open:opacity-100 transition-opacity duration-300">Oui. Paris est ma base, mais je me deplace regulierement en France et a l international. Les deplacements font l objet d une ligne separee sur le devis.</p>
+              </details>
+              <details className="group cursor-pointer">
+                <summary className="font-serif text-xl font-medium tracking-tight text-ink flex justify-between items-center outline-none">
+                  Comment est geree la retouche ?
+                  <span className="text-ink/40 group-open:rotate-180 transition-transform">↓</span>
+                </summary>
+                <p className="mt-3 text-sm text-ink/70 leading-relaxed opacity-0 group-open:opacity-100 transition-opacity duration-300">Ma retouche se concentre sur la lumiere, la colorimetrie et la force de l image. Je ne denature jamais les personnes.</p>
+              </details>
+            </div>
+          </motion.div>
         </div>
 
         <motion.div
