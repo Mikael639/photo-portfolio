@@ -44,8 +44,10 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
           role="dialog"
           aria-modal="true"
           aria-label="Visionneuse d'images"
-          className="fixed inset-0 z-[100] bg-black flex flex-col h-screen w-screen overflow-hidden"
+          className="fixed inset-0 z-[100] bg-black flex flex-col h-screen w-screen overflow-hidden focus:outline-none"
           onClick={onClose}
+          tabIndex={-1}
+          autoFocus={true}
         >
           {/* ── Top Bar ──────────────────────────────────────────── */}
           <div

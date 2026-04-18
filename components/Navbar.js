@@ -24,9 +24,13 @@ export default function Navbar() {
 
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }}
+      initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
+      transition={{ 
+        duration: 0.8, 
+        ease: [0.16, 1, 0.3, 1], 
+        delay: pathname === "/" ? 2.2 : 0.4 
+      }}
       className="fixed inset-x-0 top-0 z-50 border-b border-line/20 bg-paper/70 backdrop-blur-xl"
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">

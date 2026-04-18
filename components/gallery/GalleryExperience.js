@@ -10,6 +10,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lightbox from "../Lightbox";
 import MagneticElement from "../MagneticElement";
+import { useVelocitySkew } from "../../lib/hooks/useVelocitySkew";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -42,7 +43,7 @@ function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   };
 }
 
-function FilterButton({ category, isActive, onClick }) {
+function FilterButton({ category, count, isActive, onClick }) {
   return (
     <MagneticElement strength={0.15}>
       <button
@@ -55,7 +56,7 @@ function FilterButton({ category, isActive, onClick }) {
             : "border-line/20 bg-white/40 text-ink/60 hover:border-ink/40 hover:text-ink hover:bg-white"
         }`}
       >
-        {category}
+        {category} {count !== undefined && <span className="opacity-60 ml-1 text-xs">({count})</span>}
       </button>
     </MagneticElement>
   );
@@ -72,6 +73,7 @@ function GalleryCard({
   delay = 0,
 }) {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const liquidRef = useVelocitySkew(0.1, 7);
 
   const handleMouseMove = (e) => {
     if (reduceMotion) return;
@@ -96,22 +98,24 @@ function GalleryCard({
       onMouseLeave={handleMouseLeave}
       data-cursor="gallery-item"
       className={`group relative block w-full overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink text-left shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
-      {...getRevealProps(reduceMotion, delay)}
+      {...getRevealProps(reduceMotion, delay, 0.22, "mask")}
       style={{
         perspective: 1200,
         transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
       }}
     >
-      <Image
-        src={photo.src}
-        alt={photo.alt}
-        fill
-        priority={priority}
-        sizes={sizes}
-        className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
-        style={{ objectPosition: photo.objectPosition || "center center" }}
-        quality={85}
-      />
+      <div ref={liquidRef} className="absolute inset-0 w-full h-full">
+        <Image
+          src={photo.src}
+          alt={photo.alt}
+          fill
+          priority={priority}
+          sizes={sizes}
+          className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
+          style={{ objectPosition: photo.objectPosition || "center center" }}
+          quality={85}
+        />
+      </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
         <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
@@ -153,6 +157,16 @@ export default function GalleryExperience({ photos, activeCategory, categories }
     });
   }, { scope: containerRef, dependencies: [activeFilter, photos] });
 
+  const categoryCounts = useMemo(() => {
+    const counts = { Tout: photos.length };
+    for (const photo of photos) {
+      if (photo.category) {
+        counts[photo.category] = (counts[photo.category] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [photos]);
+
   const leadPhoto = photos[0] || null;
   const secondaryPhotos = useMemo(
     () => photos.slice(1, 3).map((photo, index) => ({ photo, index: index + 1 })),
@@ -182,6 +196,7 @@ export default function GalleryExperience({ photos, activeCategory, categories }
           <FilterButton
             key={category}
             category={category}
+            count={categoryCounts[category] || 0}
             isActive={category === activeFilter}
             onClick={() => {
               startTransition(() => {

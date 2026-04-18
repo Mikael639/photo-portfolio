@@ -69,6 +69,24 @@ export default function HomePageExperience({
   useGSAP(() => {
     if (reduceMotion) return;
 
+    // Intro Animation: Hero Scale Down
+    gsap.fromTo(".hero-image-container", 
+      { scale: 1.2, filter: "blur(10px)" }, 
+      { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
+    );
+    
+    gsap.fromTo(".hero-content-reveal",
+      { opacity: 0, y: 40 },
+      { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
+    );
+    
+    // Animate Navbar (targeted via 'header' selector)
+    gsap.fromTo("header",
+      { y: -100, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1.2, ease: "expo.out", delay: 2 },
+      { forceWait: true } // Safety
+    );
+
     // Background color transition based on scroll position
     const sections = gsap.utils.toArray("section.color-transition-section");
     sections.forEach((section) => {
@@ -116,11 +134,11 @@ export default function HomePageExperience({
           <AnimatePresence mode="wait">
             <motion.div
               key={activeHeroPhoto.id}
-              className="absolute inset-0"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
+              className="absolute inset-0 hero-image-container"
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.1, filter: "blur(8px)" }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, filter: "blur(0px)" }}
               exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
-              transition={reduceMotion ? undefined : { duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+              transition={reduceMotion ? undefined : { duration: 2, ease: [0.16, 1, 0.3, 1] }}
             >
               <Image
                 src={activeHeroPhoto.src}
@@ -166,7 +184,7 @@ export default function HomePageExperience({
             </motion.p>
 
             <motion.h1
-              className="mt-6 flex flex-wrap gap-x-[0.2em] gap-y-1 font-serif text-[clamp(3.5rem,10vw,8.4rem)] leading-[0.88] tracking-[-0.06em]"
+              className="mt-6 flex flex-wrap gap-x-[0.2em] gap-y-1 font-serif text-[clamp(2.5rem,10vw,8.4rem)] leading-[0.88] tracking-[-0.06em] hero-content-reveal"
               style={{ textShadow: "0 24px 64px rgba(0,0,0,0.4)" }}
             >
               {heroHeadline.split(" ").map((word, i) => (
@@ -180,13 +198,13 @@ export default function HomePageExperience({
 
             <motion.p
               variants={wordRevealVariant}
-              className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-xl"
+              className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-xl hero-content-reveal"
               style={{ textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}
             >
               Mode, mariages et evenements saisis avec la meme exigence de cadre, de lumiere et de presence.
             </motion.p>
 
-            <motion.div variants={wordRevealVariant} className="mt-10 flex flex-wrap gap-5">
+            <motion.div variants={wordRevealVariant} className="mt-10 flex flex-wrap gap-5 hero-content-reveal">
               <MagneticElement strength={0.25}>
                 <Link
                   href="/gallery"
@@ -235,7 +253,7 @@ export default function HomePageExperience({
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={reduceMotion ? undefined : { duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 mb-8 hero-content-reveal opacity-0"
           >
             {supportingPhotos.map((photo) => (
               <div
@@ -476,11 +494,33 @@ export default function HomePageExperience({
               </p>
             </MotionBlock>
 
-            <div className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20 backdrop-blur-md">
+            <div 
+              className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20 backdrop-blur-md relative group-hover-within"
+              onMouseMove={(e) => {
+                const { left, top } = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - left;
+                const y = e.clientY - top;
+                e.currentTarget.style.setProperty("--x", `${x}px`);
+                e.currentTarget.style.setProperty("--y", `${y}px`);
+              }}
+            >
+              <div 
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 spotlight-bg"
+                style={{
+                  background: `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.06), transparent 40%)`,
+                }}
+              />
+              
+              <style jsx>{`
+                .group-hover-within:hover .spotlight-bg {
+                  opacity: 1;
+                }
+              `}</style>
+
               {specialties.map((item, index) => (
                 <motion.div
                   key={item.title}
-                  className="group grid gap-4 border-b border-white/5 px-6 py-8 last:border-b-0 hover:bg-white/5 transition-colors md:grid-cols-[auto_1fr_auto] md:items-start md:gap-8 md:px-10"
+                  className="group grid gap-4 border-b border-white/5 px-6 py-8 last:border-b-0 hover:bg-white/5 transition-colors md:grid-cols-[auto_1fr_auto] md:items-start md:gap-8 md:px-10 overflow-hidden relative"
                   {...getRevealProps(reduceMotion, index * 0.12, 0.2)}
                 >
                   <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/30 group-hover:text-white/60 transition-colors">

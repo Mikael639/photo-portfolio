@@ -143,4 +143,28 @@ export const photos = [
     category: "Mariage",
     roles: [],
   },
+  {
+    id: 19,
+    src: "/images/concert/C3.jpeg",
+    alt: "Look fashion week 2",
+    title: "Street Style",
+    category: "Fashion Week",
+    roles: [],
+  },
+  {
+    id: 20,
+    src: "/images/mariage/8.jpg",
+    alt: "Look fashion week 3",
+    title: "Backstage Mood",
+    category: "Fashion Week",
+    roles: [],
+  },
+  {
+    id: 21,
+    src: "/images/concert/C5.jpeg",
+    alt: "Look fashion week 4",
+    title: "Runway Detail",
+    category: "Fashion Week",
+    roles: [],
+  },
 ];

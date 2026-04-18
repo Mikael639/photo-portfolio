@@ -15,17 +15,17 @@ export const metadata = {
 };
 
 const fallbackByCategory = {
-  "Fashion Week": "/images/shot-01.svg",
-  Mariage: "/images/shot-02.svg",
-  Eglise: "/images/shot-03.svg",
-  Concert: "/images/shot-04.svg",
-  Autre: "/images/shot-05.svg",
-  Portfolio: "/images/shot-06.svg",
+  "Fashion Week": "/images/concert/C3.jpeg",
+  Mariage: "/images/mariage/4.jpg",
+  Eglise: "/images/eglise/1.jpg",
+  Concert: "/images/concert/C4.jpeg",
+  Autre: "/images/concert/C2.jpeg",
+  Portfolio: "/images/mariage/5.jpg",
 };
 
 const defaultFallbackPhoto = {
   id: "fallback-photo",
-  src: "/images/shot-06.svg",
+  src: "/images/mariage/5.jpg",
   alt: "Photographie Jerrypicsart",
   title: "Selection Jerrypicsart",
   category: "Portfolio",
