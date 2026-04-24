@@ -12,12 +12,12 @@ export const contentType = "image/png";
 export default async function OpengraphImage() {
   let bgImg = null;
   try {
-    const photos = await getPublicPhotos({ limit: 1 });
-    const heroPhoto = photos[0];
+    const photos = await getPublicPhotos({ limit: 12 });
+    const heroPhoto = photos.find((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise") || photos[0];
     if (heroPhoto) {
       bgImg = heroPhoto.src.startsWith('http') ? heroPhoto.src : toAbsoluteUrl(heroPhoto.src);
     }
-  } catch (err) {}
+  } catch {}
 
   return new ImageResponse(
     (
@@ -37,6 +37,7 @@ export default async function OpengraphImage() {
         }}
       >
         {bgImg && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img 
             src={bgImg} 
             alt="background" 
@@ -77,7 +78,7 @@ export default async function OpengraphImage() {
               maxWidth: 760,
             }}
           >
-            Mode, mariages, eglises et concerts saisis avec une direction visuelle sobre et precise.
+            Mode et mariages saisis avec une direction visuelle sobre et precise.
           </div>
         </div>
 

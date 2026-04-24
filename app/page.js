@@ -8,18 +8,16 @@ import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 export const metadata = {
   title: "Accueil",
   description:
-    "Portfolio photo editorial de Jerrypicsart pour fashion week, mariages, eglises et concerts.",
+    "Portfolio photo editorial de Jerrypicsart pour fashion week, mariages et shootings photo.",
   alternates: {
     canonical: "/",
   },
 };
 
 const fallbackByCategory = {
-  "Fashion Week": "/images/concert/C3.jpeg",
+  "Fashion Week": "/images/mariage/5.jpg",
   Mariage: "/images/mariage/4.jpg",
-  Eglise: "/images/eglise/1.jpg",
-  Concert: "/images/concert/C4.jpeg",
-  Autre: "/images/concert/C2.jpeg",
+  "Shooting photo": "/images/mariage/5.jpg",
   Portfolio: "/images/mariage/5.jpg",
 };
 
@@ -97,7 +95,7 @@ function buildCategoryPriority(pool, preferredCategories = []) {
   const availableCategories = [];
 
   for (const photo of pool) {
-    const category = photo?.category || "Autre";
+    const category = photo?.category || "Shooting photo";
     if (!availableCategories.includes(category)) {
       availableCategories.push(category);
     }
@@ -132,7 +130,7 @@ function collectMixedPhotos(
   for (const photo of pool) {
     if (!photo || seen.has(photo.id)) continue;
 
-    const category = photo.category || "Autre";
+    const category = photo.category || "Shooting photo";
     if (!grouped.has(category)) {
       grouped.set(category, []);
     }
@@ -189,7 +187,8 @@ export default async function HomePage() {
     sourcePhotos = [];
   }
 
-  const photos = (sourcePhotos.length ? sourcePhotos : [defaultFallbackPhoto]).map(normalizePhoto);
+  const curatedPhotos = sourcePhotos.filter((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise");
+  const photos = (curatedPhotos.length ? curatedPhotos : [defaultFallbackPhoto]).map(normalizePhoto);
 
   const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || photos[0] || defaultFallbackPhoto);
   const featuredPool = photos.filter((photo) => photo.roles?.includes("featured"));
@@ -248,6 +247,7 @@ export default async function HomePage() {
       url: getSiteUrl(),
       description: siteConfig.description,
       image: heroPhoto?.src?.startsWith("http") ? heroPhoto.src : toAbsoluteUrl(heroPhoto?.src || "/images/shot-01.svg"),
+      sameAs: siteConfig.socialLinks.map((link) => link.href),
       serviceType: categories.length ? categories : siteConfig.categoryLabels,
       knowsAbout: siteConfig.categoryLabels,
     },

@@ -7,22 +7,17 @@ export const specialties = [
   {
     title: "Fashion Week",
     focus: "Runway, backstage, street style",
-    description: "Un regard net et editorial pour garder l'allure, le rythme et la tension d'un defile.",
+    description: "Un regard net et éditorial pour garder l'allure, le rythme et la tension d'un défilé.",
   },
   {
     title: "Mariage",
-    focus: "Preparation, ceremonie, reception",
-    description: "Un reportage sobre et sensible, construit pour tenir dans le temps sans surjouer l'emotion.",
+    focus: "Préparation, cérémonie, réception",
+    description: "Un reportage sobre et sensible, construit pour tenir dans le temps sans surjouer l'émotion.",
   },
   {
-    title: "Eglise",
-    focus: "Office, chorale, rassemblement",
-    description: "Une presence discrete pour traduire la lumiere, la ferveur et la dimension collective.",
-  },
-  {
-    title: "Concert",
-    focus: "Scene, public, communication",
-    description: "Des images fortes et lisibles, pensees autant pour l'ambiance que pour la diffusion.",
+    title: "Shooting photo",
+    focus: "Portrait, direction, série",
+    description: "Des images construites avec précision pour garder une allure forte et une lecture immédiate.",
   },
 ];
 
@@ -70,7 +65,16 @@ export function SectionHeading({ eyebrow, title, description, action, reduceMoti
   );
 }
 
-export function PhotoTile({ photo, href = "/gallery", className = "", sizes, delay = 0, reduceMotion }) {
+export function PhotoTile({
+  photo,
+  href = "/gallery",
+  className = "",
+  sizes,
+  delay = 0,
+  reduceMotion,
+  imageFit = "cover",
+  imagePosition,
+}) {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e) => {
@@ -109,8 +113,10 @@ export function PhotoTile({ photo, href = "/gallery", className = "", sizes, del
           alt={photo.alt}
           fill
           sizes={sizes}
-          className="parallax-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
-          style={{ objectPosition: photo.objectPosition || "center center" }}
+          className={`parallax-img sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] ${
+            imageFit === "contain" ? "object-contain scale-100" : "object-cover scale-[1.08]"
+          }`}
+          style={{ objectPosition: imagePosition || photo.objectPosition || "center center" }}
           quality={90}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0),rgba(12,10,8,0.85))] transition-opacity duration-500 group-hover:opacity-100" />
@@ -118,8 +124,8 @@ export function PhotoTile({ photo, href = "/gallery", className = "", sizes, del
           <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
             {photo.category}
           </span>
-          <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-            <p className="max-w-[18rem] font-serif text-3xl leading-tight text-paper">{photo.title}</p>
+          <div className="translate-y-0 opacity-100 transition-all duration-500 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+            <p className="max-w-[18rem] font-serif text-2xl leading-tight text-paper md:text-3xl">{photo.title}</p>
           </div>
         </div>
       </Link>

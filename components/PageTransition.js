@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 // Durée totale de la transition (en secondes)
 const DURATION = 0.7;
@@ -19,18 +18,13 @@ const PANELS = 4;
  */
 export default function PageTransition({ children }) {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div key={pathname} className="relative w-full h-full">
 
         {/* ─── Voile de transition (Panneaux organiques) ─── */}
-        {mounted && (
+        {(
           <div className="fixed inset-0 z-[150] pointer-events-none flex">
             {[...Array(PANELS)].map((_, i) => (
               <motion.div
@@ -59,7 +53,7 @@ export default function PageTransition({ children }) {
         )}
         
         {/* Voile de révélation (entrée de la nouvelle page) */}
-        {mounted && (
+        {(
           <div className="fixed inset-0 z-[150] pointer-events-none flex">
              {[...Array(PANELS)].map((_, i) => (
               <motion.div
