@@ -12,9 +12,9 @@ export default function manifest() {
     lang: "fr",
     icons: [
       {
-        src: "/favicon.ico",
+        src: "/icon.svg",
         sizes: "any",
-        type: "image/x-icon",
+        type: "image/svg+xml",
       },
     ],
   };
