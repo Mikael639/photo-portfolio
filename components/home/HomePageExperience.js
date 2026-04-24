@@ -8,7 +8,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MagneticElement from "../MagneticElement";
-import { MotionBlock, PhotoTile, SectionHeading, specialties, getRevealProps, wordRevealVariant } from "./homeShared";
+import { MotionBlock, PhotoTile, specialties, getRevealProps, wordRevealVariant } from "./homeShared";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -25,8 +25,11 @@ export default function HomePageExperience({
   cinematicPool = [],
 }) {
   const reduceMotion = useReducedMotion();
-  const secondaryFeatured = featuredPhotos.slice(1, 4);
   const galleryCategories = categories.filter(Boolean).slice(0, 4);
+  const marriageFeature =
+    featuredPhotos.find((photo) => photo?.category === "Mariage") ||
+    supportingPhotos.find((photo) => photo?.category === "Mariage") ||
+    featuredPhotos[0];
   const cinematicPhotos = useMemo(() => {
     const seen = new Set();
     const orderedPhotos = [
@@ -42,7 +45,7 @@ export default function HomePageExperience({
         seen.add(photo.id);
         return true;
       })
-      .slice(0, 18); // Increase variety to 18 photos
+      .slice(0, 18);
   }, [cinematicPool, featuredPhotos, heroPhoto, supportingPhotos]);
   const [shuffledPhotos, setShuffledPhotos] = useState(cinematicPhotos);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
@@ -50,7 +53,6 @@ export default function HomePageExperience({
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Shuffle the photos on client-side only to avoid hydration mismatch
     const shuffle = (array) => {
       const newArray = [...array];
       for (let i = newArray.length - 1; i > 0; i--) {
@@ -60,46 +62,45 @@ export default function HomePageExperience({
       return newArray;
     };
 
-    const randomized = shuffle(cinematicPhotos);
-    setShuffledPhotos(randomized);
-    // Start at a random index
-    setActiveHeroIndex(Math.floor(Math.random() * randomized.length));
+    const timeout = window.setTimeout(() => {
+      const randomized = shuffle(cinematicPhotos);
+      setShuffledPhotos(randomized);
+      setActiveHeroIndex(Math.floor(Math.random() * randomized.length));
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [cinematicPhotos]);
 
   useGSAP(() => {
     if (reduceMotion) return;
 
-    // Intro Animation: Hero Scale Down
-    gsap.fromTo(".hero-image-container", 
-      { scale: 1.2, filter: "blur(10px)" }, 
+    gsap.fromTo(".hero-image-container",
+      { scale: 1.2, filter: "blur(10px)" },
       { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
     );
-    
+
     gsap.fromTo(".hero-content-reveal",
       { opacity: 0, y: 40 },
       { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
     );
-    
-    // Animate Navbar (targeted via 'header' selector)
+
     gsap.fromTo("header",
       { y: -100, opacity: 0 },
       { y: 0, opacity: 1, duration: 1.2, ease: "expo.out", delay: 2 },
-      { forceWait: true } // Safety
+      { forceWait: true }
     );
 
-    // Background color transition based on scroll position
     const sections = gsap.utils.toArray("section.color-transition-section");
     sections.forEach((section) => {
       ScrollTrigger.create({
         trigger: section,
         start: "top center",
         end: "bottom center",
-        onEnter: () => gsap.to(document.body, { backgroundColor: "#0c0a08", duration: 1 }), // ink
-        onLeaveBack: () => gsap.to(document.body, { backgroundColor: "#fefdfa", duration: 1 }), // paper
+        onEnter: () => gsap.to(document.body, { backgroundColor: "#0c0a08", duration: 1 }),
+        onLeaveBack: () => gsap.to(document.body, { backgroundColor: "#fefdfa", duration: 1 }),
       });
     });
 
-    // Parallax effects
     const parralaxImages = gsap.utils.toArray(".parallax-img");
     parralaxImages.forEach((img) => {
       gsap.to(img, {
@@ -125,10 +126,8 @@ export default function HomePageExperience({
     return () => window.clearInterval(interval);
   }, [shuffledPhotos.length, reduceMotion]);
 
-  const heroHeadline = "Des images qui donnent de la tenue a l'instant.";
-
   return (
-    <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-32 pb-16 md:space-y-48">
+    <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-48">
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="absolute inset-0">
           <AnimatePresence mode="wait">
@@ -162,7 +161,7 @@ export default function HomePageExperience({
         />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-paper/20 to-paper" />
 
-        <div className="relative mx-auto grid min-h-screen max-w-7xl gap-16 px-4 pb-14 pt-32 md:px-8 md:pb-20 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+        <div className="relative mx-auto grid min-h-screen max-w-7xl gap-12 px-4 pb-12 pt-28 md:px-8 md:pb-20 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
           <motion.div
             initial={reduceMotion ? false : "hidden"}
             whileInView={reduceMotion ? undefined : "show"}
@@ -180,37 +179,16 @@ export default function HomePageExperience({
               variants={wordRevealVariant}
               className="text-[11px] font-semibold uppercase tracking-[0.4em] text-paper/60"
             >
-              Jerrypicsart portfolio editorial
+              Jerrypicsart portfolio éditorial
             </motion.p>
 
-            <motion.h1
-              className="mt-6 flex flex-wrap gap-x-[0.2em] gap-y-1 font-serif text-[clamp(2.5rem,10vw,8.4rem)] leading-[0.88] tracking-[-0.06em] hero-content-reveal"
-              style={{ textShadow: "0 24px 64px rgba(0,0,0,0.4)" }}
-            >
-              {heroHeadline.split(" ").map((word, i) => (
-                <span key={i} className="overflow-hidden py-1">
-                  <motion.span variants={wordRevealVariant} className="inline-block">
-                    {word}
-                  </motion.span>
-                </span>
-              ))}
-            </motion.h1>
-
-            <motion.p
-              variants={wordRevealVariant}
-              className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-xl hero-content-reveal"
-              style={{ textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}
-            >
-              Mode, mariages et evenements saisis avec la meme exigence de cadre, de lumiere et de presence.
-            </motion.p>
-
-            <motion.div variants={wordRevealVariant} className="mt-10 flex flex-wrap gap-5 hero-content-reveal">
+            <motion.div variants={wordRevealVariant} className="mt-8 flex flex-wrap gap-3 hero-content-reveal">
               <MagneticElement strength={0.25}>
                 <Link
                   href="/gallery"
                   className="inline-block rounded-full bg-paper px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-ink transition-colors hover:bg-accent hover:text-paper shadow-2xl"
                 >
-                  Explorer l&apos;edit
+                  Explorer l&apos;édit
                 </Link>
               </MagneticElement>
               <MagneticElement strength={0.15}>
@@ -239,7 +217,7 @@ export default function HomePageExperience({
 
             <motion.div
               variants={wordRevealVariant}
-              className="mt-10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-[0.24em] text-paper/40"
+              className="mt-8 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-[0.24em] text-paper/40"
             >
               <span className="h-px w-16 bg-paper/20" />
               <span>
@@ -295,103 +273,46 @@ export default function HomePageExperience({
                   </div>
                 ) : null}
               </div>
-              <p className="mt-4 font-serif text-2xl leading-tight text-paper">Luxe discret, intensite juste.</p>
+              <p className="mt-4 font-serif text-2xl leading-tight text-paper">Luxe discret, intensité juste.</p>
               <p className="mt-4 text-sm leading-relaxed text-paper/70">
-                Des silhouettes fortes, des receptions vivantes et une retouche qui reste au service des personnes, des
-                lieux et du rythme.
+                Des silhouettes fortes, des réceptions habitées et une retouche qui reste au service des personnes,
+                des lieux et du rythme.
               </p>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl space-y-12 px-4 md:px-8">
-        <SectionHeading
-          eyebrow="Selection"
-          title="Mode et receptions, pensees comme un meme edit."
-          description="Les images fortes alternent allure, presence et celebration pour donner une lecture plus complete du regard."
-          action={
-            <MagneticElement strength={0.2}>
-              <Link
-                href="/gallery"
-                className="inline-block rounded-full border border-line/20 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
-              >
-                Ouvrir la galerie
-              </Link>
-            </MagneticElement>
-          }
-          reduceMotion={reduceMotion}
-        />
-
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <PhotoTile
-            photo={featuredPhotos[0]}
-            className="min-h-[30rem] lg:min-h-[44rem]"
-            sizes="(max-width: 1024px) 100vw, 56vw"
-            reduceMotion={reduceMotion}
-          />
-
-          <div className="grid gap-6">
-            <MotionBlock
-              reduceMotion={reduceMotion}
-              delay={0.1}
-              className="rounded-[2.4rem] border border-line/10 bg-white/40 p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-sm md:p-10"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Edit maison</p>
-              <h3 className="mt-5 max-w-lg font-serif text-3xl leading-[1.02] tracking-[-0.04em] md:text-5xl">
-                Une signature qui melange allure et humanite.
-              </h3>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                L&apos;enjeu n&apos;est pas de tout montrer, mais de faire sentir a la fois la precision mode et la
-                chaleur des moments partages.
-              </p>
-            </MotionBlock>
-
-            <div className="grid gap-6 sm:grid-cols-2">
-              {secondaryFeatured.slice(0, 2).map((photo, index) => (
-                <PhotoTile
-                  key={photo.id}
-                  photo={photo}
-                  className="min-h-[22rem]"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 24vw"
-                  delay={0.15 + index * 0.1}
-                  reduceMotion={reduceMotion}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {secondaryFeatured[2] ? (
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      {marriageFeature ? (
+        <section className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-start">
             <PhotoTile
-              photo={secondaryFeatured[2]}
-              className="min-h-[28rem] md:min-h-[36rem]"
-              sizes="(max-width: 1024px) 100vw, 42vw"
-              delay={0.2}
+              photo={marriageFeature}
+              className="mx-auto min-h-[42rem] w-full max-w-3xl xl:mx-0 xl:max-w-none lg:min-h-[56rem]"
+              sizes="(max-width: 1280px) 100vw, 42vw"
               reduceMotion={reduceMotion}
+              imagePosition="center 22%"
             />
 
             <MotionBlock
               reduceMotion={reduceMotion}
-              delay={0.25}
-              className="rounded-[2.5rem] border border-line/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(255,255,255,0.5))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-md md:p-10"
+              delay={0.12}
+              className="self-start rounded-[2.5rem] border border-line/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.56))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-md md:p-10 lg:p-12"
             >
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Cadence</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Mariage</p>
               <h3 className="mt-5 max-w-lg font-serif text-3xl leading-[1.02] tracking-[-0.04em] md:text-5xl">
-                Laisser aux portraits la place de respirer.
+                Une élégance tenue, des images pensées pour durer.
               </h3>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                Quand une image repose sur un visage ou une silhouette, elle gagne a rester dans un cadre
-                plus vertical et plus calme.
+                Entre allure, émotion et présence, chaque image cherche un équilibre sobre, fort et intemporel.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <MagneticElement strength={0.15}>
                   <Link
-                    href="/gallery"
+                    href="/gallery?category=Mariage"
                     className="inline-block rounded-full border border-line/20 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
                   >
-                    Voir l&apos;edit complet
+                    Voir l&apos;édit complet
                   </Link>
                 </MagneticElement>
                 <MagneticElement strength={0.2}>
@@ -399,30 +320,30 @@ export default function HomePageExperience({
                     href="/contact"
                     className="inline-block rounded-full bg-ink px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-paper transition-colors hover:bg-accent"
                   >
-                    Reserver une date
+                    Réserver une date
                   </Link>
                 </MagneticElement>
               </div>
             </MotionBlock>
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
 
       <section className="mx-auto max-w-7xl px-4 md:px-8 color-transition-section">
         <div className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <MotionBlock reduceMotion={reduceMotion} className="space-y-8">
-            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-ink/40">Approche</p>
-            <h2 className="max-w-2xl font-serif text-5xl leading-[0.96] tracking-[-0.04em] md:text-7xl">
-              De la silhouette au moment partage.
+            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/55">Approche</p>
+            <h2 className="max-w-2xl font-serif text-5xl leading-[0.96] tracking-[-0.04em] text-paper md:text-7xl">
+              De la silhouette au moment partagé.
             </h2>
             <div className="space-y-6">
-              <p className="max-w-xl text-base leading-relaxed text-ink/75 md:text-xl">
-                Jerrypicsart travaille la mode et l&apos;evenement avec une meme ligne: de la tenue, de la
-                clarte et une vraie sensation de presence.
+              <p className="max-w-xl text-base leading-relaxed text-paper/82 md:text-xl">
+                Jerrypicsart travaille la mode et le mariage avec une même ligne&nbsp;: de la tenue, de la
+                clarté et une vraie sensation de présence.
               </p>
-              <p className="max-w-xl text-base leading-relaxed text-ink/55 md:text-lg">
-                Chaque serie cherche l&apos;equilibre entre desirabilite, respiration dans le cadre et finition
-                editoriale.
+              <p className="max-w-xl text-base leading-relaxed text-paper/68 md:text-lg">
+                Chaque série cherche l&apos;équilibre entre désirabilité, respiration dans le cadre et finition
+                éditoriale.
               </p>
             </div>
 
@@ -430,7 +351,7 @@ export default function HomePageExperience({
               <MagneticElement strength={0.15}>
                 <Link
                   href="/about"
-                  className="inline-block rounded-full border border-line/20 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink"
+                  className="inline-block rounded-full border border-paper/22 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-paper transition-colors hover:border-paper hover:bg-paper/10"
                 >
                   Notre manifeste
                 </Link>
@@ -463,7 +384,7 @@ export default function HomePageExperience({
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.72))]" />
             <div className="absolute bottom-6 right-6 max-w-xs rounded-[1.8rem] border border-white/12 bg-black/40 p-6 text-paper shadow-2xl backdrop-blur-md md:bottom-10 md:right-10 md:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Intention</p>
-              <p className="mt-3 font-serif text-2xl leading-tight">L&apos;elegance vient du rythme, jamais du decoratif.</p>
+              <p className="mt-3 font-serif text-2xl leading-tight">L&apos;élégance vient du rythme, jamais du décoratif.</p>
             </div>
           </MotionBlock>
         </div>
@@ -484,17 +405,17 @@ export default function HomePageExperience({
 
           <div className="relative grid gap-12 px-6 py-12 md:px-12 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <MotionBlock reduceMotion={reduceMotion} className="space-y-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-white/40">Expertises</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-white/55">Expertises</p>
               <h2 className="max-w-xl font-serif text-4xl leading-[0.96] tracking-[-0.04em] md:text-6xl">
-                La ou l&apos;image doit etre a la fois belle, utile et memorable.
+                Là où l&apos;image doit être à la fois belle, utile et mémorable.
               </h2>
-              <p className="max-w-md text-base leading-relaxed text-paper/60 md:text-lg">
-                De la Fashion Week aux receptions privees, la meme exigence visuelle s&apos;applique : clarte et
+              <p className="max-w-md text-base leading-relaxed text-paper/78 md:text-lg">
+                De la Fashion Week aux réceptions privées, la même exigence visuelle s&apos;applique&nbsp;: clarté et
                 sens du moment.
               </p>
             </MotionBlock>
 
-            <div 
+            <div
               className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20 backdrop-blur-md relative group-hover-within"
               onMouseMove={(e) => {
                 const { left, top } = e.currentTarget.getBoundingClientRect();
@@ -504,13 +425,13 @@ export default function HomePageExperience({
                 e.currentTarget.style.setProperty("--y", `${y}px`);
               }}
             >
-              <div 
+              <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 spotlight-bg"
                 style={{
                   background: `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.06), transparent 40%)`,
                 }}
               />
-              
+
               <style jsx>{`
                 .group-hover-within:hover .spotlight-bg {
                   opacity: 1;
@@ -523,14 +444,14 @@ export default function HomePageExperience({
                   className="group grid gap-4 border-b border-white/5 px-6 py-8 last:border-b-0 hover:bg-white/5 transition-colors md:grid-cols-[auto_1fr_auto] md:items-start md:gap-8 md:px-10 overflow-hidden relative"
                   {...getRevealProps(reduceMotion, index * 0.12, 0.2)}
                 >
-                  <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/30 group-hover:text-white/60 transition-colors">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/45 group-hover:text-white/75 transition-colors">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div className="space-y-3">
                     <p className="font-serif text-3xl text-paper">{item.title}</p>
-                    <p className="max-w-xl text-sm leading-relaxed text-paper/60 md:text-base">{item.description}</p>
+                    <p className="max-w-xl text-sm leading-relaxed text-paper/78 md:text-base">{item.description}</p>
                   </div>
-                  <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-white/30 md:block">
+                  <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-white/45 md:block">
                     {item.focus}
                   </span>
                 </motion.div>
@@ -548,7 +469,7 @@ export default function HomePageExperience({
               Travaillons ensemble.
             </h2>
             <p className="max-w-2xl text-base leading-relaxed text-paper/70 md:text-xl">
-              Brief court ou projet complexe : parlons de votre vision et des besoins de votre serie.
+              Brief court ou projet complexe&nbsp;: parlons de votre vision et des besoins de votre série.
             </p>
             <div className="flex flex-wrap gap-5 pt-4">
               <MagneticElement strength={0.25}>
@@ -564,7 +485,7 @@ export default function HomePageExperience({
                   href="/gallery"
                   className="inline-block rounded-full border border-white/20 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.2em] text-paper backdrop-blur-sm transition-all hover:bg-white/10"
                 >
-                  Parcourir l&apos;edit
+                  Parcourir l&apos;édit
                 </Link>
               </MagneticElement>
             </div>
@@ -576,12 +497,12 @@ export default function HomePageExperience({
               delay={0.2}
               className="rounded-[2.2rem] border border-white/10 bg-white/5 p-8 text-paper/80 backdrop-blur-xl"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">Delais</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">Délais</p>
               <p className="mt-4 font-serif text-2xl leading-tight text-white">
-                Reponse sous 24h a 48h.
+                Réponse sous 24h à 48h.
               </p>
               <p className="mt-4 text-sm leading-relaxed text-white/60">
-                La clarte du brief permet d&apos;aller droit a l&apos;essentiel pour fixer une date.
+                La clarté du brief permet d&apos;aller droit à l&apos;essentiel pour fixer une date.
               </p>
             </MotionBlock>
 

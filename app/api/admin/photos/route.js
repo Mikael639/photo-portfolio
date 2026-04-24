@@ -140,7 +140,7 @@ export async function POST(request) {
     files,
     title: toStringValue(formData.get("title")),
     alt: toStringValue(formData.get("alt")),
-    category: toStringValue(formData.get("category"), "Autre"),
+    category: toStringValue(formData.get("category"), "Shooting photo"),
     roles: toStringValue(formData.get("roles"), "[]"),
     isPublished: toBooleanValue(formData.get("isPublished"), true),
     isPinned: toBooleanValue(formData.get("isPinned"), false),

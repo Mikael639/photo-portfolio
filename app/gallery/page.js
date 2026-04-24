@@ -4,13 +4,13 @@ import { getPublicPhotos } from "../../lib/photoRepository";
 
 export const metadata = {
   title: "Galerie",
-  description: "Galerie editoriale de Jerrypicsart entre mode, mariage, eglise et concert.",
+  description: "Galerie éditoriale de Jerrypicsart entre mode et mariage.",
   alternates: {
     canonical: "/gallery",
   },
 };
 
-const defaultCategories = ["Fashion Week", "Mariage", "Eglise", "Concert"];
+const defaultCategories = ["Fashion Week", "Mariage", "Shooting photo"];
 
 function buildCategories(photos) {
   const derivedCategories = Array.from(new Set(photos.map((photo) => photo.category).filter(Boolean)));
@@ -43,8 +43,12 @@ export default async function GalleryPage({ searchParams }) {
       getPublicPhotos({ category: categoryFilter }),
     ]);
 
-    allPhotos = allResults.map(enhancePhotoPresentation);
-    initialPhotos = filteredResults.map(enhancePhotoPresentation);
+    allPhotos = allResults
+      .filter((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise")
+      .map(enhancePhotoPresentation);
+    initialPhotos = filteredResults
+      .filter((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise")
+      .map(enhancePhotoPresentation);
   } catch {
     allPhotos = [];
     initialPhotos = [];

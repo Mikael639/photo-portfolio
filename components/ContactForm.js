@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { initialContactFormState, submitContactForm } from "../app/contact/actions";
+import { submitContactForm } from "../app/contact/actions";
+import { initialContactFormState } from "../app/contact/constants";
 import SubmitButton from "./SubmitButton";
 
-const serviceOptions = ["Fashion Week", "Mariage", "Eglise", "Concert", "Autre"];
+const serviceOptions = ["Fashion Week", "Mariage", "Shooting photo"];
 const preferredContactOptions = ["Email", "Telephone", "Instagram / WhatsApp"];
 const budgetOptions = ["A definir", "Moins de 500 EUR", "500 - 1000 EUR", "1000 - 2000 EUR", "Plus de 2000 EUR"];
 
@@ -156,7 +157,7 @@ export default function ContactForm() {
           autoComplete="address-level2"
           aria-invalid={Boolean(errors.location)}
           className="w-full rounded-xl border border-line/18 bg-paper/88 px-4 py-3 outline-none transition focus:border-accent focus:bg-white"
-          placeholder="Ville, salle, eglise..."
+          placeholder="Ville, salle, lieu..."
         />
         {errors.location ? <span className="text-xs text-red-700">{errors.location}</span> : null}
       </label>

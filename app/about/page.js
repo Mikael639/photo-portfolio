@@ -4,7 +4,7 @@ import { getPublicPhotos } from "../../lib/photoRepository";
 
 export const metadata = {
   title: "A propos",
-  description: "L'approche photographique de Jerrypicsart entre mode, mariage et evenementiel.",
+  description: "L'approche photographique de Jerrypicsart entre Fashion Week, mariage et shooting photo.",
   alternates: {
     canonical: "/about",
   },

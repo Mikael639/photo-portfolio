@@ -6,11 +6,6 @@ import { sendContactEmails } from "../../lib/contactEmail";
 import { validateContactInput } from "../../lib/contactValidation";
 import { consumeRateLimit } from "../../lib/rateLimit";
 
-export const initialContactFormState = {
-  status: "idle",
-  message: "",
-  errors: {},
-};
 
 function getHeaderValue(headersList, key) {
   const value = headersList.get(key);

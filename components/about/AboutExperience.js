@@ -8,21 +8,6 @@ import { useState, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
-const principles = [
-  {
-    title: "Presence",
-    description: "Rester proche du moment sans l'alourdir, pour garder ce qui fait la justesse d'une image.",
-  },
-  {
-    title: "Tenue",
-    description: "Donner de la structure au cadre, a la lumiere et aux corps pour que la serie tienne dans le temps.",
-  },
-  {
-    title: "Utilite",
-    description: "Livrer des images desirables, mais aussi directement exploitables pour la communication.",
-  },
-];
-
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
     return {
@@ -93,7 +78,7 @@ function PhotoPanel({ photo, className = "", sizes, reduceMotion }) {
 
 export default function AboutExperience({ leadPhoto, secondaryPhoto, atmospherePhoto }) {
   const reduceMotion = useReducedMotion();
-  const headline = "Une ecriture visuelle sobre et precise.";
+  const headline = "Une écriture visuelle sobre et précise.";
   const headlineRef = useRef(null);
 
   useGSAP(() => {
@@ -117,7 +102,7 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
     <div ref={headlineRef} data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
       <section className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
         <motion.div className="space-y-6" {...getRevealProps(reduceMotion)}>
-          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">A propos</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">À propos</p>
           <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl flex flex-wrap gap-x-[0.2em] gap-y-2">
             {headline.split(" ").map((word, i) => (
               <span key={i} className="overflow-hidden inline-flex">
@@ -126,12 +111,12 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
             ))}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-ink/75 md:text-xl">
-            Jerrypicsart photographie la mode, le mariage et l&apos;evenementiel avec une meme intention: donner de la
-            tenue a l&apos;instant, sans enlever ce qui le rend vivant.
+             Jerrypicsart photographie la Fashion Week, le mariage et le shooting photo avec une même intention : donner de la
+             tenue à l&apos;instant, sans enlever ce qui le rend vivant.
           </p>
           <p className="max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-            Le regard reste editorial, mais l&apos;enjeu n&apos;est jamais de faire pose pour faire pose. Chaque image
-            doit rester lisible, elegante et juste.
+             Le regard reste éditorial, mais l&apos;enjeu n&apos;est jamais de faire posé pour faire posé. Chaque image
+             doit rester lisible, élégante et juste.
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <MagneticElement strength={0.25}>
@@ -163,22 +148,6 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
         </motion.div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
-        {principles.map((item, index) => (
-          <motion.div
-            key={item.title}
-            className="group rounded-[2.2rem] border border-line/12 bg-white/40 p-8 shadow-[0_24px_80px_rgba(12,10,8,0.04)] backdrop-blur-sm transition-colors hover:bg-white/60"
-            {...getRevealProps(reduceMotion, index * 0.1)}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40 group-hover:text-ink/60 transition-colors">
-              {String(index + 1).padStart(2, "0")}
-            </p>
-            <p className="mt-6 font-serif text-4xl leading-tight tracking-[-0.03em]">{item.title}</p>
-            <p className="mt-4 text-base leading-relaxed text-ink/65">{item.description}</p>
-          </motion.div>
-        ))}
-      </section>
-
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <motion.div
           className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.65))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-12"
@@ -186,11 +155,11 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
         >
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Approche</p>
           <h2 className="mt-6 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] md:text-6xl">
-            Travailler l&apos;allure sans perdre la verite.
+            Travailler l&apos;allure sans perdre la vérité.
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">
             En Fashion Week, cela veut dire garder la tension, la coupe, le rythme. En mariage, cela veut dire rester
-            attentif aux regards, aux gestes, a la circulation de la lumiere.
+            attentif aux regards, aux gestes, à la circulation de la lumière.
           </p>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink/55 md:text-lg">
             Des images suffisamment fortes pour marquer, et suffisamment propres pour durer.
@@ -218,11 +187,11 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
           <div className="space-y-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/40">Direction</p>
             <h2 className="max-w-4xl font-serif text-4xl leading-[0.94] tracking-[-0.05em] md:text-7xl">
-              Une signature qui peut passer de l&apos;editorial a la celebration.
+              Une signature qui peut passer de l&apos;éditorial à la célébration.
             </h2>
             <p className="max-w-2xl text-base leading-relaxed text-paper/70 md:text-xl">
-              Si tu cherches des images nettes, elegantes et pensees comme une vraie serie, on peut construire quelque
-              chose de tres simple, mais tres tenu.
+              Si tu cherches des images nettes, élégantes et pensées comme une vraie série, on peut construire quelque
+              chose de très simple, mais très tenu.
             </p>
           </div>
 

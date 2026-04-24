@@ -1,8 +1,7 @@
 "use client";
 
-import { startTransition, useMemo, useState, useRef } from "react";
+import { startTransition, useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import gsap from "gsap";
@@ -15,14 +14,6 @@ import { useVelocitySkew } from "../../lib/hooks/useVelocitySkew";
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
-
-const collectionStories = {
-  Tout: "Une lecture continue entre mode, mariages, ceremonies et moments de scene.",
-  "Fashion Week": "Des silhouettes, des details et des instants saisis avec une ecriture editoriale nette.",
-  Mariage: "Des images pensees pour tenir dans le temps, entre emotion, allure et respiration.",
-  Eglise: "Une presence discrete pour traduire la lumiere, la ferveur et la dimension collective.",
-  Concert: "Une galerie construite autour de l'ambiance, de la presence scenique et de l'energie du lieu.",
-};
 
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
@@ -104,7 +95,7 @@ function GalleryCard({
         transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
       }}
     >
-      <div ref={liquidRef} className="absolute inset-0 w-full h-full">
+      <div ref={liquidRef} className="absolute inset-0 h-full w-full">
         <Image
           src={photo.src}
           alt={photo.alt}
@@ -137,7 +128,14 @@ export default function GalleryExperience({ photos, activeCategory, categories }
   const router = useRouter();
   const activeFilter = activeCategory || "Tout";
   const [activeIndex, setActiveIndex] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useGSAP(() => {
     if (reduceMotion) return;
@@ -177,20 +175,8 @@ export default function GalleryExperience({ photos, activeCategory, categories }
     [photos]
   );
 
-  const collectionStory = collectionStories[activeFilter] || collectionStories.Tout;
-
   return (
     <div ref={containerRef} data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
-      <header className="space-y-6">
-        <motion.div className="max-w-4xl space-y-5" {...getRevealProps(reduceMotion)}>
-          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">Galerie</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl">
-            Une collection pensee comme un edit continu.
-          </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">{collectionStory}</p>
-        </motion.div>
-      </header>
-
       <motion.div className="flex flex-wrap gap-4" {...getRevealProps(reduceMotion, 0.1)}>
         {categories.map((category) => (
           <FilterButton
@@ -227,52 +213,18 @@ export default function GalleryExperience({ photos, activeCategory, categories }
 
       {leadPhoto ? (
         <>
-          <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <section className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr] xl:items-stretch">
             <GalleryCard
               photo={leadPhoto}
               index={0}
               onOpen={setActiveIndex}
               sizes="(max-width: 1280px) 100vw, 58vw"
-              className="min-h-[30rem] lg:min-h-[44rem]"
+              className="min-h-[30rem] lg:min-h-[44rem] xl:h-[44rem]"
               priority
               reduceMotion={reduceMotion}
             />
 
-            <div className="grid gap-6">
-              <motion.div
-                className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.65))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-10"
-                {...getRevealProps(reduceMotion, 0.08)}
-              >
-                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Edit maison</p>
-                <h2 className="mt-5 max-w-lg font-serif text-3xl leading-[1] tracking-[-0.04em] md:text-5xl">
-                  La galerie commence comme une prise de position.
-                </h2>
-                <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70 md:text-xl">
-                  Les premieres images donnent le ton, puis la grille laisse les series et les
-                  moments plus documentaires dialoguer librement.
-                </p>
-                <div className="mt-10 flex flex-wrap gap-4">
-                  <MagneticElement strength={0.2}>
-                    <Link
-                      href="/contact"
-                      className="inline-block rounded-full bg-ink px-7 py-3.5 text-sm font-bold uppercase tracking-[0.2em] text-paper transition-colors hover:bg-accent"
-                    >
-                      Demander une date
-                    </Link>
-                  </MagneticElement>
-                  <MagneticElement strength={0.15}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveIndex(0)}
-                      className="rounded-full border border-line/20 px-7 py-3.5 text-sm font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
-                    >
-                      Ouvrir l&apos;image
-                    </button>
-                  </MagneticElement>
-                </div>
-              </motion.div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2 xl:h-[44rem]">
                 {secondaryPhotos.map(({ photo, index }, itemIndex) => (
                   <GalleryCard
                     key={photo.id}
@@ -280,32 +232,15 @@ export default function GalleryExperience({ photos, activeCategory, categories }
                     index={index}
                     onOpen={setActiveIndex}
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 24vw"
-                    className="min-h-[22rem] md:min-h-[26rem]"
+                    className="aspect-[4/5] min-h-[24rem] md:min-h-[30rem] xl:h-full xl:min-h-0"
                     reduceMotion={reduceMotion}
                     delay={0.15 + itemIndex * 0.08}
                   />
                 ))}
-              </div>
             </div>
           </section>
 
-          <section className="space-y-10">
-            <motion.div
-              className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
-              {...getRevealProps(reduceMotion, 0.1)}
-            >
-              <div className="space-y-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Grille complete</p>
-                <p className="max-w-2xl font-serif text-4xl leading-tight md:text-5xl">
-                  Toutes les images publiees, sans filtre narratif.
-                </p>
-              </div>
-              <p className="max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                Une fois l&apos;edit pose, la grille laisse apparaitre le reste de la collection avec une lecture plus
-                libre.
-              </p>
-            </motion.div>
-
+          <section>
             <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
               {galleryGridPhotos.map(({ photo, index }, itemIndex) => (
                 <GalleryCard
@@ -343,6 +278,34 @@ export default function GalleryExperience({ photos, activeCategory, categories }
           setActiveIndex(activeIndex === photos.length - 1 ? 0 : activeIndex + 1);
         }}
       />
+
+      {/* Bouton retour en haut */}
+      <motion.button
+        type="button"
+        aria-label="Remonter en haut de la page"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        initial={false}
+        animate={showScrollTop ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 16, scale: 0.85 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full border border-ink/12 bg-paper/90 text-ink shadow-[0_16px_48px_rgba(12,10,8,0.18)] backdrop-blur-xl transition-colors hover:bg-ink hover:text-paper"
+        style={{ pointerEvents: showScrollTop ? "auto" : "none" }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5" />
+          <path d="m5 12 7-7 7 7" />
+        </svg>
+      </motion.button>
     </div>
   );
 }
