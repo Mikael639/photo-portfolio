@@ -1,0 +1,15 @@
+meta {
+  name: List Contact Messages
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/contact
+  body: none
+  auth: none
+}
+
+headers {
+  x-admin-key: {{adminApiKey}}
+}

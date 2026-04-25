@@ -1,0 +1,31 @@
+meta {
+  name: Submit Contact Test
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/contact
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Test Codex",
+    "email": "mikaelcoulibaly40@gmail.com",
+    "company": "Test Bruno",
+    "phone": "+33000000000",
+    "serviceType": "Shooting photo",
+    "preferredContact": "Email",
+    "budget": "A definir",
+    "eventDate": "",
+    "location": "Paris",
+    "referenceLink": "https://example.com/test-bruno",
+    "project": "TEST BRUNO - vérification formulaire contact à supprimer après contrôle."
+  }
+}

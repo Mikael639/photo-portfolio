@@ -144,7 +144,6 @@ export default function HomePageExperience({
                 alt={activeHeroPhoto.alt}
                 fill
                 priority
-                unoptimized={true}
                 sizes="100vw"
                 className="object-cover sharpen-img"
                 style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}

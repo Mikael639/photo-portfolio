@@ -1,11 +1,13 @@
 "use server";
 
 import { headers } from "next/headers";
-import { addContactMessage } from "../../lib/contactStore";
+import { createContactMessage } from "../../lib/contactStore";
 import { sendContactEmails } from "../../lib/contactEmail";
 import { validateContactInput } from "../../lib/contactValidation";
 import { consumeRateLimit } from "../../lib/rateLimit";
 
+const CONTACT_SEND_ERROR_MESSAGE =
+  "Message enregistré, mais l'envoi email est temporairement indisponible. Nous traiterons votre demande rapidement.";
 
 function getHeaderValue(headersList, key) {
   const value = headersList.get(key);
@@ -35,7 +37,7 @@ export async function submitContactForm(_previousState, formData) {
   if (!limiter.allowed) {
     return {
       status: "error",
-      message: "Trop de tentatives. Reessaye dans quelques minutes.",
+      message: "Trop de tentatives. Réessaye dans quelques minutes.",
       errors: {},
     };
   }
@@ -57,26 +59,27 @@ export async function submitContactForm(_previousState, formData) {
   if (!validation.isValid) {
     return {
       status: "error",
-      message: "Validation echouee.",
+      message: "Validation échouée.",
       errors: validation.errors,
     };
   }
 
-  const created = addContactMessage(validation.sanitized);
+  const created = await createContactMessage(validation.sanitized);
 
   try {
     const emailResult = await sendContactEmails(created);
     return {
       status: "success",
       message: emailResult?.autoReplySent
-        ? "Message envoye."
-        : "Message envoye. Confirmation email au client non disponible pour le moment.",
+        ? "Message envoyé."
+        : "Message envoyé. Confirmation email au client non disponible pour le moment.",
       errors: {},
     };
   } catch (error) {
+    console.error("Contact email delivery failed", error);
     return {
       status: "error",
-      message: `Message enregistre mais email principal non envoye: ${error.message || "erreur inconnue"}`,
+      message: CONTACT_SEND_ERROR_MESSAGE,
       errors: {},
     };
   }
