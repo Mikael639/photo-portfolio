@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { submitContactForm } from "../app/contact/actions";
 import { initialContactFormState } from "../app/contact/constants";
 import SubmitButton from "./SubmitButton";
+import CustomSelect from "./CustomSelect";
 
 const serviceOptions = ["Fashion Week", "Mariage", "Shooting photo"];
 const preferredContactOptions = ["Email", "Telephone", "Instagram / WhatsApp"];
@@ -88,56 +89,29 @@ export default function ContactForm() {
         {errors.phone ? <span className="text-xs text-red-700">{errors.phone}</span> : null}
       </label>
 
-      <label className="space-y-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Type de prestation</span>
-        <select
-          name="serviceType"
-          defaultValue="Fashion Week"
-          aria-invalid={Boolean(errors.serviceType)}
-          className="w-full rounded-xl border border-line/18 bg-paper/88 px-4 py-3 outline-none transition focus:border-accent focus:bg-white"
-        >
-          {serviceOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        {errors.serviceType ? <span className="text-xs text-red-700">{errors.serviceType}</span> : null}
-      </label>
+      <CustomSelect
+        name="serviceType"
+        label="Type de prestation"
+        options={serviceOptions}
+        defaultValue="Fashion Week"
+        error={errors.serviceType}
+      />
 
-      <label className="space-y-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Canal prefere</span>
-        <select
-          name="preferredContact"
-          defaultValue="Email"
-          aria-invalid={Boolean(errors.preferredContact)}
-          className="w-full rounded-xl border border-line/18 bg-paper/88 px-4 py-3 outline-none transition focus:border-accent focus:bg-white"
-        >
-          {preferredContactOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        {errors.preferredContact ? <span className="text-xs text-red-700">{errors.preferredContact}</span> : null}
-      </label>
+      <CustomSelect
+        name="preferredContact"
+        label="Canal prefere"
+        options={preferredContactOptions}
+        defaultValue="Email"
+        error={errors.preferredContact}
+      />
 
-      <label className="space-y-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Budget indicatif</span>
-        <select
-          name="budget"
-          defaultValue="A definir"
-          aria-invalid={Boolean(errors.budget)}
-          className="w-full rounded-xl border border-line/18 bg-paper/88 px-4 py-3 outline-none transition focus:border-accent focus:bg-white"
-        >
-          {budgetOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        {errors.budget ? <span className="text-xs text-red-700">{errors.budget}</span> : null}
-      </label>
+      <CustomSelect
+        name="budget"
+        label="Budget indicatif"
+        options={budgetOptions}
+        defaultValue="A definir"
+        error={errors.budget}
+      />
 
       <label className="space-y-2">
         <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Date de l&apos;evenement</span>
