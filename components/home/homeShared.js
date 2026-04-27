@@ -5,19 +5,24 @@ import { useState } from "react";
 
 export const specialties = [
   {
-    title: "Fashion Week",
-    focus: "Runway, backstage, street style",
-    description: "Un regard net et éditorial pour garder l'allure, le rythme et la tension d'un défilé.",
+    title: "Events",
+    focus: "Soirees, lancements, scenes",
+    description: "Un regard net pour capter l'energie, les invites et les moments qui signent un evenement.",
   },
   {
-    title: "Mariage",
-    focus: "Préparation, cérémonie, réception",
-    description: "Un reportage sobre et sensible, construit pour tenir dans le temps sans surjouer l'émotion.",
+    title: "Fashion Week & Celebrities",
+    focus: "Runway, backstage, red carpet",
+    description: "Une lecture editoriale pour garder l'allure, le rythme et la presence des personnalites.",
   },
   {
-    title: "Shooting photo",
-    focus: "Portrait, direction, série",
-    description: "Des images construites avec précision pour garder une allure forte et une lecture immédiate.",
+    title: "Studio",
+    focus: "Portrait, direction, serie",
+    description: "Des images construites avec precision pour garder une allure forte et une lecture immediate.",
+  },
+  {
+    title: "Fashion Wedding",
+    focus: "Preparation, ceremonie, reception",
+    description: "Un reportage sobre et sensible, pense comme un editorial intime et intemporel.",
   },
 ];
 

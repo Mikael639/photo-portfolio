@@ -111,7 +111,7 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
             ))}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-ink/75 md:text-xl">
-             Jerrypicsart photographie la Fashion Week, le mariage et le shooting photo avec une même intention : donner de la
+             Jerrypicsart photographie les events, la Fashion Week, les celebrities, le studio et le fashion wedding avec une même intention : donner de la
              tenue à l&apos;instant, sans enlever ce qui le rend vivant.
           </p>
           <p className="max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
@@ -158,7 +158,7 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
             Travailler l&apos;allure sans perdre la vérité.
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">
-            En Fashion Week, cela veut dire garder la tension, la coupe, le rythme. En mariage, cela veut dire rester
+            En Fashion Week et celebrities, cela veut dire garder la tension, la coupe, le rythme. En fashion wedding, cela veut dire rester
             attentif aux regards, aux gestes, à la circulation de la lumière.
           </p>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink/55 md:text-lg">

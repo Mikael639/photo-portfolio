@@ -4,7 +4,7 @@ import { getPublicPhotos } from "../../lib/photoRepository";
 
 export const metadata = {
   title: "A propos",
-  description: "L'approche photographique de Jerrypicsart entre Fashion Week, mariage et shooting photo.",
+  description: "L'approche photographique de Jerrypicsart entre events, Fashion Week, celebrities, studio et fashion wedding.",
   alternates: {
     canonical: "/about",
   },
@@ -47,7 +47,7 @@ export default async function AboutPage() {
   const secondaryPhoto =
     findByTitle(photos, ["Portrait couture", "Ouverture de defile", "Voile et regard"], [leadPhoto?.id]) || null;
   const atmospherePhoto =
-    findByCategory(photos, ["Mariage", "Fashion Week"], [leadPhoto?.id, secondaryPhoto?.id]) || null;
+    findByCategory(photos, ["Fashion Wedding", "Fashion Week & Celebrities", "Events", "Studio"], [leadPhoto?.id, secondaryPhoto?.id]) || null;
 
   return (
     <AboutExperience leadPhoto={leadPhoto} secondaryPhoto={secondaryPhoto} atmospherePhoto={atmospherePhoto} />

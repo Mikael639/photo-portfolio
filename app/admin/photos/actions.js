@@ -10,6 +10,8 @@ import {
   validateAdminCredentials,
   verifyAdminSessionToken,
 } from "../../../lib/adminAuth";
+import { defaultPortfolioCategory } from "../../../lib/categories";
+import { listContactMessages, updateContactMessageStatus } from "../../../lib/contactStore";
 import {
   createAdminPhotos,
   deleteAdminPhoto,
@@ -17,8 +19,10 @@ import {
   isAdminStorageConfigured,
   MAX_BULK_UPLOAD_COUNT,
   MAX_UPLOAD_FILE_SIZE_BYTES,
+  reorderAdminPhotos,
   updateAdminPhoto,
 } from "../../../lib/photoRepository";
+import { updateHomeCopy } from "../../../lib/siteSettings";
 
 function unauthorizedResult(message = "Unauthorized.") {
   return createActionResult({ ok: false, message });
@@ -38,6 +42,11 @@ function revalidatePublicPhotoViews() {
   revalidatePath("/gallery");
   revalidatePath("/about");
   revalidatePath("/contact");
+}
+
+function revalidateAdminViews() {
+  revalidatePath("/admin");
+  revalidatePath("/admin/photos");
 }
 
 async function getAuthorizedCookieStore() {
@@ -78,8 +87,9 @@ export async function loginAdminAction(credentials) {
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE_NAME, createAdminSessionToken(username), getAdminCookieOptions());
   const photos = await getAdminPhotos();
+  const messages = await listContactMessages();
 
-  return createActionResult({ ok: true, message: "Connexion admin reussie.", data: photos });
+  return createActionResult({ ok: true, message: "Connexion admin reussie.", data: { photos, messages } });
 }
 
 export async function logoutAdminAction() {
@@ -129,13 +139,14 @@ export async function uploadAdminPhotosAction(formData) {
       files,
       title: toStringValue(formData.get("title")),
       alt: toStringValue(formData.get("alt")),
-      category: toStringValue(formData.get("category"), "Shooting photo"),
+      category: toStringValue(formData.get("category"), defaultPortfolioCategory),
       roles: toStringValue(formData.get("roles"), "[]"),
       isPublished: toBooleanValue(formData.get("isPublished"), true),
       isPinned: toBooleanValue(formData.get("isPinned"), false),
     });
 
     revalidatePublicPhotoViews();
+    revalidateAdminViews();
     const photos = await getAdminPhotos();
     return createActionResult({
       ok: true,
@@ -167,6 +178,7 @@ export async function updateAdminPhotoAction(input) {
     });
 
     revalidatePublicPhotoViews();
+    revalidateAdminViews();
     const photos = await getAdminPhotos();
     return createActionResult({ ok: true, message: "Photo mise a jour.", data: photos });
   } catch (error) {
@@ -186,9 +198,52 @@ export async function deleteAdminPhotoAction(id) {
   try {
     await deleteAdminPhoto(photoId);
     revalidatePublicPhotoViews();
+    revalidateAdminViews();
     const photos = await getAdminPhotos();
     return createActionResult({ ok: true, message: "Photo supprimee.", data: photos });
   } catch (error) {
     return createActionResult({ ok: false, message: error.message || "Unable to delete photo." });
+  }
+}
+
+export async function reorderAdminPhotosAction(items) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const photos = await reorderAdminPhotos(items);
+    revalidatePublicPhotoViews();
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Ordre des photos enregistre.", data: photos });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to reorder photos." });
+  }
+}
+
+export async function updateContactStatusAction(id, status) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const messages = await updateContactMessageStatus(id, status);
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Message mis a jour.", data: messages });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to update message." });
+  }
+}
+
+export async function updateHomeCopyAction(input) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const copy = await updateHomeCopy(input);
+    revalidateTag("site-settings");
+    revalidatePath("/");
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Textes du site enregistres.", data: copy });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to update site copy." });
   }
 }

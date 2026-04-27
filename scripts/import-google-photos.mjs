@@ -9,12 +9,12 @@ const MAX_BATCH_SIZE = 12;
 const albums = [
   {
     name: "mariage-event",
-    category: "Mariage",
+    category: "Fashion Wedding",
     url: "https://photos.google.com/share/AF1QipPaQE2jxUvEQ9NAi409MjmjPI1ERI9CZ3ezSsodmM3Eb8Z7Gy8HrwV9MGC9tBjR7w?key=ZG54YVJna3U0cWkxWGFKT0szc3JCeVoxTTVET0FB",
   },
   {
     name: "fashion-week",
-    category: "Fashion Week",
+    category: "Fashion Week & Celebrities",
     url: "https://photos.google.com/share/AF1QipNom0AEA9McRrz64TbArbTQHCe1Ze9bsk4Ghj6XYn_NLGz7XQUtbcewFs3oWwEDWA?key=UkhLSldTLVJLcC1DTGZ2M1BHVGMwcmZ1UXV0RWFn",
   },
 ];

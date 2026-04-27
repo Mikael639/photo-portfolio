@@ -5,22 +5,46 @@ import {
   deleteAdminPhotoAction,
   loginAdminAction,
   logoutAdminAction,
+  reorderAdminPhotosAction,
   updateAdminPhotoAction,
+  updateContactStatusAction,
+  updateHomeCopyAction,
   uploadAdminPhotosAction,
 } from "../../app/admin/photos/actions";
+import AdminDashboard from "./AdminDashboard";
 import AdminFeedback from "./AdminFeedback";
 import AdminFilters from "./AdminFilters";
 import AdminLoginForm from "./AdminLoginForm";
+import AdminMessagesPanel from "./AdminMessagesPanel";
 import AdminPhotosTable from "./AdminPhotosTable";
+import AdminSiteTextEditor from "./AdminSiteTextEditor";
+import AdminThemeGuide from "./AdminThemeGuide";
 import AdminUploadForm from "./AdminUploadForm";
 import { categories, categoryFilters, initialUploadForm, maxBulkUploadCount, roleOptions } from "./constants";
+import { defaultHomeCopy } from "../../lib/siteSettings";
 
-export default function AdminPhotosClient({ initialAuthenticated = false, initialPhotos = [] }) {
+const tabs = [
+  { id: "photos", label: "Photos" },
+  { id: "upload", label: "Ajouter" },
+  { id: "messages", label: "Messages" },
+  { id: "texts", label: "Textes" },
+  { id: "themes", label: "Aide" },
+];
+
+export default function AdminPhotosClient({
+  initialAuthenticated = false,
+  initialPhotos = [],
+  initialMessages = [],
+  initialHomeCopy = {},
+}) {
   const [authForm, setAuthForm] = useState({ username: "admin", password: "" });
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
   const [photos, setPhotos] = useState(initialPhotos);
+  const [messages, setMessages] = useState(initialMessages);
+  const [homeCopy, setHomeCopy] = useState({ ...defaultHomeCopy, ...(initialHomeCopy || {}) });
   const [uploadForm, setUploadForm] = useState(initialUploadForm);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSavingText, setIsSavingText] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [busyId, setBusyId] = useState("");
@@ -28,9 +52,8 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
   const [categoryFilter, setCategoryFilter] = useState("Toutes");
   const [publishFilter, setPublishFilter] = useState("all");
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [activeTab, setActiveTab] = useState("photos");
 
-  const totalPublished = useMemo(() => photos.filter((photo) => photo.isPublished).length, [photos]);
-  const totalDrafts = useMemo(() => photos.filter((photo) => !photo.isPublished).length, [photos]);
   const filteredPhotos = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -55,12 +78,7 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
   }
 
   function replacePhotoLocally(id, patch) {
-    setPhotos((current) =>
-      current.map((photo) => {
-        if (photo.id !== id) return photo;
-        return { ...photo, ...patch };
-      })
-    );
+    setPhotos((current) => current.map((photo) => (photo.id === id ? { ...photo, ...patch } : photo)));
   }
 
   async function handleLogin(event) {
@@ -77,11 +95,12 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
       }
 
       setIsAuthenticated(true);
-      setPhotos(result.data || []);
+      setPhotos(result.data?.photos || result.data || []);
+      setMessages(result.data?.messages || []);
       setStatusMessage(result.message || "Connexion admin reussie.");
     } catch (error) {
       setIsAuthenticated(false);
-      setErrorMessage(error?.message || "Impossible de charger les photos admin.");
+      setErrorMessage(error?.message || "Impossible de charger l'admin.");
     }
   }
 
@@ -89,6 +108,7 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
     const result = await logoutAdminAction();
     setIsAuthenticated(false);
     setPhotos([]);
+    setMessages([]);
     setErrorMessage("");
     setStatusMessage(result.message || "Deconnecte.");
   }
@@ -141,6 +161,7 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
     setUploadForm(initialUploadForm);
     setFileInputKey((current) => current + 1);
     setPhotos(result.data || []);
+    setActiveTab("photos");
     setStatusMessage(result.message || `${uploadForm.files.length} photo(s) ajoutee(s).`);
     setIsUploading(false);
   }
@@ -158,12 +179,7 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
     setBusyId("");
 
     if (!result.ok) {
-      setPhotos((current) =>
-        current.map((photo) => {
-          if (photo.id !== id) return photo;
-          return previousPhoto;
-        })
-      );
+      setPhotos((current) => current.map((photo) => (photo.id === id ? previousPhoto : photo)));
       setErrorMessage(result.message || "Update failed.");
       return;
     }
@@ -197,59 +213,154 @@ export default function AdminPhotosClient({ initialAuthenticated = false, initia
     setStatusMessage(result.message || "Photo supprimee.");
   }
 
+  async function reorderPhotos(items) {
+    const previousPhotos = photos;
+    const order = new Map(items.map((item) => [item.id, item.sortOrder]));
+    setPhotos((current) =>
+      [...current]
+        .map((photo) => ({ ...photo, sortOrder: order.get(photo.id) || photo.sortOrder }))
+        .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
+    );
+
+    const result = await reorderAdminPhotosAction(items);
+    if (!result.ok) {
+      setPhotos(previousPhotos);
+      setErrorMessage(result.message || "Impossible d'enregistrer l'ordre.");
+      return;
+    }
+
+    setPhotos(result.data || []);
+    setStatusMessage(result.message || "Ordre enregistre.");
+  }
+
+  async function updateMessageStatus(id, status) {
+    const previousMessages = messages;
+    setMessages((current) => current.map((message) => (message.id === id ? { ...message, status } : message)));
+
+    const result = await updateContactStatusAction(id, status);
+    if (!result.ok) {
+      setMessages(previousMessages);
+      setErrorMessage(result.message || "Impossible de mettre a jour le message.");
+      return;
+    }
+
+    setMessages(result.data || []);
+    setStatusMessage(result.message || "Message mis a jour.");
+  }
+
+  async function saveHomeCopy(event) {
+    event.preventDefault();
+    setIsSavingText(true);
+    setErrorMessage("");
+
+    const result = await updateHomeCopyAction(homeCopy);
+    setIsSavingText(false);
+
+    if (!result.ok) {
+      setErrorMessage(result.message || "Impossible d'enregistrer les textes.");
+      return;
+    }
+
+    setHomeCopy(result.data || homeCopy);
+    setStatusMessage(result.message || "Textes enregistres.");
+  }
+
   if (!isAuthenticated) {
-    return <AdminLoginForm authForm={authForm} errorMessage={errorMessage} onSubmit={handleLogin} onChange={updateAuthField} />;
+    return (
+      <AdminLoginForm authForm={authForm} errorMessage={errorMessage} onSubmit={handleLogin} onChange={updateAuthField} />
+    );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 pt-10 md:px-8">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 pb-16 pt-10 md:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-serif text-4xl">Admin Photos</h1>
-          <p className="text-sm text-ink/70">
-            Total: {photos.length} | Publiees: {totalPublished} | Brouillons: {totalDrafts}
-          </p>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-ink/45">Espace photographe</p>
+          <h1 className="font-serif text-5xl leading-tight">Admin Jerrypicsart</h1>
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="rounded-full border border-line/40 px-4 py-2 text-sm hover:border-ink"
-        >
-          Deconnexion
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <a href="/gallery" target="_blank" className="rounded-full border border-line/30 px-4 py-2 text-sm hover:border-ink">
+            Voir le site
+          </a>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-full border border-line/30 px-4 py-2 text-sm hover:border-ink"
+          >
+            Deconnexion
+          </button>
+        </div>
       </div>
 
-      <AdminUploadForm
-        categories={categories}
-        fileInputKey={fileInputKey}
-        isUploading={isUploading}
-        maxBulkUploadCount={maxBulkUploadCount}
-        onSubmit={handleUpload}
-        toggleUploadRole={toggleUploadRole}
-        roleOptions={roleOptions}
-        setUploadForm={setUploadForm}
-        uploadForm={uploadForm}
-      />
-
+      <AdminDashboard photos={photos} messages={messages} categories={categories} onSelectTab={setActiveTab} />
       <AdminFeedback errorMessage={errorMessage} statusMessage={statusMessage} />
 
-      <AdminFilters
-        categoryFilter={categoryFilter}
-        categoryFilters={categoryFilters}
-        publishFilter={publishFilter}
-        searchQuery={searchQuery}
-        setCategoryFilter={setCategoryFilter}
-        setPublishFilter={setPublishFilter}
-        setSearchQuery={setSearchQuery}
-      />
+      <nav className="flex gap-2 overflow-x-auto rounded-2xl border border-line/20 bg-white/55 p-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition ${
+              activeTab === tab.id ? "bg-ink text-paper" : "text-ink/65 hover:bg-white"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-      <AdminPhotosTable
-        busyId={busyId}
-        categories={categories}
-        deletePhoto={deletePhoto}
-        filteredPhotos={filteredPhotos}
-        updatePhoto={updatePhoto}
-      />
+      {activeTab === "photos" ? (
+        <>
+          <AdminFilters
+            categoryFilter={categoryFilter}
+            categoryFilters={categoryFilters}
+            publishFilter={publishFilter}
+            searchQuery={searchQuery}
+            setCategoryFilter={setCategoryFilter}
+            setPublishFilter={setPublishFilter}
+            setSearchQuery={setSearchQuery}
+          />
+          <AdminPhotosTable
+            busyId={busyId}
+            categories={categories}
+            deletePhoto={deletePhoto}
+            filteredPhotos={filteredPhotos}
+            onReorder={reorderPhotos}
+            roleOptions={roleOptions}
+            updatePhoto={updatePhoto}
+          />
+        </>
+      ) : null}
+
+      {activeTab === "upload" ? (
+        <AdminUploadForm
+          categories={categories}
+          fileInputKey={fileInputKey}
+          isUploading={isUploading}
+          maxBulkUploadCount={maxBulkUploadCount}
+          onSubmit={handleUpload}
+          toggleUploadRole={toggleUploadRole}
+          roleOptions={roleOptions}
+          setUploadForm={setUploadForm}
+          uploadForm={uploadForm}
+        />
+      ) : null}
+
+      {activeTab === "messages" ? (
+        <AdminMessagesPanel messages={messages} onUpdateStatus={updateMessageStatus} />
+      ) : null}
+
+      {activeTab === "texts" ? (
+        <AdminSiteTextEditor
+          homeCopy={homeCopy}
+          isSaving={isSavingText}
+          onSave={saveHomeCopy}
+          setHomeCopy={setHomeCopy}
+        />
+      ) : null}
+
+      {activeTab === "themes" ? <AdminThemeGuide categories={categories} /> : null}
     </div>
   );
 }

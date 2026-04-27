@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext }) {
-  const [isZoomed, setIsZoomed] = useState(false);
+export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext, onSelect }) {
+  const [zoomedPhotoId, setZoomedPhotoId] = useState(null);
   const constraintsRef = useRef(null);
 
   const activePhoto = activeIndex === null ? null : photos[activeIndex];
+  const isZoomed = Boolean(activePhoto && zoomedPhotoId === activePhoto.id);
   const currentNum = activeIndex === null ? 0 : activeIndex + 1;
   const totalNum = photos.length;
   const progress = totalNum > 0 ? (currentNum / totalNum) * 100 : 0;
 
-  // Reset zoom when photo changes
-  useEffect(() => {
-    setIsZoomed(false);
-  }, [activeIndex]);
+  const handleClose = useCallback(() => {
+    setZoomedPhotoId(null);
+    onClose();
+  }, [onClose]);
 
 
   useEffect(() => {
@@ -32,13 +33,13 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
   useEffect(() => {
     if (activeIndex === null) return;
     const onKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
       if (event.key === "ArrowLeft") onPrev();
       if (event.key === "ArrowRight") onNext();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, onClose, onPrev, onNext]);
+  }, [activeIndex, handleClose, onPrev, onNext]);
 
   if (typeof document === "undefined") return null;
 
@@ -54,7 +55,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
           aria-modal="true"
           aria-label="Visionneuse d'images"
           className="fixed inset-0 z-[100] bg-black h-screen w-screen overflow-hidden focus:outline-none"
-          onClick={onClose}
+          onClick={handleClose}
           tabIndex={-1}
           autoFocus={true}
         >
@@ -88,7 +89,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             {/* Close button */}
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="group flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-white/40 transition hover:text-white"
             >
               <span className="h-px w-6 bg-white/30 transition group-hover:w-10 group-hover:bg-white duration-300" />
@@ -122,7 +123,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             className={`absolute inset-0 z-10 flex items-center justify-center ${isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"}`}
             onClick={(e) => {
               e.stopPropagation(); // Prevent click from reaching the root and closing the lightbox
-              setIsZoomed(!isZoomed);
+              setZoomedPhotoId(isZoomed ? null : activePhoto.id);
             }}
           >
             <AnimatePresence mode="wait">
@@ -223,7 +224,10 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             <div className="flex items-center gap-3 flex-shrink-0">
               <button
                 type="button"
-                onClick={onPrev}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onPrev();
+                }}
                 className="group flex h-11 w-11 items-center justify-center rounded-full border border-white/14 text-white/60 transition hover:border-white/50 hover:text-white"
                 aria-label="Image précédente"
               >
@@ -234,7 +238,10 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
               </button>
               <button
                 type="button"
-                onClick={onNext}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onNext();
+                }}
                 className="group flex h-11 w-11 items-center justify-center rounded-full border border-white/14 text-white/60 transition hover:border-white/50 hover:text-white"
                 aria-label="Image suivante"
               >
@@ -246,6 +253,44 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext 
             </div>
           </motion.div>
           )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {!isZoomed && photos.length > 1 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 18 }}
+                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl gap-2 overflow-x-auto px-6 md:flex"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {photos.map((photo, index) => (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    onClick={() => onSelect?.(index)}
+                    className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition ${
+                      index === activeIndex
+                        ? "border-white/80 opacity-100"
+                        : "border-white/10 opacity-45 hover:border-white/45 hover:opacity-90"
+                    }`}
+                    aria-label={`Afficher ${photo.title}`}
+                  >
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt || photo.title}
+                      fill
+                      sizes="80px"
+                      quality={75}
+                      unoptimized
+                      className="object-cover"
+                      style={{ objectPosition: photo.objectPosition || "center center" }}
+                    />
+                  </button>
+                ))}
+              </motion.div>
+            ) : null}
           </AnimatePresence>
         </motion.div>
       )}

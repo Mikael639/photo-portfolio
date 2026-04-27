@@ -3,10 +3,11 @@
 import { useActionState, useEffect, useRef } from "react";
 import { submitContactForm } from "../app/contact/actions";
 import { initialContactFormState } from "../app/contact/constants";
+import { defaultPortfolioCategory, portfolioCategories } from "../lib/categories";
 import SubmitButton from "./SubmitButton";
 import CustomSelect from "./CustomSelect";
 
-const serviceOptions = ["Fashion Week", "Mariage", "Shooting photo"];
+const serviceOptions = portfolioCategories;
 const preferredContactOptions = ["Email", "Telephone", "Instagram / WhatsApp"];
 const budgetOptions = ["A definir", "Moins de 500 EUR", "500 - 1000 EUR", "1000 - 2000 EUR", "Plus de 2000 EUR"];
 
@@ -93,7 +94,7 @@ export default function ContactForm() {
         name="serviceType"
         label="Type de prestation"
         options={serviceOptions}
-        defaultValue="Fashion Week"
+        defaultValue={defaultPortfolioCategory}
         error={errors.serviceType}
       />
 
