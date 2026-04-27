@@ -258,13 +258,18 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           <AnimatePresence>
             {!isZoomed && photos.length > 1 ? (
               <motion.div
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 18 }}
-                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl gap-2 overflow-x-auto px-6 md:flex"
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl md:block"
                 onClick={(event) => event.stopPropagation()}
               >
+                {/* Masques de dégradé pour le scroll horizontal */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-black to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-black to-transparent" />
+                
+                <div className="no-scrollbar flex gap-3 overflow-x-auto px-12 py-2">
                 {photos.map((photo, index) => (
                   <button
                     key={photo.id}
@@ -289,6 +294,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                     />
                   </button>
                 ))}
+                </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
