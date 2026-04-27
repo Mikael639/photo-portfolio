@@ -3,7 +3,7 @@
 import { startTransition, useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -41,13 +41,27 @@ function FilterButton({ category, count, isActive, onClick }) {
         type="button"
         aria-pressed={isActive}
         onClick={onClick}
-        className={`rounded-full border px-5 py-2.5 text-sm uppercase tracking-[0.16em] transition-all duration-300 md:px-6 ${
+        className={`relative overflow-hidden rounded-full border px-5 py-2.5 text-sm uppercase tracking-[0.16em] transition-all duration-300 md:px-6 ${
           isActive
-            ? "border-ink bg-ink text-paper shadow-[0_12px_40px_rgba(12,10,8,0.18)]"
+            ? "border-ink text-paper shadow-[0_12px_40px_rgba(12,10,8,0.18)]"
             : "border-line/20 bg-white/40 text-ink/60 hover:border-ink/40 hover:text-ink hover:bg-white"
         }`}
       >
-        {category} {count !== undefined && <span className="opacity-60 ml-1 text-xs">({count})</span>}
+        {isActive ? (
+          <motion.span
+            layoutId="gallery-active-filter"
+            className="absolute inset-0 -z-10 rounded-full bg-ink"
+            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+          />
+        ) : null}
+        <span className="relative z-10">
+          {category}{" "}
+          {count !== undefined && (
+            <motion.span key={`${category}-${count}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 0.6, y: 0 }} className="ml-1 text-xs">
+              ({count})
+            </motion.span>
+          )}
+        </span>
       </button>
     </MagneticElement>
   );
@@ -89,7 +103,10 @@ function GalleryCard({
       onMouseLeave={handleMouseLeave}
       data-cursor="gallery-item"
       className={`group relative block w-full overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink text-left shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
-      {...getRevealProps(reduceMotion, delay, 0.22, "mask")}
+      initial={reduceMotion ? false : { opacity: 0, y: 42, clipPath: "inset(12% 0 12% 0 round 2.2rem)" }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, clipPath: "inset(0% 0 0% 0 round 2.2rem)" }}
+      viewport={{ once: true, amount: 0.22 }}
+      transition={reduceMotion ? undefined : { duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
       style={{
         perspective: 1200,
         transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
@@ -108,8 +125,10 @@ function GalleryCard({
         />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.18)_45%,transparent_62%)] opacity-0 transition duration-700 group-hover:translate-x-full group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-3 rounded-[1.8rem] border border-white/0 transition-colors duration-500 group-hover:border-white/18" />
       <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
-        <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
+        <span className="w-fit translate-y-0 rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md transition-transform duration-500 group-hover:-translate-y-1">
           {photo.category}
         </span>
         <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
@@ -122,7 +141,7 @@ function GalleryCard({
   );
 }
 
-export default function GalleryExperience({ photos, activeCategory, categories }) {
+export default function GalleryExperience({ photos, allPhotos = photos, activeCategory, categories }) {
   const reduceMotion = useReducedMotion();
   const pathname = usePathname();
   const router = useRouter();
@@ -156,14 +175,14 @@ export default function GalleryExperience({ photos, activeCategory, categories }
   }, { scope: containerRef, dependencies: [activeFilter, photos] });
 
   const categoryCounts = useMemo(() => {
-    const counts = { Tout: photos.length };
-    for (const photo of photos) {
+    const counts = { Tout: allPhotos.length };
+    for (const photo of allPhotos) {
       if (photo.category) {
         counts[photo.category] = (counts[photo.category] || 0) + 1;
       }
     }
     return counts;
-  }, [photos]);
+  }, [allPhotos]);
 
   const leadPhoto = photos[0] || null;
   const secondaryPhotos = useMemo(
@@ -211,8 +230,16 @@ export default function GalleryExperience({ photos, activeCategory, categories }
         </div>
       ) : null}
 
+      <AnimatePresence mode="wait">
       {leadPhoto ? (
-        <>
+        <motion.div
+          key={activeFilter}
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0, y: -18 }}
+          transition={reduceMotion ? undefined : { duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          className="space-y-12 md:space-y-16"
+        >
           <section className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr] xl:items-stretch">
             <GalleryCard
               photo={leadPhoto}
@@ -262,8 +289,9 @@ export default function GalleryExperience({ photos, activeCategory, categories }
               ))}
             </div>
           </section>
-        </>
+        </motion.div>
       ) : null}
+      </AnimatePresence>
 
       <Lightbox
         photos={photos}
@@ -277,6 +305,7 @@ export default function GalleryExperience({ photos, activeCategory, categories }
           if (activeIndex === null || photos.length === 0) return;
           setActiveIndex(activeIndex === photos.length - 1 ? 0 : activeIndex + 1);
         }}
+        onSelect={(index) => setActiveIndex(index)}
       />
 
       {/* Bouton retour en haut */}

@@ -75,18 +75,6 @@ export default function ContactExperience() {
                 Aller au formulaire
               </a>
             </MagneticElement>
-            {instagram ? (
-              <MagneticElement strength={0.15}>
-                <a
-                  href={instagram.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block rounded-full border border-line/20 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
-                >
-                  {instagram.handle}
-                </a>
-              </MagneticElement>
-            ) : null}
           </div>
         </motion.div>
       </section>
@@ -141,6 +129,25 @@ export default function ContactExperience() {
                </p>
             </details>
           </div>
+        </motion.div>
+        <motion.div
+          className="rounded-[2.2rem] border border-line/12 bg-white/40 p-8 text-center backdrop-blur-sm"
+          {...getRevealProps(reduceMotion, 0.22)}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40 mb-4">Besoin d&apos;une autre voie ?</p>
+          <h3 className="font-serif text-2xl tracking-tight text-ink mb-6">Suivre le travail au quotidien.</h3>
+          {instagram ? (
+            <MagneticElement strength={0.15}>
+              <a
+                href={instagram.href}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 rounded-full border border-line/20 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
+              >
+                {instagram.handle}
+              </a>
+            </MagneticElement>
+          ) : null}
         </motion.div>
       </section>
     </div>

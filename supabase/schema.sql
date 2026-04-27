@@ -10,6 +10,7 @@ create table if not exists public.photos (
   roles jsonb not null default '[]'::jsonb,
   is_published boolean not null default true,
   is_pinned boolean not null default false,
+  sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -17,8 +18,37 @@ create index if not exists photos_created_at_idx on public.photos (created_at de
 create index if not exists photos_category_idx on public.photos (category);
 create index if not exists photos_published_idx on public.photos (is_published);
 create index if not exists photos_pinned_idx on public.photos (is_pinned);
+create index if not exists photos_sort_order_idx on public.photos (sort_order asc);
 
 alter table public.photos enable row level security;
+
+create table if not exists public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  company text,
+  phone text,
+  service_type text not null,
+  preferred_contact text not null default 'Email',
+  budget text not null default 'A definir',
+  event_date date,
+  location text,
+  reference_link text,
+  project text not null,
+  status text not null default 'new',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists contact_messages_created_at_idx on public.contact_messages (created_at desc);
+create index if not exists contact_messages_status_idx on public.contact_messages (status);
+
+alter table public.contact_messages enable row level security;
+
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
 
 drop policy if exists "Public can read published photos" on public.photos;
 create policy "Public can read published photos"

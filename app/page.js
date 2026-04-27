@@ -1,23 +1,26 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import HomePageExperience from "../components/home/HomePageExperience";
+import { defaultPortfolioCategory, portfolioCategories } from "../lib/categories";
 import { getPhotoObjectPosition } from "../lib/photoPresentation";
 import { getPublicPhotos } from "../lib/photoRepository";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
+import { getHomeCopy } from "../lib/siteSettings";
 
 export const metadata = {
   title: "Accueil",
   description:
-    "Portfolio photo editorial de Jerrypicsart pour fashion week, mariages et shootings photo.",
+    "Portfolio photo editorial de Jerrypicsart pour events, Fashion Week, celebrities, studio et fashion wedding.",
   alternates: {
     canonical: "/",
   },
 };
 
 const fallbackByCategory = {
-  "Fashion Week": "/images/mariage/5.jpg",
-  Mariage: "/images/mariage/4.jpg",
-  "Shooting photo": "/images/mariage/5.jpg",
+  Events: "/images/mariage/5.jpg",
+  "Fashion Week & Celebrities": "/images/mariage/5.jpg",
+  Studio: "/images/mariage/5.jpg",
+  "Fashion Wedding": "/images/mariage/4.jpg",
   Portfolio: "/images/mariage/5.jpg",
 };
 
@@ -95,7 +98,7 @@ function buildCategoryPriority(pool, preferredCategories = []) {
   const availableCategories = [];
 
   for (const photo of pool) {
-    const category = photo?.category || "Shooting photo";
+    const category = photo?.category || defaultPortfolioCategory;
     if (!availableCategories.includes(category)) {
       availableCategories.push(category);
     }
@@ -130,7 +133,7 @@ function collectMixedPhotos(
   for (const photo of pool) {
     if (!photo || seen.has(photo.id)) continue;
 
-    const category = photo.category || "Shooting photo";
+    const category = photo.category || defaultPortfolioCategory;
     if (!grouped.has(category)) {
       grouped.set(category, []);
     }
@@ -187,8 +190,7 @@ export default async function HomePage() {
     sourcePhotos = [];
   }
 
-  const curatedPhotos = sourcePhotos.filter((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise");
-  const photos = (curatedPhotos.length ? curatedPhotos : [defaultFallbackPhoto]).map(normalizePhoto);
+  const photos = (sourcePhotos.length ? sourcePhotos : [defaultFallbackPhoto]).map(normalizePhoto);
 
   const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || photos[0] || defaultFallbackPhoto);
   const featuredPool = photos.filter((photo) => photo.roles?.includes("featured"));
@@ -216,20 +218,22 @@ export default async function HomePage() {
   const servicesBackground = normalizePhoto(
     getFirstPhotoByRole(photos, "servicesBackground") || supportingPhotos[0] || heroPhoto
   );
-  const identityPhoto = collectMixedPhotos(photos, 1, {
-    excludeIds: [heroPhoto.id, servicesBackground.id, ...featuredPhotos.map((photo) => photo.id)],
-    preferredCategories: alternateCategories.length
-      ? [heroPhoto.category, ...alternateCategories]
-      : [heroPhoto.category],
-    fallbackPhoto: supportingPhotos[0] || heroPhoto,
-  })[0];
+  const identityPhoto =
+    normalizePhoto(getFirstPhotoByRole(photos, "approachImage")) ||
+    collectMixedPhotos(photos, 1, {
+      excludeIds: [heroPhoto.id, servicesBackground.id, ...featuredPhotos.map((photo) => photo.id)],
+      preferredCategories: alternateCategories.length
+        ? [heroPhoto.category, ...alternateCategories]
+        : [heroPhoto.category],
+      fallbackPhoto: supportingPhotos[0] || heroPhoto,
+    })[0];
   const closingPhoto = collectPhotos(
     photos,
     1,
     [heroPhoto.id, servicesBackground.id, identityPhoto.id, ...featuredPhotos.map((photo) => photo.id)],
     identityPhoto || heroPhoto
   )[0];
-  const categories = Array.from(new Set(photos.map((photo) => photo.category).filter(Boolean))).slice(0, 4);
+  const categories = portfolioCategories.filter((category) => photos.some((photo) => photo.category === category));
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -270,6 +274,7 @@ export default async function HomePage() {
         closingPhoto={closingPhoto}
         categories={categories}
         cinematicPool={photos}
+        siteText={await getHomeCopy()}
       />
     </>
   );

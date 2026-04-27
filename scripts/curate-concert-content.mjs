@@ -83,7 +83,7 @@ function formatRawConcertTitle(rawTitle) {
 async function fetchConcertPhotos() {
   const url = new URL("/rest/v1/photos", SUPABASE_URL);
   url.searchParams.set("select", "id,title,alt,roles,is_pinned,category");
-  url.searchParams.set("category", "eq.Concert");
+  url.searchParams.set("category", "eq.Events");
   url.searchParams.append("order", "created_at.desc");
 
   const response = await fetch(url, { headers });

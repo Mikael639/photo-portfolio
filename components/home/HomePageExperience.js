@@ -14,6 +14,18 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
+const HERO_SLIDE_DURATION_MS = 8400;
+
+function getHeroPriority(photo) {
+  const roles = new Set(photo?.roles || []);
+  return (
+    (roles.has("hero") ? 8 : 0) +
+    (roles.has("featured") ? 4 : 0) +
+    (roles.has("servicesBackground") ? 1 : 0) +
+    (photo?.isPinned ? 1 : 0)
+  );
+}
+
 export default function HomePageExperience({
   heroPhoto,
   supportingPhotos,
@@ -23,20 +35,30 @@ export default function HomePageExperience({
   closingPhoto,
   categories,
   cinematicPool = [],
+  siteText = {},
 }) {
   const reduceMotion = useReducedMotion();
   const galleryCategories = categories.filter(Boolean).slice(0, 4);
   const marriageFeature =
-    featuredPhotos.find((photo) => photo?.category === "Mariage") ||
-    supportingPhotos.find((photo) => photo?.category === "Mariage") ||
+    featuredPhotos.find((photo) => photo?.category === "Fashion Wedding") ||
+    supportingPhotos.find((photo) => photo?.category === "Fashion Wedding") ||
     featuredPhotos[0];
   const cinematicPhotos = useMemo(() => {
     const seen = new Set();
+    const selectedPool = cinematicPool.filter((photo) =>
+      photo?.roles?.some((role) => ["hero", "featured", "servicesBackground"].includes(role))
+    );
+    const prioritizedPool = [...selectedPool].sort((left, right) => {
+      const priorityDiff = getHeroPriority(right) - getHeroPriority(left);
+      if (priorityDiff !== 0) return priorityDiff;
+      return (left.sortOrder || 0) - (right.sortOrder || 0);
+    });
     const orderedPhotos = [
+      ...prioritizedPool,
       heroPhoto,
-      ...cinematicPool,
       ...supportingPhotos,
       ...featuredPhotos,
+      ...(selectedPool.length < 4 ? cinematicPool : []),
     ];
 
     return orderedPhotos
@@ -47,29 +69,20 @@ export default function HomePageExperience({
       })
       .slice(0, 18);
   }, [cinematicPool, featuredPhotos, heroPhoto, supportingPhotos]);
-  const [shuffledPhotos, setShuffledPhotos] = useState(cinematicPhotos);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+  const shuffledPhotos = cinematicPhotos;
   const activeHeroPhoto = shuffledPhotos[activeHeroIndex] || heroPhoto;
   const containerRef = useRef(null);
+  const visibleHeroDots = shuffledPhotos.slice(0, 5);
 
-  useEffect(() => {
-    const shuffle = (array) => {
-      const newArray = [...array];
-      for (let i = newArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-      }
-      return newArray;
-    };
+  function showPreviousHeroPhoto() {
+    setActiveHeroIndex((currentIndex) => (currentIndex === 0 ? shuffledPhotos.length - 1 : currentIndex - 1));
+  }
 
-    const timeout = window.setTimeout(() => {
-      const randomized = shuffle(cinematicPhotos);
-      setShuffledPhotos(randomized);
-      setActiveHeroIndex(Math.floor(Math.random() * randomized.length));
-    }, 0);
-
-    return () => window.clearTimeout(timeout);
-  }, [cinematicPhotos]);
+  function showNextHeroPhoto() {
+    setActiveHeroIndex((currentIndex) => (currentIndex + 1) % shuffledPhotos.length);
+  }
 
   useGSAP(() => {
     if (reduceMotion) return;
@@ -117,14 +130,14 @@ export default function HomePageExperience({
   }, { scope: containerRef });
 
   useEffect(() => {
-    if (reduceMotion || shuffledPhotos.length < 2) return;
+    if (reduceMotion || isHeroPaused || shuffledPhotos.length < 2) return;
 
     const interval = window.setInterval(() => {
       setActiveHeroIndex((currentIndex) => (currentIndex + 1) % shuffledPhotos.length);
-    }, 8400);
+    }, HERO_SLIDE_DURATION_MS);
 
     return () => window.clearInterval(interval);
-  }, [shuffledPhotos.length, reduceMotion]);
+  }, [isHeroPaused, shuffledPhotos.length, reduceMotion]);
 
   return (
     <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-48">
@@ -134,21 +147,27 @@ export default function HomePageExperience({
             <motion.div
               key={activeHeroPhoto.id}
               className="absolute inset-0 hero-image-container"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.1, filter: "blur(8px)" }}
-              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, filter: "blur(0px)" }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1.04, filter: "blur(0px)" }}
               exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
               transition={reduceMotion ? undefined : { duration: 2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Image
-                src={activeHeroPhoto.src}
-                alt={activeHeroPhoto.alt}
-                fill
-                priority
-                unoptimized={true}
-                sizes="100vw"
-                className="object-cover sharpen-img"
-                style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
-              />
+              <motion.div
+                className="absolute inset-0"
+                initial={reduceMotion ? false : { scale: 1 }}
+                animate={reduceMotion || isHeroPaused ? { scale: 1 } : { scale: 1.08 }}
+                transition={reduceMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
+              >
+                <Image
+                  src={activeHeroPhoto.src}
+                  alt={activeHeroPhoto.alt}
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-cover sharpen-img"
+                  style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
+                />
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -179,7 +198,7 @@ export default function HomePageExperience({
               variants={wordRevealVariant}
               className="text-[11px] font-semibold uppercase tracking-[0.4em] text-paper/60"
             >
-              Jerrypicsart portfolio éditorial
+              {siteText.eyebrow || "Jerrypicsart portfolio editorial"}
             </motion.p>
 
             <motion.div variants={wordRevealVariant} className="mt-8 flex flex-wrap gap-3 hero-content-reveal">
@@ -188,7 +207,7 @@ export default function HomePageExperience({
                   href="/gallery"
                   className="inline-block rounded-full bg-paper px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-ink transition-colors hover:bg-accent hover:text-paper shadow-2xl"
                 >
-                  Explorer l&apos;édit
+                  {siteText.primaryCta || "Explorer l'edit"}
                 </Link>
               </MagneticElement>
               <MagneticElement strength={0.15}>
@@ -196,7 +215,7 @@ export default function HomePageExperience({
                   href="/contact"
                   className="inline-block rounded-full border border-paper/30 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-paper backdrop-blur-md transition-all hover:border-paper hover:bg-paper/10"
                 >
-                  Parler d&apos;une date
+                  {siteText.secondaryCta || "Parler d'une date"}
                 </Link>
               </MagneticElement>
             </motion.div>
@@ -224,6 +243,44 @@ export default function HomePageExperience({
                 {activeHeroPhoto.category} / {activeHeroPhoto.title}
               </span>
             </motion.div>
+
+            {shuffledPhotos.length > 1 ? (
+              <motion.div variants={wordRevealVariant} className="mt-5 flex max-w-xl items-center gap-3">
+                <button
+                  type="button"
+                  onClick={showPreviousHeroPhoto}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  aria-label="Photo precedente"
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsHeroPaused((current) => !current)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  aria-label={isHeroPaused ? "Relancer le diaporama" : "Mettre le diaporama en pause"}
+                >
+                  <span aria-hidden="true">{isHeroPaused ? "▶" : "Ⅱ"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={showNextHeroPhoto}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  aria-label="Photo suivante"
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+                <div className="relative h-px flex-1 overflow-hidden bg-paper/14">
+                  <motion.div
+                    key={`${activeHeroPhoto.id}-${isHeroPaused ? "paused" : "playing"}`}
+                    className="absolute inset-y-0 left-0 bg-paper/70"
+                    initial={{ width: "0%" }}
+                    animate={{ width: isHeroPaused || reduceMotion ? "0%" : "100%" }}
+                    transition={reduceMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
+                  />
+                </div>
+              </motion.div>
+            ) : null}
           </motion.div>
 
           <motion.div
@@ -260,12 +317,15 @@ export default function HomePageExperience({
                 <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Direction</p>
                 {shuffledPhotos.length > 1 ? (
                   <div className="flex items-center gap-2">
-                    {shuffledPhotos.slice(0, 5).map((photo, index) => (
+                    {visibleHeroDots.map((photo, index) => (
                       <button
                         key={photo.id}
                         type="button"
                         aria-label={`Afficher ${photo.title}`}
-                        onClick={() => setActiveHeroIndex(index)}
+                        onClick={() => {
+                          setActiveHeroIndex(index);
+                          setIsHeroPaused(true);
+                        }}
                         className={`h-1.5 rounded-full transition-all duration-500 ${activeHeroIndex === index ? "w-6 bg-paper/90" : "w-1.5 bg-paper/20 hover:bg-paper/40"
                           }`}
                       />
@@ -273,10 +333,12 @@ export default function HomePageExperience({
                   </div>
                 ) : null}
               </div>
-              <p className="mt-4 font-serif text-2xl leading-tight text-paper">Luxe discret, intensité juste.</p>
+              <p className="mt-4 font-serif text-2xl leading-tight text-paper">
+                {siteText.directionTitle || "Luxe discret, intensite juste."}
+              </p>
               <p className="mt-4 text-sm leading-relaxed text-paper/70">
-                Des silhouettes fortes, des réceptions habitées et une retouche qui reste au service des personnes,
-                des lieux et du rythme.
+                {siteText.directionText ||
+                  "Des silhouettes fortes, des receptions habitees et une retouche qui reste au service des personnes, des lieux et du rythme."}
               </p>
             </div>
           </motion.div>
@@ -299,17 +361,20 @@ export default function HomePageExperience({
               delay={0.12}
               className="self-start rounded-[2.5rem] border border-line/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.56))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-md md:p-10 lg:p-12"
             >
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Mariage</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">
+                {siteText.weddingEyebrow || "Fashion Wedding"}
+              </p>
               <h3 className="mt-5 max-w-lg font-serif text-3xl leading-[1.02] tracking-[-0.04em] md:text-5xl">
-                Une élégance tenue, des images pensées pour durer.
+                {siteText.weddingTitle || "Une elegance tenue, des images pensees pour durer."}
               </h3>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-                Entre allure, émotion et présence, chaque image cherche un équilibre sobre, fort et intemporel.
+                {siteText.weddingText ||
+                  "Entre allure, emotion et presence, chaque image cherche un equilibre sobre, fort et intemporel."}
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <MagneticElement strength={0.15}>
                   <Link
-                    href="/gallery?category=Mariage"
+                    href="/gallery?category=Fashion%20Wedding"
                     className="inline-block rounded-full border border-line/20 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-colors hover:border-ink hover:bg-white"
                   >
                     Voir l&apos;édit complet
@@ -410,8 +475,8 @@ export default function HomePageExperience({
                 Là où l&apos;image doit être à la fois belle, utile et mémorable.
               </h2>
               <p className="max-w-md text-base leading-relaxed text-paper/78 md:text-lg">
-                De la Fashion Week aux réceptions privées, la même exigence visuelle s&apos;applique&nbsp;: clarté et
-                sens du moment.
+                Des events a la Fashion Week, des celebrities au studio, la meme exigence visuelle s&apos;applique&nbsp;:
+                clarte et sens du moment.
               </p>
             </MotionBlock>
 

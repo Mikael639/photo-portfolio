@@ -4,7 +4,7 @@ export const photos = [
     src: "/images/mariage/4.jpg",
     alt: "Couple de maries pendant la ceremonie",
     title: "Mariage Ceremony",
-    category: "Mariage",
+    category: "Fashion Wedding",
     roles: ["featured"],
   },
   {
@@ -12,7 +12,7 @@ export const photos = [
     src: "/images/mariage/5.jpg",
     alt: "Detail de mariage et emotion",
     title: "Wedding Details",
-    category: "Mariage",
+    category: "Fashion Wedding",
     roles: [],
   },
   {
@@ -20,7 +20,7 @@ export const photos = [
     src: "/images/shot-01.svg",
     alt: "Look fashion week",
     title: "Fashion Intro",
-    category: "Fashion Week",
+    category: "Fashion Week & Celebrities",
     roles: [],
   },
   {
@@ -28,7 +28,7 @@ export const photos = [
     src: "/images/mariage/8.jpg",
     alt: "Detail de mariage et emotion",
     title: "Wedding Details",
-    category: "Mariage",
+    category: "Fashion Wedding",
     roles: [],
   },
   {
@@ -36,7 +36,7 @@ export const photos = [
     src: "/images/mariage/9.jpg",
     alt: "Detail de mariage et emotion",
     title: "Wedding Details",
-    category: "Mariage",
+    category: "Fashion Wedding",
     roles: [],
   },
   {
@@ -44,7 +44,7 @@ export const photos = [
     src: "/images/shot-04.svg",
     alt: "Silhouette fashion week en exterieur",
     title: "Street Style",
-    category: "Fashion Week",
+    category: "Fashion Week & Celebrities",
     roles: [],
   },
   {
@@ -52,7 +52,7 @@ export const photos = [
     src: "/images/mariage/8.jpg",
     alt: "Look fashion week 3",
     title: "Backstage Mood",
-    category: "Fashion Week",
+    category: "Fashion Week & Celebrities",
     roles: [],
   },
   {
@@ -60,7 +60,7 @@ export const photos = [
     src: "/images/shot-05.svg",
     alt: "Detail fashion week",
     title: "Runway Detail",
-    category: "Fashion Week",
+    category: "Fashion Week & Celebrities",
     roles: [],
   },
 ];

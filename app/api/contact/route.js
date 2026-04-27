@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { addContactMessage, listContactMessages } from "../../../lib/contactStore";
+import { createContactMessage, listContactMessages } from "../../../lib/contactStore";
 import { sendContactEmails } from "../../../lib/contactEmail";
 import { validateContactInput } from "../../../lib/contactValidation";
 import { consumeRateLimit } from "../../../lib/rateLimit";
 
 export const runtime = "nodejs";
+
+const CONTACT_SEND_ERROR_MESSAGE =
+  "Message enregistré, mais l'envoi email est temporairement indisponible. Nous traiterons votre demande rapidement.";
 
 function getClientIp(request) {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -24,7 +27,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Trop de tentatives. Reessaye dans quelques minutes.",
+        message: "Trop de tentatives. Réessaye dans quelques minutes.",
       },
       {
         status: 429,
@@ -53,38 +56,38 @@ export async function POST(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Validation echouee.",
+        message: "Validation échouée.",
         errors: validation.errors,
       },
       { status: 422 }
     );
   }
 
-  const created = addContactMessage(validation.sanitized);
+  const created = await createContactMessage(validation.sanitized);
 
   let emailResult;
   try {
     emailResult = await sendContactEmails(created);
   } catch (error) {
+    console.error("Contact API email delivery failed", error);
     return NextResponse.json(
       {
         ok: false,
-        message: `Message enregistre mais email principal non envoye: ${error.message || "erreur inconnue"}`,
+        message: CONTACT_SEND_ERROR_MESSAGE,
       },
       { status: 502 }
     );
   }
 
   const responseMessage = emailResult?.autoReplySent
-    ? "Message envoye."
-    : "Message envoye. Confirmation email au client non disponible pour le moment.";
+    ? "Message envoyé."
+    : "Message envoyé. Confirmation email au client non disponible pour le moment.";
 
   return NextResponse.json(
     {
       ok: true,
       message: responseMessage,
-      warning: emailResult?.autoReplySent ? null : emailResult?.autoReplyError || null,
-      data: created,
+      warning: emailResult?.autoReplySent ? null : "AUTO_REPLY_UNAVAILABLE",
     },
     { status: 201 }
   );
@@ -104,9 +107,11 @@ export async function GET(request) {
     );
   }
 
+  const messages = await listContactMessages();
+
   return NextResponse.json({
     ok: true,
-    total: listContactMessages().length,
-    data: listContactMessages(),
+    total: messages.length,
+    data: messages,
   });
 }

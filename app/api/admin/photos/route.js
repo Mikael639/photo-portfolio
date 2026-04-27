@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from "../../../../lib/adminAuth";
+import { defaultPortfolioCategory } from "../../../../lib/categories";
 import {
   createAdminPhotos,
   deleteAdminPhoto,
@@ -140,10 +141,11 @@ export async function POST(request) {
     files,
     title: toStringValue(formData.get("title")),
     alt: toStringValue(formData.get("alt")),
-    category: toStringValue(formData.get("category"), "Shooting photo"),
+    category: toStringValue(formData.get("category"), defaultPortfolioCategory),
     roles: toStringValue(formData.get("roles"), "[]"),
     isPublished: toBooleanValue(formData.get("isPublished"), true),
     isPinned: toBooleanValue(formData.get("isPinned"), false),
+    sortOrder: toStringValue(formData.get("sortOrder"), "0"),
   };
 
   try {

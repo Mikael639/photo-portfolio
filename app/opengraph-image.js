@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
+import { siteConfig } from "../lib/siteConfig";
 import { getPublicPhotos } from "../lib/photoRepository";
 
 export const alt = `${siteConfig.name} portfolio photo`;
@@ -13,9 +13,9 @@ export default async function OpengraphImage() {
   let bgImg = null;
   try {
     const photos = await getPublicPhotos({ limit: 12 });
-    const heroPhoto = photos.find((photo) => photo?.category !== "Concert" && photo?.category !== "Eglise") || photos[0];
+    const heroPhoto = photos.find((photo) => photo?.src?.startsWith("http"));
     if (heroPhoto) {
-      bgImg = heroPhoto.src.startsWith('http') ? heroPhoto.src : toAbsoluteUrl(heroPhoto.src);
+      bgImg = heroPhoto.src;
     }
   } catch {}
 

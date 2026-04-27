@@ -113,7 +113,7 @@ async function fetchJson(response) {
 async function getExistingConcertTitles() {
   const url = new URL(buildRestUrl("/rest/v1/photos"));
   url.searchParams.set("select", "title,category");
-  url.searchParams.set("category", "eq.Concert");
+  url.searchParams.set("category", "eq.Events");
 
   const rows = await fetchJson(
     await fetch(url, {
@@ -151,7 +151,7 @@ async function createPhotoRecord({ title, alt, publicUrl, storagePath }) {
   const payload = {
     title,
     alt,
-    category: "Concert",
+    category: "Events",
     image_url: publicUrl,
     storage_path: storagePath,
     roles: [],
