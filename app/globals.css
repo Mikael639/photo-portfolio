@@ -83,3 +83,12 @@ button {
 .noise-under-text > * {
   z-index: 10;
 }
+
+/* Utilitaires pour masquer les scrollbars tout en gardant le scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

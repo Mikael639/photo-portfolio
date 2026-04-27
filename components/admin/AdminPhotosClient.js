@@ -295,7 +295,7 @@ export default function AdminPhotosClient({
       <AdminDashboard photos={photos} messages={messages} categories={categories} onSelectTab={setActiveTab} />
       <AdminFeedback errorMessage={errorMessage} statusMessage={statusMessage} />
 
-      <nav className="flex gap-2 overflow-x-auto rounded-2xl border border-line/20 bg-white/55 p-2">
+      <nav className="no-scrollbar flex gap-2 overflow-x-auto rounded-2xl border border-line/20 bg-white/55 p-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
