@@ -117,26 +117,18 @@ function GalleryCard({
           src={photo.src}
           alt={photo.alt}
           fill
-          priority={priority}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           sizes={sizes}
           className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
           style={{ objectPosition: photo.objectPosition || "center center" }}
           quality={85}
+          unoptimized
         />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.18)_45%,transparent_62%)] opacity-0 transition duration-700 group-hover:translate-x-full group-hover:opacity-100" />
       <div className="pointer-events-none absolute inset-3 rounded-[1.8rem] border border-white/0 transition-colors duration-500 group-hover:border-white/18" />
-      <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
-        <span className="w-fit translate-y-0 rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md transition-transform duration-500 group-hover:-translate-y-1">
-          {photo.category}
-        </span>
-        <div className="translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-          <p className="max-w-[20rem] font-serif text-[clamp(1.8rem,3vw,3rem)] leading-[0.92] tracking-[-0.04em] text-paper">
-            {photo.title}
-          </p>
-        </div>
-      </div>
     </motion.button>
   );
 }

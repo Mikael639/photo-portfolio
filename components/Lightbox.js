@@ -193,30 +193,12 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 className="absolute bottom-0 inset-x-0 z-20 flex items-center justify-between gap-6 px-6 py-5 md:px-10"
               >
 
-            {/* Left — category + title (editorial) */}
             <div className="flex items-center gap-4 min-w-0">
               <div
                 className="hidden md:flex items-center justify-center rounded-full border border-white/10 text-white/30 font-serif"
                 style={{ width: 48, height: 48, fontSize: "1.1rem", flexShrink: 0 }}
               >
                 {String(currentNum).padStart(2, "0")}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 truncate">
-                  {activePhoto.category}
-                </p>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={activePhoto.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.25 }}
-                    className="mt-1 font-serif text-lg leading-tight text-white truncate max-w-[18rem] md:max-w-[28rem]"
-                  >
-                    {activePhoto.title}
-                  </motion.p>
-                </AnimatePresence>
               </div>
             </div>
 
