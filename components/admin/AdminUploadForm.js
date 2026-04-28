@@ -31,8 +31,7 @@ export default function AdminUploadForm({
       <div>
         <h2 className="font-serif text-3xl">Ajouter des photos</h2>
         <p className="mt-2 text-sm text-ink/65">
-          Choisis le theme, depose les images, puis publie. Les champs titre et description peuvent rester vides en
-          envoi multiple.
+          Choisis le theme, depose les images, puis publie. Les photos sont allegees automatiquement avant l&apos;envoi.
         </p>
       </div>
 

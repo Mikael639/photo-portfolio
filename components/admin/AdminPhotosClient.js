@@ -22,6 +22,7 @@ import AdminThemeGuide from "./AdminThemeGuide";
 import AdminUploadForm from "./AdminUploadForm";
 import { categories, categoryFilters, initialUploadForm, maxBulkUploadCount, roleOptions } from "./constants";
 import { defaultHomeCopy } from "../../lib/siteSettings";
+import { compressImageFiles, formatFileSize } from "../../lib/imageCompression";
 
 const tabs = [
   { id: "photos", label: "Photos" },
@@ -137,10 +138,30 @@ export default function AdminPhotosClient({
 
     setIsUploading(true);
     setErrorMessage("");
-    setStatusMessage("");
+    setStatusMessage("Preparation et allegement des images...");
+
+    let uploadFiles = uploadForm.files;
+    try {
+      const compression = await compressImageFiles(uploadForm.files);
+      uploadFiles = compression.files;
+
+      if (compression.compressedCount > 0) {
+        setStatusMessage(
+          `${compression.compressedCount} image(s) allegee(s) : ${formatFileSize(compression.originalSize)} -> ${formatFileSize(
+            compression.compressedSize
+          )}. Upload en cours...`
+        );
+      } else {
+        setStatusMessage("Images deja legeres. Upload en cours...");
+      }
+    } catch (error) {
+      setIsUploading(false);
+      setErrorMessage(error?.message || "Impossible d'alleger les images avant l'upload.");
+      return;
+    }
 
     const formData = new FormData();
-    uploadForm.files.forEach((file) => {
+    uploadFiles.forEach((file) => {
       formData.append("files", file);
     });
     formData.append("title", uploadForm.title);
