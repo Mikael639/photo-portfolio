@@ -8,8 +8,8 @@ import SubmitButton from "./SubmitButton";
 import CustomSelect from "./CustomSelect";
 
 const serviceOptions = portfolioCategories;
-const preferredContactOptions = ["Email", "Telephone", "Instagram / WhatsApp"];
-const budgetOptions = ["A definir", "Moins de 500 EUR", "500 - 1000 EUR", "1000 - 2000 EUR", "Plus de 2000 EUR"];
+const preferredContactOptions = ["Email", "Téléphone", "Instagram / WhatsApp"];
+const budgetOptions = ["À définir", "Moins de 500 EUR", "500 - 1000 EUR", "1000 - 2000 EUR", "Plus de 2000 EUR"];
 
 export default function ContactForm() {
   const formRef = useRef(null);
@@ -35,7 +35,7 @@ export default function ContactForm() {
         <p className="text-[11px] uppercase tracking-[0.24em] text-ink/48">Brief express</p>
         <h2 className="font-serif text-3xl leading-tight md:text-4xl">Parle-moi du contexte et du rendu attendu.</h2>
         <p className="max-w-2xl text-sm leading-relaxed text-ink/65 md:text-base">
-          Date, lieu, type de prestation, ambiance recherchee et contraintes utiles suffisent pour lancer un echange
+          Date, lieu, type de prestation, ambiance recherchée et contraintes utiles suffisent pour lancer un échange
           clair.
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function ContactForm() {
       </label>
 
       <label className="space-y-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Telephone</span>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Téléphone</span>
         <input
           name="phone"
           autoComplete="tel"
@@ -100,7 +100,7 @@ export default function ContactForm() {
 
       <CustomSelect
         name="preferredContact"
-        label="Canal prefere"
+        label="Canal préféré"
         options={preferredContactOptions}
         defaultValue="Email"
         error={errors.preferredContact}
@@ -110,12 +110,12 @@ export default function ContactForm() {
         name="budget"
         label="Budget indicatif"
         options={budgetOptions}
-        defaultValue="A definir"
+        defaultValue="À définir"
         error={errors.budget}
       />
 
       <label className="space-y-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Date de l&apos;evenement</span>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Date de l&apos;événement</span>
         <input
           name="eventDate"
           type="date"
@@ -138,7 +138,7 @@ export default function ContactForm() {
       </label>
 
       <label className="space-y-2 md:col-span-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Reference ou lien utile</span>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Référence ou lien utile</span>
         <input
           name="referenceLink"
           aria-invalid={Boolean(errors.referenceLink)}
@@ -149,13 +149,13 @@ export default function ContactForm() {
       </label>
 
       <label className="space-y-2 md:col-span-2">
-        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Details du projet</span>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink/58">Détails du projet</span>
         <textarea
           name="project"
           rows={6}
           aria-invalid={Boolean(errors.project)}
           className="w-full rounded-[1.2rem] border border-line/18 bg-paper/88 px-4 py-3 outline-none transition focus:border-accent focus:bg-white"
-          placeholder="Type de projet, date, lieu, ambiance recherchee, contraintes utiles..."
+          placeholder="Type de projet, date, lieu, ambiance recherchée, contraintes utiles..."
           required
         />
         {errors.project ? <span className="text-xs text-red-700">{errors.project}</span> : null}
@@ -168,7 +168,7 @@ export default function ContactForm() {
           className="w-fit rounded-full bg-ink px-6 py-3 text-sm uppercase tracking-[0.18em] text-paper transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-70"
         />
 
-        <p className="text-sm text-ink/55">Reponse habituelle sous 24h a 48h avec un retour oriente action.</p>
+        <p className="text-sm text-ink/55">Réponse habituelle sous 24h à 48h avec un retour orienté action.</p>
 
         {message ? (
           <p

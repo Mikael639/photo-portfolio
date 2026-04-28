@@ -5,9 +5,12 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 
+const SWIPE_THRESHOLD = 50;
+
 export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext, onSelect }) {
   const [zoomedPhotoId, setZoomedPhotoId] = useState(null);
   const constraintsRef = useRef(null);
+  const touchStartRef = useRef(null);
 
   const activePhoto = activeIndex === null ? null : photos[activeIndex];
   const isZoomed = Boolean(activePhoto && zoomedPhotoId === activePhoto.id);
@@ -41,6 +44,23 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, handleClose, onPrev, onNext]);
 
+  // Handlers swipe tactile
+  const handleTouchStart = useCallback((e) => {
+    if (isZoomed || e.touches.length > 1) return;
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, [isZoomed]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (isZoomed || !touchStartRef.current || e.changedTouches.length > 1) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    // Ne naviguer que si le geste est principalement horizontal
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) onNext();
+    else onPrev();
+  }, [isZoomed, onNext, onPrev]);
+
   if (typeof document === "undefined") return null;
 
   return createPortal(
@@ -56,6 +76,8 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           aria-label="Visionneuse d'images"
           className="fixed inset-0 z-[100] bg-black h-screen w-screen overflow-hidden focus:outline-none"
           onClick={handleClose}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           tabIndex={-1}
           autoFocus={true}
         >

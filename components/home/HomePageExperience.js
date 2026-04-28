@@ -114,8 +114,8 @@ export default function HomePageExperience({
       });
     });
 
-    const parralaxImages = gsap.utils.toArray(".parallax-img");
-    parralaxImages.forEach((img) => {
+    const parallaxImages = gsap.utils.toArray(".parallax-img");
+    parallaxImages.forEach((img) => {
       gsap.to(img, {
         yPercent: 15,
         ease: "none",

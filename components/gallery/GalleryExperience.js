@@ -151,8 +151,8 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   useGSAP(() => {
     if (reduceMotion) return;
 
-    const parralaxImages = gsap.utils.toArray(".parallax-gallery-img");
-    parralaxImages.forEach((img) => {
+    const parallaxImages = gsap.utils.toArray(".parallax-gallery-img");
+    parallaxImages.forEach((img) => {
       gsap.to(img, {
         yPercent: 18,
         ease: "none",
