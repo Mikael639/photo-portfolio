@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import {
   deleteAdminPhotoAction,
   loginAdminAction,
@@ -54,6 +54,14 @@ export default function AdminPhotosClient({
   const [publishFilter, setPublishFilter] = useState("all");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [activeTab, setActiveTab] = useState("photos");
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 520);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const filteredPhotos = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -382,6 +390,31 @@ export default function AdminPhotosClient({
       ) : null}
 
       {activeTab === "themes" ? <AdminThemeGuide categories={categories} /> : null}
+
+      <button
+        type="button"
+        aria-label="Remonter en haut de la page admin"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-line/15 bg-paper/90 text-ink shadow-[0_18px_52px_rgba(12,10,8,0.18)] backdrop-blur-xl transition duration-300 hover:bg-ink hover:text-paper md:bottom-8 md:right-8 ${
+          showScrollTop ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+        }`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5" />
+          <path d="m5 12 7-7 7 7" />
+        </svg>
+      </button>
     </div>
   );
 }
