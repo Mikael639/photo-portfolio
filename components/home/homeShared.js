@@ -124,15 +124,7 @@ export function PhotoTile({
           style={{ objectPosition: imagePosition || photo.objectPosition || "center center" }}
           quality={90}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0),rgba(12,10,8,0.85))] transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
-          <span className="w-fit rounded-full border border-white/12 bg-black/20 px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-paper/75 backdrop-blur-md">
-            {photo.category}
-          </span>
-          <div className="translate-y-0 opacity-100 transition-all duration-500 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
-            <p className="max-w-[18rem] font-serif text-2xl leading-tight text-paper md:text-3xl">{photo.title}</p>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.08),rgba(12,10,8,0.35))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </Link>
     </motion.div>
   );

@@ -234,16 +234,6 @@ export default function HomePageExperience({
               </motion.div>
             ) : null}
 
-            <motion.div
-              variants={wordRevealVariant}
-              className="mt-8 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-[0.24em] text-paper/40"
-            >
-              <span className="h-px w-16 bg-paper/20" />
-              <span>
-                {activeHeroPhoto.category} / {activeHeroPhoto.title}
-              </span>
-            </motion.div>
-
             {shuffledPhotos.length > 1 ? (
               <motion.div variants={wordRevealVariant} className="mt-5 flex max-w-xl items-center gap-3">
                 <button
@@ -304,11 +294,7 @@ export default function HomePageExperience({
                   style={{ objectPosition: photo.objectPosition || "center center" }}
                   quality={90}
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.78))]" />
-                <div className="absolute inset-x-0 bottom-0 p-6 text-paper">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-paper/50">{photo.category}</p>
-                  <p className="mt-1 font-serif text-2xl leading-tight">{photo.title}</p>
-                </div>
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.22))]" />
               </div>
             ))}
 
@@ -584,11 +570,7 @@ export default function HomePageExperience({
                 className="object-cover transition-transform duration-[3s] hover:scale-125"
                 style={{ objectPosition: closingPhoto.objectPosition || "center center" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-paper">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">{closingPhoto.category}</p>
-                <p className="mt-1 font-serif text-xl leading-tight">{closingPhoto.title}</p>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
             </MotionBlock>
           </div>
         </div>
