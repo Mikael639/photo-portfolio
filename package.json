@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "optimize:images": "node scripts/optimize-supabase-images.mjs"
+    "import:local-photos": "node scripts/import-local-photos.mjs",
+    "optimize:images": "node scripts/optimize-supabase-images.mjs",
+    "migrate:images:r2": "node scripts/migrate-supabase-images-to-r2.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

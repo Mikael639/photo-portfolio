@@ -3,7 +3,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 function roleLabel(role) {
-  if (role === "hero") return "Accueil";
+  if (role === "hero") return "Diaporama accueil";
   if (role === "featured") return "Mise en avant";
   if (role === "servicesBackground") return "Fond";
   if (role === "approachImage") return "Image approche";
@@ -15,6 +15,9 @@ export default function AdminPhotosTable({
   categories,
   deletePhoto,
   filteredPhotos,
+  heroPhotoCount,
+  maxHeroPhotoCount,
+  onHeroLimit,
   roleOptions,
   updatePhoto,
   onReorder,
@@ -24,6 +27,12 @@ export default function AdminPhotosTable({
 
   function toggleRole(photo, role) {
     const currentRoles = photo.roles || [];
+    const isAddingHero = role === "hero" && !currentRoles.includes("hero");
+    if (isAddingHero && heroPhotoCount >= maxHeroPhotoCount) {
+      onHeroLimit?.();
+      return;
+    }
+
     const nextRoles = currentRoles.includes(role)
       ? currentRoles.filter((item) => item !== role)
       : [...currentRoles, role];
@@ -49,12 +58,33 @@ export default function AdminPhotosTable({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/20 bg-white/65 p-4">
         <div>
           <h2 className="font-serif text-3xl">Phototheque</h2>
-          <p className="text-sm text-ink/60">{filteredPhotos.length} photo(s) affichee(s)</p>
+          <p className="text-sm text-ink/60">
+            {filteredPhotos.length} photo(s) affichee(s). Coche Diaporama accueil pour afficher une photo dans le
+            diaporama de la page d&apos;accueil.
+          </p>
         </div>
-        <a href="/gallery" target="_blank" className="rounded-full border border-line/25 px-4 py-2 text-sm hover:border-ink">
-          Voir la galerie
-        </a>
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className={`rounded-full border px-4 py-2 text-sm ${
+              heroPhotoCount >= maxHeroPhotoCount
+                ? "border-amber-300 bg-amber-50 text-amber-900"
+                : "border-line/20 bg-paper/75 text-ink/70"
+            }`}
+          >
+            Diaporama accueil : {heroPhotoCount}/{maxHeroPhotoCount}
+          </span>
+          <a href="/gallery" target="_blank" className="rounded-full border border-line/25 px-4 py-2 text-sm hover:border-ink">
+            Voir la galerie
+          </a>
+        </div>
       </div>
+
+      {heroPhotoCount >= maxHeroPhotoCount ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Limite atteinte : le diaporama d&apos;accueil contient deja {maxHeroPhotoCount} photos. Decoche
+          Diaporama accueil sur une photo avant d&apos;en choisir une nouvelle.
+        </div>
+      ) : null}
 
       {filteredPhotos.length === 0 ? (
         <div className="rounded-2xl border border-line/20 bg-white/55 p-8 text-center text-sm text-ink/60">
@@ -87,7 +117,6 @@ export default function AdminPhotosTable({
                     src={photo.src}
                     alt={photo.alt || photo.title}
                     fill
-                    unoptimized
                     className="object-cover"
                     sizes="(max-width: 1280px) 50vw, 33vw"
                   />
@@ -187,16 +216,32 @@ export default function AdminPhotosTable({
                       </label>
 
                       <div className="flex flex-wrap gap-2">
-                        {roleOptions.map((role) => (
-                          <label key={role} className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs">
+                        <p className="basis-full text-xs leading-relaxed text-ink/55">
+                          Pour le diaporama de la page d&apos;accueil, coche Diaporama accueil. Maximum{" "}
+                          {maxHeroPhotoCount} photos.
+                        </p>
+                        {roleOptions.map((role) => {
+                          const currentRoles = photo.roles || [];
+                          const wouldExceedHeroLimit =
+                            role === "hero" && !currentRoles.includes("hero") && heroPhotoCount >= maxHeroPhotoCount;
+
+                          return (
+                          <label
+                            key={role}
+                            className={`flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs ${
+                              wouldExceedHeroLimit ? "cursor-not-allowed opacity-45" : ""
+                            }`}
+                          >
                             <input
                               type="checkbox"
-                              checked={(photo.roles || []).includes(role)}
+                              checked={currentRoles.includes(role)}
+                              disabled={wouldExceedHeroLimit}
                               onChange={() => toggleRole(photo, role)}
                             />
                             {roleLabel(role)}
                           </label>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <div className="flex flex-wrap gap-2">

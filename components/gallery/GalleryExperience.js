@@ -15,6 +15,9 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const INITIAL_VISIBLE_PHOTOS = 18;
+const LOAD_MORE_PHOTOS = 18;
+
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
     return {
@@ -117,18 +120,49 @@ function GalleryCard({
           src={photo.src}
           alt={photo.alt}
           fill
+          priority={priority}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
           sizes={sizes}
           className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
           style={{ objectPosition: photo.objectPosition || "center center" }}
           quality={85}
-          unoptimized
         />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.18)_45%,transparent_62%)] opacity-0 transition duration-700 group-hover:translate-x-full group-hover:opacity-100" />
       <div className="pointer-events-none absolute inset-3 rounded-[1.8rem] border border-white/0 transition-colors duration-500 group-hover:border-white/18" />
+    </motion.button>
+  );
+}
+
+function FramedGalleryCard({ photo, index, onOpen, reduceMotion, priority = false }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={() => onOpen(index)}
+      data-cursor="gallery-item"
+      className="group relative block w-full overflow-hidden rounded-xl border border-line/14 bg-white p-2 text-left shadow-[0_18px_54px_rgba(12,10,8,0.07)] transition duration-500 hover:-translate-y-1 hover:border-ink/18 hover:shadow-[0_28px_76px_rgba(12,10,8,0.12)]"
+      initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.985 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.18 }}
+      transition={reduceMotion ? undefined : { duration: 0.58, delay: Math.min(index * 0.025, 0.22), ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-ink">
+        <Image
+          src={photo.src}
+          alt={photo.alt}
+          fill
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover sharpen-img transition duration-700 ease-out group-hover:scale-[1.045]"
+          style={{ objectPosition: photo.objectPosition || "center center" }}
+          quality={85}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.18))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-2 rounded-md border border-white/0 transition-colors duration-500 group-hover:border-white/24" />
+      </div>
     </motion.button>
   );
 }
@@ -139,8 +173,14 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   const router = useRouter();
   const activeFilter = activeCategory || "Tout";
   const [activeIndex, setActiveIndex] = useState(null);
+  const [visiblePhotoState, setVisiblePhotoState] = useState({
+    filter: activeFilter,
+    count: INITIAL_VISIBLE_PHOTOS,
+  });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const containerRef = useRef(null);
+  const visibleCount =
+    visiblePhotoState.filter === activeFilter ? visiblePhotoState.count : INITIAL_VISIBLE_PHOTOS;
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -164,7 +204,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
         },
       });
     });
-  }, { scope: containerRef, dependencies: [activeFilter, photos] });
+  }, { scope: containerRef, dependencies: [activeFilter, visibleCount] });
 
   const categoryCounts = useMemo(() => {
     const counts = { Tout: allPhotos.length };
@@ -176,14 +216,17 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
     return counts;
   }, [allPhotos]);
 
-  const leadPhoto = photos[0] || null;
+  const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
+  const hasMorePhotos = visiblePhotos.length < photos.length;
+  const isFilteredCollection = activeFilter !== "Tout";
+  const leadPhoto = visiblePhotos[0] || null;
   const secondaryPhotos = useMemo(
-    () => photos.slice(1, 3).map((photo, index) => ({ photo, index: index + 1 })),
-    [photos]
+    () => visiblePhotos.slice(1, 3).map((photo, index) => ({ photo, index: index + 1 })),
+    [visiblePhotos]
   );
   const galleryGridPhotos = useMemo(
-    () => photos.slice(3).map((photo, index) => ({ photo, index: index + 3 })),
-    [photos]
+    () => visiblePhotos.slice(3).map((photo, index) => ({ photo, index: index + 3 })),
+    [visiblePhotos]
   );
 
   return (
@@ -232,6 +275,40 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
           transition={reduceMotion ? undefined : { duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-12 md:space-y-16"
         >
+          {isFilteredCollection ? (
+            <section className="space-y-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5">
+                {visiblePhotos.map((photo, index) => (
+                  <FramedGalleryCard
+                    key={photo.id}
+                    photo={photo}
+                    index={index}
+                    onOpen={setActiveIndex}
+                    reduceMotion={reduceMotion}
+                    priority={index < 8}
+                  />
+                ))}
+              </div>
+
+              {hasMorePhotos ? (
+                <div className="mt-10 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisiblePhotoState({
+                        filter: activeFilter,
+                        count: Math.min(visibleCount + LOAD_MORE_PHOTOS, photos.length),
+                      })
+                    }
+                    className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"
+                  >
+                    Voir plus ({photos.length - visiblePhotos.length})
+                  </button>
+                </div>
+              ) : null}
+            </section>
+          ) : (
+          <>
           <section className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr] xl:items-stretch">
             <GalleryCard
               photo={leadPhoto}
@@ -280,22 +357,41 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
                 />
               ))}
             </div>
+
+            {hasMorePhotos ? (
+              <div className="mt-10 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisiblePhotoState({
+                      filter: activeFilter,
+                      count: Math.min(visibleCount + LOAD_MORE_PHOTOS, photos.length),
+                    })
+                  }
+                  className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"
+                >
+                  Voir plus ({photos.length - visiblePhotos.length})
+                </button>
+              </div>
+            ) : null}
           </section>
+          </>
+          )}
         </motion.div>
       ) : null}
       </AnimatePresence>
 
       <Lightbox
-        photos={photos}
+        photos={visiblePhotos}
         activeIndex={activeIndex}
         onClose={() => setActiveIndex(null)}
         onPrev={() => {
-          if (activeIndex === null || photos.length === 0) return;
-          setActiveIndex(activeIndex === 0 ? photos.length - 1 : activeIndex - 1);
+          if (activeIndex === null || visiblePhotos.length === 0) return;
+          setActiveIndex(activeIndex === 0 ? visiblePhotos.length - 1 : activeIndex - 1);
         }}
         onNext={() => {
-          if (activeIndex === null || photos.length === 0) return;
-          setActiveIndex(activeIndex === photos.length - 1 ? 0 : activeIndex + 1);
+          if (activeIndex === null || visiblePhotos.length === 0) return;
+          setActiveIndex(activeIndex === visiblePhotos.length - 1 ? 0 : activeIndex + 1);
         }}
         onSelect={(index) => setActiveIndex(index)}
       />

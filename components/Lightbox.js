@@ -168,7 +168,6 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                   className="object-contain pointer-events-none"
                   sizes="100vw"
                   quality={90}
-                  unoptimized
                 />
               </motion.div>
             </AnimatePresence>
@@ -292,7 +291,6 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                       fill
                       sizes="80px"
                       quality={75}
-                      unoptimized
                       className="object-cover"
                       style={{ objectPosition: photo.objectPosition || "center center" }}
                     />

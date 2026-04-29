@@ -3,8 +3,10 @@ import { useEffect, useMemo } from "react";
 export default function AdminUploadForm({
   categories,
   fileInputKey,
+  heroPhotoCount,
   isUploading,
   maxBulkUploadCount,
+  maxHeroPhotoCount,
   onSubmit,
   toggleUploadRole,
   roleOptions,
@@ -32,6 +34,7 @@ export default function AdminUploadForm({
         <h2 className="font-serif text-3xl">Ajouter des photos</h2>
         <p className="mt-2 text-sm text-ink/65">
           Choisis le theme, depose les images, puis publie. Les photos sont allegees automatiquement avant l&apos;envoi.
+          Coche Diaporama accueil si elles doivent apparaitre dans le diaporama de la page d&apos;accueil.
         </p>
       </div>
 
@@ -99,23 +102,41 @@ export default function AdminUploadForm({
       ) : null}
 
       <div className="flex flex-wrap gap-4">
-        {roleOptions.map((role) => (
-          <label key={role} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={uploadForm.roles.includes(role)}
-              onChange={() => toggleUploadRole(role)}
-            />
-            {role === "hero"
-              ? "Image d'accueil"
-              : role === "featured"
-                ? "Mise en avant"
-                : role === "servicesBackground"
-                  ? "Fond de section"
-                  : "Image approche"}
-          </label>
-        ))}
+        {roleOptions.map((role) => {
+          const isHeroRole = role === "hero";
+          const selectedFilesCount = Math.max(uploadForm.files.length, 1);
+          const wouldExceedHeroLimit =
+            isHeroRole && !uploadForm.roles.includes(role) && heroPhotoCount + selectedFilesCount > maxHeroPhotoCount;
+
+          return (
+            <label
+              key={role}
+              className={`flex items-center gap-2 text-sm ${wouldExceedHeroLimit ? "cursor-not-allowed text-ink/35" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={uploadForm.roles.includes(role)}
+                disabled={wouldExceedHeroLimit}
+                onChange={() => toggleUploadRole(role)}
+              />
+              {isHeroRole
+                ? `Diaporama accueil (${heroPhotoCount}/${maxHeroPhotoCount})`
+                : role === "featured"
+                  ? "Mise en avant"
+                  : role === "servicesBackground"
+                    ? "Fond de section"
+                    : "Image approche"}
+            </label>
+          );
+        })}
       </div>
+
+      {heroPhotoCount >= maxHeroPhotoCount ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Le diaporama d&apos;accueil est plein : {heroPhotoCount}/{maxHeroPhotoCount}. Pour en ajouter une autre,
+          retire d&apos;abord le statut Diaporama accueil sur une photo existante.
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-4 text-sm">
         <label className="flex items-center gap-2">

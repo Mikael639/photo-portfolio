@@ -4,6 +4,7 @@ export const categories = portfolioCategories;
 export const categoryFilters = ["Toutes", ...categories];
 export const roleOptions = ["hero", "featured", "servicesBackground", "approachImage"];
 export const maxBulkUploadCount = 12;
+export const maxHeroPhotoCount = 10;
 
 export const initialUploadForm = {
   title: "",

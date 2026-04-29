@@ -15,6 +15,7 @@ if (typeof window !== "undefined") {
 }
 
 const HERO_SLIDE_DURATION_MS = 8400;
+const HOME_SLIDESHOW_LIMIT = 10;
 
 function getHeroPriority(photo) {
   const roles = new Set(photo?.roles || []);
@@ -45,30 +46,21 @@ export default function HomePageExperience({
     featuredPhotos[0];
   const cinematicPhotos = useMemo(() => {
     const seen = new Set();
-    const selectedPool = cinematicPool.filter((photo) =>
-      photo?.roles?.some((role) => ["hero", "featured", "servicesBackground"].includes(role))
-    );
-    const prioritizedPool = [...selectedPool].sort((left, right) => {
+    const heroPool = cinematicPool.filter((photo) => photo?.roles?.includes("hero"));
+    const prioritizedPool = [...heroPool].sort((left, right) => {
       const priorityDiff = getHeroPriority(right) - getHeroPriority(left);
       if (priorityDiff !== 0) return priorityDiff;
       return (left.sortOrder || 0) - (right.sortOrder || 0);
     });
-    const orderedPhotos = [
-      ...prioritizedPool,
-      heroPhoto,
-      ...supportingPhotos,
-      ...featuredPhotos,
-      ...(selectedPool.length < 4 ? cinematicPool : []),
-    ];
 
-    return orderedPhotos
+    return prioritizedPool
       .filter((photo) => {
         if (!photo?.id || seen.has(photo.id)) return false;
         seen.add(photo.id);
         return true;
       })
-      .slice(0, 18);
-  }, [cinematicPool, featuredPhotos, heroPhoto, supportingPhotos]);
+      .slice(0, HOME_SLIDESHOW_LIMIT);
+  }, [cinematicPool]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const shuffledPhotos = cinematicPhotos;
@@ -87,21 +79,23 @@ export default function HomePageExperience({
   useGSAP(() => {
     if (reduceMotion) return;
 
-    gsap.fromTo(".hero-image-container",
-      { scale: 1.2, filter: "blur(10px)" },
-      { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
-    );
+    const heroImages = gsap.utils.toArray(".hero-image-container");
+    if (heroImages.length) {
+      gsap.fromTo(
+        heroImages,
+        { scale: 1.2, filter: "blur(10px)" },
+        { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
+      );
+    }
 
-    gsap.fromTo(".hero-content-reveal",
-      { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
-    );
-
-    gsap.fromTo("header",
-      { y: -100, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2, ease: "expo.out", delay: 2 },
-      { forceWait: true }
-    );
+    const heroContent = gsap.utils.toArray(".hero-content-reveal");
+    if (heroContent.length) {
+      gsap.fromTo(
+        heroContent,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
+      );
+    }
 
     const sections = gsap.utils.toArray("section.color-transition-section");
     sections.forEach((section) => {

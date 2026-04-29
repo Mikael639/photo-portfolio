@@ -192,7 +192,7 @@ export default async function HomePage() {
 
   const photos = (sourcePhotos.length ? sourcePhotos : [defaultFallbackPhoto]).map(normalizePhoto);
 
-  const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || photos[0] || defaultFallbackPhoto);
+  const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || defaultFallbackPhoto);
   const featuredPool = photos.filter((photo) => photo.roles?.includes("featured"));
   const editorialPool = [...featuredPool, ...photos];
   const alternateCategories = Array.from(

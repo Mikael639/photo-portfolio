@@ -20,7 +20,14 @@ import AdminPhotosTable from "./AdminPhotosTable";
 import AdminSiteTextEditor from "./AdminSiteTextEditor";
 import AdminThemeGuide from "./AdminThemeGuide";
 import AdminUploadForm from "./AdminUploadForm";
-import { categories, categoryFilters, initialUploadForm, maxBulkUploadCount, roleOptions } from "./constants";
+import {
+  categories,
+  categoryFilters,
+  initialUploadForm,
+  maxBulkUploadCount,
+  maxHeroPhotoCount,
+  roleOptions,
+} from "./constants";
 import { defaultHomeCopy } from "../../lib/siteSettings";
 import { compressImageFiles, formatFileSize } from "../../lib/imageCompression";
 
@@ -82,6 +89,18 @@ export default function AdminPhotosClient({
     });
   }, [categoryFilter, photos, publishFilter, searchQuery]);
 
+  const heroPhotoCount = useMemo(
+    () => photos.filter((photo) => (photo.roles || []).includes("hero")).length,
+    [photos]
+  );
+
+  function showHeroLimitMessage() {
+    setStatusMessage("");
+    setErrorMessage(
+      `Le diaporama d'accueil est limite a ${maxHeroPhotoCount} photos. Retire une image d'accueil avant d'en ajouter une autre.`
+    );
+  }
+
   function updateAuthField(field, value) {
     setAuthForm((current) => ({ ...current, [field]: value }));
   }
@@ -123,6 +142,14 @@ export default function AdminPhotosClient({
   }
 
   function toggleUploadRole(role) {
+    if (role === "hero" && !uploadForm.roles.includes("hero")) {
+      const selectedFilesCount = Math.max(uploadForm.files.length, 1);
+      if (heroPhotoCount + selectedFilesCount > maxHeroPhotoCount) {
+        showHeroLimitMessage();
+        return;
+      }
+    }
+
     setUploadForm((current) => {
       const hasRole = current.roles.includes(role);
       return {
@@ -136,6 +163,11 @@ export default function AdminPhotosClient({
     event.preventDefault();
     if (!uploadForm.files.length) {
       setErrorMessage("Ajoute au moins un fichier image avant de publier.");
+      return;
+    }
+
+    if (uploadForm.roles.includes("hero") && heroPhotoCount + uploadForm.files.length > maxHeroPhotoCount) {
+      showHeroLimitMessage();
       return;
     }
 
@@ -355,6 +387,9 @@ export default function AdminPhotosClient({
             categories={categories}
             deletePhoto={deletePhoto}
             filteredPhotos={filteredPhotos}
+            heroPhotoCount={heroPhotoCount}
+            maxHeroPhotoCount={maxHeroPhotoCount}
+            onHeroLimit={showHeroLimitMessage}
             onReorder={reorderPhotos}
             roleOptions={roleOptions}
             updatePhoto={updatePhoto}
@@ -366,8 +401,10 @@ export default function AdminPhotosClient({
         <AdminUploadForm
           categories={categories}
           fileInputKey={fileInputKey}
+          heroPhotoCount={heroPhotoCount}
           isUploading={isUploading}
           maxBulkUploadCount={maxBulkUploadCount}
+          maxHeroPhotoCount={maxHeroPhotoCount}
           onSubmit={handleUpload}
           toggleUploadRole={toggleUploadRole}
           roleOptions={roleOptions}
