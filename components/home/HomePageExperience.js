@@ -66,6 +66,8 @@ export default function HomePageExperience({
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const shuffledPhotos = cinematicPhotos;
   const activeHeroPhoto = shuffledPhotos[activeHeroIndex] || heroPhoto;
+  const nextHeroPhoto =
+    shuffledPhotos.length > 1 ? shuffledPhotos[(activeHeroIndex + 1) % shuffledPhotos.length] : null;
   const activeHeroCategoryHref = activeHeroPhoto?.category
     ? `/gallery?category=${encodeURIComponent(activeHeroPhoto.category)}`
     : "/gallery";
@@ -151,37 +153,59 @@ export default function HomePageExperience({
     <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-48">
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="absolute inset-0">
-          <AnimatePresence mode={shouldCalmHeroMotion ? "sync" : "wait"}>
-            <motion.div
-              key={activeHeroPhoto.id}
-              className="absolute inset-0 hero-image-container"
-              initial={shouldCalmHeroMotion ? { opacity: 0 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
-              animate={shouldCalmHeroMotion ? { opacity: 1 } : { opacity: 1, scale: 1.04, filter: "blur(0px)" }}
-              exit={shouldCalmHeroMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
-              transition={
-                shouldCalmHeroMotion
-                  ? { duration: 0.65, ease: "easeOut" }
-                  : { duration: 2, ease: [0.16, 1, 0.3, 1] }
-              }
-            >
+          {shouldCalmHeroMotion ? (
+            <div key={activeHeroPhoto.id} className="absolute inset-0 hero-image-container">
+              <Image
+                src={activeHeroPhoto.src}
+                alt={activeHeroPhoto.alt}
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover sharpen-img"
+                style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
+              />
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
               <motion.div
-                className="absolute inset-0"
-                initial={shouldCalmHeroMotion ? false : { scale: 1 }}
-                animate={shouldCalmHeroMotion || isHeroPaused ? { scale: 1 } : { scale: 1.08 }}
-                transition={shouldCalmHeroMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
+                key={activeHeroPhoto.id}
+                className="absolute inset-0 hero-image-container"
+                initial={{ opacity: 0, scale: 1.08, filter: "blur(8px)" }}
+                animate={{ opacity: 1, scale: 1.04, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 0.98, filter: "blur(4px)" }}
+                transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Image
-                  src={activeHeroPhoto.src}
-                  alt={activeHeroPhoto.alt}
-                  fill
-                  priority
-                  sizes="100vw"
-                  className="object-cover sharpen-img"
-                  style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
-                />
+                <motion.div
+                  className="absolute inset-0"
+                  initial={{ scale: 1 }}
+                  animate={isHeroPaused ? { scale: 1 } : { scale: 1.08 }}
+                  transition={{ duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
+                >
+                  <Image
+                    src={activeHeroPhoto.src}
+                    alt={activeHeroPhoto.alt}
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover sharpen-img"
+                    style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
+                  />
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+          )}
+          {shouldCalmHeroMotion && nextHeroPhoto ? (
+            <div className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
+              <Image
+                src={nextHeroPhoto.src}
+                alt=""
+                width={1}
+                height={1}
+                sizes="1px"
+                aria-hidden="true"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
