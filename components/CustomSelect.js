@@ -1,56 +1,68 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function CustomSelect({ 
-  name, 
-  options, 
-  defaultValue, 
-  label, 
+export default function CustomSelect({
+  name,
+  options,
+  defaultValue,
+  label,
   error,
-  className = "" 
+  className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(defaultValue || options[0]);
   const containerRef = useRef(null);
 
-  // Close when clicking outside
+  // Fonction close centralisée et stable
+  const close = useCallback(() => setIsOpen(false), []);
+
+  // Fermer au clic extérieur
   useEffect(() => {
     function handleClickOutside(event) {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
+        close();
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [close]);
+
+  // Fermer au scroll — capture:true pour attraper tous les conteneurs scrollables
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("scroll", close, { passive: true, capture: true });
+    return () => window.removeEventListener("scroll", close, { capture: true });
+  }, [isOpen, close]);
 
   const handleSelect = (option) => {
     setSelectedValue(option);
-    setIsOpen(false);
+    close();
   };
 
-  const toggleOpen = () => setIsOpen(!isOpen);
+  const toggleOpen = () => setIsOpen((prev) => !prev);
 
-  // Keyboard navigation
+  // Navigation clavier complète
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Escape") {
+      close();
+    } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setIsOpen(!isOpen);
-    } else if (e.key === "Escape") {
-      setIsOpen(false);
+      if (isOpen) {
+        // Valider la valeur en cours et fermer
+        close();
+      } else {
+        setIsOpen(true);
+      }
     } else if (isOpen) {
       const currentIndex = options.indexOf(selectedValue);
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        const nextIndex = (currentIndex + 1) % options.length;
-        setSelectedValue(options[nextIndex]);
+        setSelectedValue(options[(currentIndex + 1) % options.length]);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        const prevIndex = (currentIndex - 1 + options.length) % options.length;
-        setSelectedValue(options[prevIndex]);
+        setSelectedValue(options[(currentIndex - 1 + options.length) % options.length]);
       }
     }
   };
@@ -62,9 +74,9 @@ export default function CustomSelect({
           {label}
         </span>
       )}
-      
+
       <input type="hidden" name={name} value={selectedValue} />
-      
+
       <button
         type="button"
         aria-haspopup="listbox"
@@ -72,8 +84,8 @@ export default function CustomSelect({
         onClick={toggleOpen}
         onKeyDown={handleKeyDown}
         className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 outline-none transition-all duration-300 ${
-          isOpen 
-            ? "border-accent bg-white shadow-sm ring-1 ring-accent/20" 
+          isOpen
+            ? "border-accent bg-white shadow-sm ring-1 ring-accent/20"
             : "border-line/18 bg-paper/88 hover:border-line/40"
         } ${error ? "border-red-400" : ""}`}
       >
@@ -123,13 +135,13 @@ export default function CustomSelect({
 
 function ChevronDownIcon({ className = "" }) {
   return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={className}
     >
       <polyline points="6 9 12 15 18 9"></polyline>

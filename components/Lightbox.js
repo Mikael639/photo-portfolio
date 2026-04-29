@@ -5,9 +5,12 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 
+const SWIPE_THRESHOLD = 50;
+
 export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext, onSelect }) {
   const [zoomedPhotoId, setZoomedPhotoId] = useState(null);
   const constraintsRef = useRef(null);
+  const touchStartRef = useRef(null);
 
   const activePhoto = activeIndex === null ? null : photos[activeIndex];
   const isZoomed = Boolean(activePhoto && zoomedPhotoId === activePhoto.id);
@@ -41,6 +44,23 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, handleClose, onPrev, onNext]);
 
+  // Handlers swipe tactile
+  const handleTouchStart = useCallback((e) => {
+    if (isZoomed || e.touches.length > 1) return;
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, [isZoomed]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (isZoomed || !touchStartRef.current || e.changedTouches.length > 1) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    // Ne naviguer que si le geste est principalement horizontal
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) onNext();
+    else onPrev();
+  }, [isZoomed, onNext, onPrev]);
+
   if (typeof document === "undefined") return null;
 
   return createPortal(
@@ -56,6 +76,8 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           aria-label="Visionneuse d'images"
           className="fixed inset-0 z-[100] bg-black h-screen w-screen overflow-hidden focus:outline-none"
           onClick={handleClose}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           tabIndex={-1}
           autoFocus={true}
         >
@@ -146,7 +168,6 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                   className="object-contain pointer-events-none"
                   sizes="100vw"
                   quality={90}
-                  unoptimized
                 />
               </motion.div>
             </AnimatePresence>
@@ -193,30 +214,12 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 className="absolute bottom-0 inset-x-0 z-20 flex items-center justify-between gap-6 px-6 py-5 md:px-10"
               >
 
-            {/* Left — category + title (editorial) */}
             <div className="flex items-center gap-4 min-w-0">
               <div
                 className="hidden md:flex items-center justify-center rounded-full border border-white/10 text-white/30 font-serif"
                 style={{ width: 48, height: 48, fontSize: "1.1rem", flexShrink: 0 }}
               >
                 {String(currentNum).padStart(2, "0")}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 truncate">
-                  {activePhoto.category}
-                </p>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={activePhoto.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.25 }}
-                    className="mt-1 font-serif text-lg leading-tight text-white truncate max-w-[18rem] md:max-w-[28rem]"
-                  >
-                    {activePhoto.title}
-                  </motion.p>
-                </AnimatePresence>
               </div>
             </div>
 
@@ -288,7 +291,6 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                       fill
                       sizes="80px"
                       quality={75}
-                      unoptimized
                       className="object-cover"
                       style={{ objectPosition: photo.objectPosition || "center center" }}
                     />

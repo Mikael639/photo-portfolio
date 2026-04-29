@@ -15,6 +15,7 @@ if (typeof window !== "undefined") {
 }
 
 const HERO_SLIDE_DURATION_MS = 8400;
+const HOME_SLIDESHOW_LIMIT = 10;
 
 function getHeroPriority(photo) {
   const roles = new Set(photo?.roles || []);
@@ -45,30 +46,21 @@ export default function HomePageExperience({
     featuredPhotos[0];
   const cinematicPhotos = useMemo(() => {
     const seen = new Set();
-    const selectedPool = cinematicPool.filter((photo) =>
-      photo?.roles?.some((role) => ["hero", "featured", "servicesBackground"].includes(role))
-    );
-    const prioritizedPool = [...selectedPool].sort((left, right) => {
+    const heroPool = cinematicPool.filter((photo) => photo?.roles?.includes("hero"));
+    const prioritizedPool = [...heroPool].sort((left, right) => {
       const priorityDiff = getHeroPriority(right) - getHeroPriority(left);
       if (priorityDiff !== 0) return priorityDiff;
       return (left.sortOrder || 0) - (right.sortOrder || 0);
     });
-    const orderedPhotos = [
-      ...prioritizedPool,
-      heroPhoto,
-      ...supportingPhotos,
-      ...featuredPhotos,
-      ...(selectedPool.length < 4 ? cinematicPool : []),
-    ];
 
-    return orderedPhotos
+    return prioritizedPool
       .filter((photo) => {
         if (!photo?.id || seen.has(photo.id)) return false;
         seen.add(photo.id);
         return true;
       })
-      .slice(0, 18);
-  }, [cinematicPool, featuredPhotos, heroPhoto, supportingPhotos]);
+      .slice(0, HOME_SLIDESHOW_LIMIT);
+  }, [cinematicPool]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const shuffledPhotos = cinematicPhotos;
@@ -87,21 +79,23 @@ export default function HomePageExperience({
   useGSAP(() => {
     if (reduceMotion) return;
 
-    gsap.fromTo(".hero-image-container",
-      { scale: 1.2, filter: "blur(10px)" },
-      { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
-    );
+    const heroImages = gsap.utils.toArray(".hero-image-container");
+    if (heroImages.length) {
+      gsap.fromTo(
+        heroImages,
+        { scale: 1.2, filter: "blur(10px)" },
+        { scale: 1, filter: "blur(0px)", duration: 2.4, ease: "expo.out", delay: 0.5 }
+      );
+    }
 
-    gsap.fromTo(".hero-content-reveal",
-      { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
-    );
-
-    gsap.fromTo("header",
-      { y: -100, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2, ease: "expo.out", delay: 2 },
-      { forceWait: true }
-    );
+    const heroContent = gsap.utils.toArray(".hero-content-reveal");
+    if (heroContent.length) {
+      gsap.fromTo(
+        heroContent,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
+      );
+    }
 
     const sections = gsap.utils.toArray("section.color-transition-section");
     sections.forEach((section) => {
@@ -114,8 +108,8 @@ export default function HomePageExperience({
       });
     });
 
-    const parralaxImages = gsap.utils.toArray(".parallax-img");
-    parralaxImages.forEach((img) => {
+    const parallaxImages = gsap.utils.toArray(".parallax-img");
+    parallaxImages.forEach((img) => {
       gsap.to(img, {
         yPercent: 15,
         ease: "none",
@@ -234,16 +228,6 @@ export default function HomePageExperience({
               </motion.div>
             ) : null}
 
-            <motion.div
-              variants={wordRevealVariant}
-              className="mt-8 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-[0.24em] text-paper/40"
-            >
-              <span className="h-px w-16 bg-paper/20" />
-              <span>
-                {activeHeroPhoto.category} / {activeHeroPhoto.title}
-              </span>
-            </motion.div>
-
             {shuffledPhotos.length > 1 ? (
               <motion.div variants={wordRevealVariant} className="mt-5 flex max-w-xl items-center gap-3">
                 <button
@@ -304,11 +288,7 @@ export default function HomePageExperience({
                   style={{ objectPosition: photo.objectPosition || "center center" }}
                   quality={90}
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.78))]" />
-                <div className="absolute inset-x-0 bottom-0 p-6 text-paper">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-paper/50">{photo.category}</p>
-                  <p className="mt-1 font-serif text-2xl leading-tight">{photo.title}</p>
-                </div>
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.22))]" />
               </div>
             ))}
 
@@ -584,11 +564,7 @@ export default function HomePageExperience({
                 className="object-cover transition-transform duration-[3s] hover:scale-125"
                 style={{ objectPosition: closingPhoto.objectPosition || "center center" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-paper">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">{closingPhoto.category}</p>
-                <p className="mt-1 font-serif text-xl leading-tight">{closingPhoto.title}</p>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
             </MotionBlock>
           </div>
         </div>

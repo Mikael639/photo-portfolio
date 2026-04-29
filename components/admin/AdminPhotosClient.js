@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import {
   deleteAdminPhotoAction,
   loginAdminAction,
@@ -20,8 +20,16 @@ import AdminPhotosTable from "./AdminPhotosTable";
 import AdminSiteTextEditor from "./AdminSiteTextEditor";
 import AdminThemeGuide from "./AdminThemeGuide";
 import AdminUploadForm from "./AdminUploadForm";
-import { categories, categoryFilters, initialUploadForm, maxBulkUploadCount, roleOptions } from "./constants";
+import {
+  categories,
+  categoryFilters,
+  initialUploadForm,
+  maxBulkUploadCount,
+  maxHeroPhotoCount,
+  roleOptions,
+} from "./constants";
 import { defaultHomeCopy } from "../../lib/siteSettings";
+import { compressImageFiles, formatFileSize } from "../../lib/imageCompression";
 
 const tabs = [
   { id: "photos", label: "Photos" },
@@ -53,6 +61,14 @@ export default function AdminPhotosClient({
   const [publishFilter, setPublishFilter] = useState("all");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [activeTab, setActiveTab] = useState("photos");
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 520);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const filteredPhotos = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -72,6 +88,18 @@ export default function AdminPhotosClient({
       return matchesCategory && matchesPublishState && matchesQuery;
     });
   }, [categoryFilter, photos, publishFilter, searchQuery]);
+
+  const heroPhotoCount = useMemo(
+    () => photos.filter((photo) => (photo.roles || []).includes("hero")).length,
+    [photos]
+  );
+
+  function showHeroLimitMessage() {
+    setStatusMessage("");
+    setErrorMessage(
+      `Le diaporama d'accueil est limite a ${maxHeroPhotoCount} photos. Retire une image d'accueil avant d'en ajouter une autre.`
+    );
+  }
 
   function updateAuthField(field, value) {
     setAuthForm((current) => ({ ...current, [field]: value }));
@@ -114,6 +142,14 @@ export default function AdminPhotosClient({
   }
 
   function toggleUploadRole(role) {
+    if (role === "hero" && !uploadForm.roles.includes("hero")) {
+      const selectedFilesCount = Math.max(uploadForm.files.length, 1);
+      if (heroPhotoCount + selectedFilesCount > maxHeroPhotoCount) {
+        showHeroLimitMessage();
+        return;
+      }
+    }
+
     setUploadForm((current) => {
       const hasRole = current.roles.includes(role);
       return {
@@ -130,6 +166,11 @@ export default function AdminPhotosClient({
       return;
     }
 
+    if (uploadForm.roles.includes("hero") && heroPhotoCount + uploadForm.files.length > maxHeroPhotoCount) {
+      showHeroLimitMessage();
+      return;
+    }
+
     if (uploadForm.files.length > maxBulkUploadCount) {
       setErrorMessage(`Tu peux envoyer max ${maxBulkUploadCount} photos en meme temps.`);
       return;
@@ -137,10 +178,30 @@ export default function AdminPhotosClient({
 
     setIsUploading(true);
     setErrorMessage("");
-    setStatusMessage("");
+    setStatusMessage("Preparation et allegement des images...");
+
+    let uploadFiles = uploadForm.files;
+    try {
+      const compression = await compressImageFiles(uploadForm.files);
+      uploadFiles = compression.files;
+
+      if (compression.compressedCount > 0) {
+        setStatusMessage(
+          `${compression.compressedCount} image(s) allegee(s) : ${formatFileSize(compression.originalSize)} -> ${formatFileSize(
+            compression.compressedSize
+          )}. Upload en cours...`
+        );
+      } else {
+        setStatusMessage("Images deja legeres. Upload en cours...");
+      }
+    } catch (error) {
+      setIsUploading(false);
+      setErrorMessage(error?.message || "Impossible d'alleger les images avant l'upload.");
+      return;
+    }
 
     const formData = new FormData();
-    uploadForm.files.forEach((file) => {
+    uploadFiles.forEach((file) => {
       formData.append("files", file);
     });
     formData.append("title", uploadForm.title);
@@ -326,6 +387,9 @@ export default function AdminPhotosClient({
             categories={categories}
             deletePhoto={deletePhoto}
             filteredPhotos={filteredPhotos}
+            heroPhotoCount={heroPhotoCount}
+            maxHeroPhotoCount={maxHeroPhotoCount}
+            onHeroLimit={showHeroLimitMessage}
             onReorder={reorderPhotos}
             roleOptions={roleOptions}
             updatePhoto={updatePhoto}
@@ -337,8 +401,10 @@ export default function AdminPhotosClient({
         <AdminUploadForm
           categories={categories}
           fileInputKey={fileInputKey}
+          heroPhotoCount={heroPhotoCount}
           isUploading={isUploading}
           maxBulkUploadCount={maxBulkUploadCount}
+          maxHeroPhotoCount={maxHeroPhotoCount}
           onSubmit={handleUpload}
           toggleUploadRole={toggleUploadRole}
           roleOptions={roleOptions}
@@ -361,6 +427,31 @@ export default function AdminPhotosClient({
       ) : null}
 
       {activeTab === "themes" ? <AdminThemeGuide categories={categories} /> : null}
+
+      <button
+        type="button"
+        aria-label="Remonter en haut de la page admin"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-line/15 bg-paper/90 text-ink shadow-[0_18px_52px_rgba(12,10,8,0.18)] backdrop-blur-xl transition duration-300 hover:bg-ink hover:text-paper md:bottom-8 md:right-8 ${
+          showScrollTop ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+        }`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5" />
+          <path d="m5 12 7-7 7 7" />
+        </svg>
+      </button>
     </div>
   );
 }

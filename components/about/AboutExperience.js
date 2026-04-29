@@ -67,11 +67,7 @@ function PhotoPanel({ photo, className = "", sizes, reduceMotion }) {
         className="object-cover transition-transform duration-[2s] ease-out hover:scale-110"
         style={{ objectPosition: photo.objectPosition || "center center" }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.78))]" />
-      <div className="absolute inset-x-0 bottom-0 p-6 text-paper md:p-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-paper/50">{photo.category}</p>
-        <p className="mt-2 font-serif text-2xl leading-tight md:text-3xl">{photo.title}</p>
-      </div>
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.22))]" />
     </div>
   );
 }
