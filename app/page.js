@@ -7,6 +7,8 @@ import { getPublicPhotos } from "../lib/photoRepository";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 import { getHomeCopy } from "../lib/siteSettings";
 
+const FEATURED_ROTATION_INTERVAL_MS = 30 * 60 * 1000;
+
 export const metadata = {
   title: "Accueil",
   description:
@@ -92,6 +94,13 @@ function collectPhotos(pool, count, excludeIds = [], fallbackPhoto = defaultFall
   }
 
   return taken;
+}
+
+function rotatePhotosByTimeWindow(pool, intervalMs = FEATURED_ROTATION_INTERVAL_MS) {
+  if (!pool.length) return pool;
+
+  const rotationIndex = Math.floor(Date.now() / intervalMs) % pool.length;
+  return [...pool.slice(rotationIndex), ...pool.slice(0, rotationIndex)];
 }
 
 function buildCategoryPriority(pool, preferredCategories = []) {
@@ -193,7 +202,7 @@ export default async function HomePage() {
   const photos = (sourcePhotos.length ? sourcePhotos : [defaultFallbackPhoto]).map(normalizePhoto);
 
   const heroPhoto = normalizePhoto(getFirstPhotoByRole(photos, "hero") || defaultFallbackPhoto);
-  const featuredPool = photos.filter((photo) => photo.roles?.includes("featured"));
+  const featuredPool = rotatePhotosByTimeWindow(photos.filter((photo) => photo.roles?.includes("featured")));
   const editorialPool = [...featuredPool, ...photos];
   const alternateCategories = Array.from(
     new Set(photos.map((photo) => photo.category).filter((category) => category && category !== heroPhoto.category))

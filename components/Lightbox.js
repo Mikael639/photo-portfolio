@@ -74,6 +74,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           role="dialog"
           aria-modal="true"
           aria-label="Visionneuse d'images"
+          data-cursor-surface="dark"
           className="fixed inset-0 z-[100] h-screen w-screen overflow-hidden bg-[#050403] focus:outline-none"
           onClick={handleClose}
           onTouchStart={handleTouchStart}
@@ -275,27 +276,27 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           <AnimatePresence>
             {!isZoomed && photos.length > 1 ? (
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 24 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl rounded-2xl border border-white/8 bg-black/18 backdrop-blur-md md:block"
+                className="absolute bottom-24 right-6 top-24 z-30 hidden w-24 rounded-2xl border border-white/10 bg-black/[0.08] shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-[6px] md:block xl:right-10"
                 onClick={(event) => event.stopPropagation()}
               >
                 {/* Masques de dégradé pour le scroll horizontal */}
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-black to-transparent" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-black to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-black/35 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-black/35 to-transparent" />
                 
-                <div className="no-scrollbar flex gap-3 overflow-x-auto px-12 py-2">
+                <div className="no-scrollbar flex h-full flex-col gap-3 overflow-y-auto px-2 py-8">
                 {photos.map((photo, index) => (
                   <button
                     key={photo.id}
                     type="button"
                     onClick={() => onSelect?.(index)}
-                    className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition ${
+                    className={`relative h-14 w-full shrink-0 overflow-hidden rounded-lg border bg-black/10 transition duration-300 ${
                       index === activeIndex
-                        ? "border-white/80 opacity-100"
-                        : "border-white/10 opacity-45 hover:border-white/45 hover:opacity-90"
+                        ? "border-white/85 opacity-100 shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
+                        : "border-white/14 opacity-70 hover:border-white/55 hover:opacity-100"
                     }`}
                     aria-label={`Afficher ${photo.title}`}
                   >
@@ -303,7 +304,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                       src={photo.src}
                       alt={photo.alt || photo.title}
                       fill
-                      sizes="80px"
+                      sizes="96px"
                       quality={75}
                       className="object-cover"
                       style={{ objectPosition: photo.objectPosition || "center center" }}

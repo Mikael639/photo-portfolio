@@ -59,6 +59,7 @@ export default function AdminPhotosClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Toutes");
   const [publishFilter, setPublishFilter] = useState("all");
+  const [heroFilter, setHeroFilter] = useState("all");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [activeTab, setActiveTab] = useState("photos");
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -77,6 +78,8 @@ export default function AdminPhotosClient({
       const matchesCategory = categoryFilter === "Toutes" ? true : photo.category === categoryFilter;
       const matchesPublishState =
         publishFilter === "all" ? true : publishFilter === "published" ? photo.isPublished : !photo.isPublished;
+      const isHeroPhoto = (photo.roles || []).includes("hero");
+      const matchesHeroState = heroFilter === "all" ? true : heroFilter === "hero" ? isHeroPhoto : !isHeroPhoto;
       const matchesQuery = !normalizedQuery
         ? true
         : [photo.title, photo.alt, photo.category, ...(photo.roles || [])]
@@ -85,9 +88,9 @@ export default function AdminPhotosClient({
             .toLowerCase()
             .includes(normalizedQuery);
 
-      return matchesCategory && matchesPublishState && matchesQuery;
+      return matchesCategory && matchesPublishState && matchesHeroState && matchesQuery;
     });
-  }, [categoryFilter, photos, publishFilter, searchQuery]);
+  }, [categoryFilter, heroFilter, photos, publishFilter, searchQuery]);
 
   const heroPhotoCount = useMemo(
     () => photos.filter((photo) => (photo.roles || []).includes("hero")).length,
@@ -376,9 +379,11 @@ export default function AdminPhotosClient({
           <AdminFilters
             categoryFilter={categoryFilter}
             categoryFilters={categoryFilters}
+            heroFilter={heroFilter}
             publishFilter={publishFilter}
             searchQuery={searchQuery}
             setCategoryFilter={setCategoryFilter}
+            setHeroFilter={setHeroFilter}
             setPublishFilter={setPublishFilter}
             setSearchQuery={setSearchQuery}
           />

@@ -74,19 +74,20 @@ function PortraitPanel({ photo, className = "", imageClassName = "", sizes, prio
 
 export default function AboutExperience() {
   const reduceMotion = useReducedMotion();
-  const headline = "Je ne photographie pas un statut. Je photographie une présence.";
+  const headline = "Je photographie les personnes et les moments qui comptent.";
 
   return (
     <div data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
       <section className="grid min-h-[calc(100vh-8rem)] gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
         <motion.div className="space-y-8 pb-2" {...getRevealProps(reduceMotion)}>
-          <p className="text-[11px] font-medium uppercase tracking-[0.34em] text-ink/50">À propos</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.34em] text-ink/50">Derrière l&apos;objectif</p>
           <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-7xl xl:text-8xl">
             {headline}
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-ink/72 md:text-xl">
-            Jerrypicsart construit une photographie à la frontière de la mode, du mariage haut de gamme,
-            des events et des personnalités. Une image tenue, précise, mais jamais froide.
+            Un parcours inattendu et un regard bien à lui. Jerrypicsart construit une photographie à la frontière
+            de la mode, du mariage haut de gamme, des events et des personnalités. Une image tenue, précise,
+            mais jamais froide.
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
             <MagneticElement strength={0.25}>
