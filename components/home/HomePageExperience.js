@@ -39,6 +39,7 @@ export default function HomePageExperience({
   siteText = {},
 }) {
   const reduceMotion = useReducedMotion();
+  const [useCalmHeroMotion, setUseCalmHeroMotion] = useState(false);
   const galleryCategories = categories.filter(Boolean).slice(0, 4);
   const marriageFeature =
     featuredPhotos.find((photo) => photo?.category === "Fashion Wedding") ||
@@ -70,6 +71,7 @@ export default function HomePageExperience({
     : "/gallery";
   const containerRef = useRef(null);
   const visibleHeroDots = shuffledPhotos.slice(0, 5);
+  const shouldCalmHeroMotion = reduceMotion || useCalmHeroMotion;
 
   function showPreviousHeroPhoto() {
     setActiveHeroIndex((currentIndex) => (currentIndex === 0 ? shuffledPhotos.length - 1 : currentIndex - 1));
@@ -79,8 +81,17 @@ export default function HomePageExperience({
     setActiveHeroIndex((currentIndex) => (currentIndex + 1) % shuffledPhotos.length);
   }
 
+  useEffect(() => {
+    const query = window.matchMedia("(pointer: coarse) and (min-width: 768px) and (max-width: 1180px)");
+    const updateMotionMode = () => setUseCalmHeroMotion(query.matches);
+
+    updateMotionMode();
+    query.addEventListener("change", updateMotionMode);
+    return () => query.removeEventListener("change", updateMotionMode);
+  }, []);
+
   useGSAP(() => {
-    if (reduceMotion) return;
+    if (shouldCalmHeroMotion) return;
 
     const heroImages = gsap.utils.toArray(".hero-image-container");
     if (heroImages.length) {
@@ -124,7 +135,7 @@ export default function HomePageExperience({
         },
       });
     });
-  }, { scope: containerRef });
+  }, { scope: containerRef, dependencies: [shouldCalmHeroMotion] });
 
   useEffect(() => {
     if (reduceMotion || isHeroPaused || shuffledPhotos.length < 2) return;
@@ -140,20 +151,24 @@ export default function HomePageExperience({
     <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-48">
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="absolute inset-0">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode={shouldCalmHeroMotion ? "sync" : "wait"}>
             <motion.div
               key={activeHeroPhoto.id}
               className="absolute inset-0 hero-image-container"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
-              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1.04, filter: "blur(0px)" }}
-              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
-              transition={reduceMotion ? undefined : { duration: 2, ease: [0.16, 1, 0.3, 1] }}
+              initial={shouldCalmHeroMotion ? { opacity: 0 } : { opacity: 0, scale: 1.08, filter: "blur(8px)" }}
+              animate={shouldCalmHeroMotion ? { opacity: 1 } : { opacity: 1, scale: 1.04, filter: "blur(0px)" }}
+              exit={shouldCalmHeroMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, filter: "blur(4px)" }}
+              transition={
+                shouldCalmHeroMotion
+                  ? { duration: 0.65, ease: "easeOut" }
+                  : { duration: 2, ease: [0.16, 1, 0.3, 1] }
+              }
             >
               <motion.div
                 className="absolute inset-0"
-                initial={reduceMotion ? false : { scale: 1 }}
-                animate={reduceMotion || isHeroPaused ? { scale: 1 } : { scale: 1.08 }}
-                transition={reduceMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
+                initial={shouldCalmHeroMotion ? false : { scale: 1 }}
+                animate={shouldCalmHeroMotion || isHeroPaused ? { scale: 1 } : { scale: 1.08 }}
+                transition={shouldCalmHeroMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
               >
                 <Image
                   src={activeHeroPhoto.src}
@@ -172,13 +187,13 @@ export default function HomePageExperience({
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
         <motion.div
           className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.035)_42%,transparent_58%)]"
-          animate={reduceMotion ? undefined : { x: ["-12%", "12%", "-12%"] }}
-          transition={reduceMotion ? undefined : { duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          animate={shouldCalmHeroMotion ? undefined : { x: ["-12%", "12%", "-12%"] }}
+          transition={shouldCalmHeroMotion ? undefined : { duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.06),transparent_60%)]"
-          animate={reduceMotion ? undefined : { opacity: [0.05, 0.12, 0.05] }}
-          transition={reduceMotion ? undefined : { duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          animate={shouldCalmHeroMotion ? undefined : { opacity: [0.05, 0.12, 0.05] }}
+          transition={shouldCalmHeroMotion ? undefined : { duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-paper/20 to-paper" />
 
