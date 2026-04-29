@@ -2,7 +2,6 @@ import { Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import CustomCursor from "../components/CustomCursor";
-import PageTransition from "../components/PageTransition";
 import SmoothScroll from "../components/SmoothScroll";
 import NoiseOverlay from "../components/NoiseOverlay";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
@@ -79,9 +78,7 @@ export default function RootLayout({ children }) {
             <NoiseOverlay />
             <CustomCursor />
             <Navbar />
-            <PageTransition>
-              <main className="w-full pb-16 pt-20">{children}</main>
-            </PageTransition>
+            <main className="w-full pb-16 pt-20">{children}</main>
           </div>
         </SmoothScroll>
       </body>

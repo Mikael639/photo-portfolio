@@ -1,98 +1,244 @@
 # Jerrypicsart Portfolio
 
-Portfolio photo en Next.js + Tailwind + Framer Motion, avec back-office V1 pour publier des photos sans modifier le code.
+Portfolio photo en Next.js pour Jerrypicsart, avec une galerie publique, une page d'accueil avec diaporama, une page À propos éditoriale et un back-office simple pour gérer les photos sans intervention développeur.
 
-## Prerequisites
+## Stack
 
-- Node.js >= 20.9.0
-- npm
-- Projet Supabase
+- Next.js 16
+- React 19
+- Tailwind CSS
+- Framer Motion
+- GSAP
+- Supabase pour la base de données
+- Cloudflare R2 pour le stockage public des images
+- Resend pour les messages de contact
+- Vercel pour le déploiement
 
-## Local setup
+## Installation Locale
 
-1. Installer les dependances:
+1. Installer les dépendances :
 
 ```bash
 npm install
 ```
 
-2. Creer le fichier d'environnement:
+2. Créer le fichier d'environnement :
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Remplir les variables dans `.env.local`:
+3. Remplir les variables dans `.env.local`.
 
+Variables principales :
+
+- `NEXT_PUBLIC_SITE_URL`
 - `RESEND_API_KEY`
-- `NEXT_PUBLIC_SITE_URL` (optionnel mais recommande pour les metadata, le sitemap et le partage social)
 - `CONTACT_TO_EMAIL`
 - `CONTACT_FROM_EMAIL`
-- `CONTACT_AUTO_REPLY_SUBJECT` (optionnel)
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_BUCKET`
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET`
+- `R2_PUBLIC_URL`
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 - `ADMIN_SESSION_SECRET`
-- `ADMIN_API_KEY` (pour l'accès programmatique aux messages de contact)
+- `ADMIN_API_KEY`
 
-Le formulaire Contact envoie un email via Resend vers `CONTACT_TO_EMAIL` et envoie aussi un accusé de reception automatique au client.
+4. Appliquer le schéma Supabase :
 
-4. Appliquer le schema SQL dans Supabase:
+```text
+supabase/schema.sql
+```
 
-- Ouvrir SQL Editor
-- Executer `supabase/schema.sql`
-
-5. Lancer le projet:
+5. Lancer le projet :
 
 ```bash
 npm run dev
 ```
 
-## Admin photos
+## Fonctionnement Des Images
 
-- URL: `/admin/photos`
-- Login avec `ADMIN_USERNAME` + `ADMIN_PASSWORD`
-- L'interface admin charge maintenant la session et les photos initiales cote serveur, puis utilise des Server Actions pour les operations principales
-- Actions disponibles:
-  - upload simple ou multiple (max 12 photos/envoi, 15MB max/fichier)
-  - categorie
-  - roles (`hero`, `featured`, `servicesBackground`)
-  - publier/non publier
-  - epingler en haut
-  - supprimer
+Supabase sert principalement à stocker les informations des photos : titre, description, catégorie, rôles, statut de publication, etc.
 
-## Tri automatique des photos
+Les fichiers image sont stockés dans Cloudflare R2. Cela permet d'éviter de consommer le quota Supabase Storage et de réduire le risque de dépassement du Cached Egress Supabase.
 
-Les photos sont triees ainsi:
+Les nouvelles images ajoutées depuis l'admin sont envoyées vers R2 si les variables R2 sont configurées.
 
-1. `is_pinned DESC`
-2. `created_at DESC`
+## Page Admin
 
-Donc les nouvelles presta apparaissent automatiquement en haut.
+URL :
+
+```text
+/admin/photos
+```
+
+Connexion avec :
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+
+Actions disponibles :
+
+- importer une ou plusieurs photos
+- choisir la catégorie
+- publier ou masquer une photo
+- épingler une photo
+- supprimer une photo
+- choisir les rôles d'affichage
+
+Rôles disponibles :
+
+- `Diaporama accueil` : affiche la photo dans le diaporama de la page d'accueil
+- `Mise en avant` : rend la photo prioritaire dans certaines sélections
+- `Fond` : peut servir d'image d'ambiance
+- `Image approche` : peut servir à illustrer la section approche
+
+Le diaporama de la page d'accueil est limité à 10 photos. L'admin bloque l'ajout si cette limite est atteinte.
+
+## Galerie
+
+Catégories principales :
+
+- Events
+- Fashion Week & Celebrities
+- Studio
+- Fashion Wedding
+
+La galerie affiche :
+
+- `Tout`
+- puis chaque catégorie séparément
+
+Tous les filtres utilisent désormais le même rendu encadré. La galerie charge 24 photos au départ, puis 24 photos supplémentaires avec le bouton `Voir plus`.
+
+## Page D'accueil
+
+La page d'accueil utilise les photos cochées `Diaporama accueil` dans l'admin.
+
+Comportement actuel :
+
+- maximum 10 photos
+- autoplay du diaporama
+- animations premium sur desktop
+- animations simplifiées sur tablette pour éviter les saccades
+- scroll natif sur tablette pour améliorer la fluidité
+
+Après une modification dans l'admin, l'accueil peut mettre quelques minutes à refléter les changements à cause du cache.
+
+## Page À Propos
+
+La page À propos est une page éditoriale centrée sur le parcours de JerryPicsart.
+
+Elle utilise deux portraits locaux :
+
+- `public/images/about/jerrypicsart-profile-bw.jpeg`
+- `public/images/about/jerrypicsart-portrait-blue.jpeg`
+
+Ces images ne dépendent pas de Supabase ni de R2.
+
+## Scripts Utiles
+
+```bash
+npm run lint
+npm run build
+npm run import:local-photos
+npm run optimize:images
+npm run migrate:images:r2
+```
+
+Scripts image :
+
+- `scripts/import-local-photos.mjs` : importe des photos locales vers le projet
+- `scripts/optimize-supabase-images.mjs` : ancien script d'optimisation Supabase
+- `scripts/migrate-supabase-images-to-r2.mjs` : migre les images Supabase Storage vers R2
 
 ## API
 
-- Public: `GET /api/photos?category=...&limit=...`
-- Contact:
-  - `POST /api/contact` (envoi d'un message)
-  - `GET /api/contact` (nécessite header `x-admin-key`)
-- Admin auth:
-  - `POST /api/admin/login`
-  - `POST /api/admin/logout`
-- Admin photos:
-  - `GET /api/admin/photos`
-  - `POST /api/admin/photos`
-  - `PATCH /api/admin/photos`
-  - `DELETE /api/admin/photos?id=...`
+Photos publiques :
+
+```text
+GET /api/photos?category=...&limit=...
+```
+
+Contact :
+
+```text
+POST /api/contact
+GET /api/contact
+```
+
+Le `GET /api/contact` nécessite le header :
+
+```text
+x-admin-key
+```
+
+Admin auth :
+
+```text
+POST /api/admin/login
+POST /api/admin/logout
+GET /api/admin/session
+```
+
+Admin photos :
+
+```text
+GET /api/admin/photos
+POST /api/admin/photos
+PATCH /api/admin/photos
+DELETE /api/admin/photos?id=...
+```
+
+## Déploiement Vercel
+
+Ajouter les variables d'environnement une par une dans Vercel.
+
+Ne pas importer tout le fichier `.env.local` si des variables sensibles ou locales y sont présentes.
+
+À mettre dans Vercel :
+
+- variables Supabase publiques et serveur
+- variables R2
+- variables admin
+- variables Resend/contact
+
+Ne jamais exposer en `NEXT_PUBLIC_` :
+
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `R2_SECRET_ACCESS_KEY`
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+- `ADMIN_API_KEY`
 
 ## Sécurité
 
-> [!CAUTION]
-> Ne jamais versionner les fichiers `.env.local` ou toute clé privée sur un dépôt public.
+Ne jamais versionner :
 
-- Utilisez des secrets longs et complexes pour `ADMIN_SESSION_SECRET` et `ADMIN_API_KEY`.
-- Les accès admin utilisent des signatures HMAC sécurisées pour les sessions.
-- Le stockage Supabase est protégé par RLS (Row Level Security), assurez-vous que `supabase/schema.sql` est bien appliqué.
+- `.env.local`
+- clés R2 privées
+- clé Supabase service role
+- mot de passe admin
+- secrets de session
+
+Le fichier `.env.example` sert uniquement de modèle et ne doit contenir aucune vraie clé.
+
+## Vérification Avant Push
+
+Avant de pousser :
+
+```bash
+npm run lint
+npm run build
+```
+
+Puis :
+
+```bash
+git status -sb
+```
