@@ -1,14 +1,16 @@
 export default function AdminFilters({
   categoryFilter,
   categoryFilters,
+  heroFilter,
   publishFilter,
   searchQuery,
   setCategoryFilter,
+  setHeroFilter,
   setPublishFilter,
   setSearchQuery,
 }) {
   return (
-    <div className="grid gap-4 rounded-2xl border border-line/25 bg-white/55 p-4 md:grid-cols-[minmax(0,1.3fr)_220px_220px]">
+    <div className="grid gap-4 rounded-2xl border border-line/25 bg-white/55 p-4 md:grid-cols-[minmax(0,1.3fr)_200px_200px_220px]">
       <label className="space-y-2">
         <span className="text-xs uppercase tracking-[0.2em] text-ink/55">Recherche</span>
         <input
@@ -30,6 +32,18 @@ export default function AdminFilters({
               {category}
             </option>
           ))}
+        </select>
+      </label>
+      <label className="space-y-2">
+        <span className="text-xs uppercase tracking-[0.2em] text-ink/55">Accueil</span>
+        <select
+          value={heroFilter}
+          onChange={(event) => setHeroFilter(event.target.value)}
+          className="w-full rounded-lg border border-line/25 bg-paper px-3 py-2 outline-none focus:border-accent"
+        >
+          <option value="all">Toutes</option>
+          <option value="hero">Sur diaporama</option>
+          <option value="notHero">Hors diaporama</option>
         </select>
       </label>
       <label className="space-y-2">

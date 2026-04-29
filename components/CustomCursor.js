@@ -22,6 +22,7 @@ const textInputSelector = [
 ].join(", ");
 
 const galleryItemSelector = "[data-cursor='gallery-item']";
+const darkSurfaceSelector = "[data-cursor-surface='dark']";
 
 function getCursorMode(target) {
   if (!(target instanceof Element)) {
@@ -34,6 +35,10 @@ function getCursorMode(target) {
 
   if (target.closest(galleryItemSelector)) {
     return "gallery-item";
+  }
+
+  if (target.closest(darkSurfaceSelector)) {
+    return target.closest(interactiveSelector) ? "dark-interactive" : "dark-default";
   }
 
   if (target.closest(interactiveSelector)) {
@@ -66,11 +71,14 @@ export default function CustomCursor() {
   const [isVisible, setIsVisible] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [cursorMode, setCursorMode] = useState("default");
+  const [isTemporarilyPaused, setIsTemporarilyPaused] = useState(false);
   
   const stateRef = useRef(cursorMode);
+  const resizeTimeoutRef = useRef(null);
   
   const supportsFinePointer = useSyncExternalStore(subscribeToFinePointerQuery, getFinePointerSnapshot, () => false);
   const isEnabled = supportsFinePointer && !reduceMotion;
+  const isCursorActive = isEnabled && !isTemporarilyPaused;
   
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
@@ -93,6 +101,10 @@ export default function CustomCursor() {
 
   const handlePointerMove = useEffectEvent((event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
+
+    if (isTemporarilyPaused) {
+      setIsTemporarilyPaused(false);
+    }
     
     x.set(event.clientX);
     y.set(event.clientY);
@@ -122,12 +134,28 @@ export default function CustomCursor() {
     setCursorMode("default");
   });
 
+  const pauseCursorAfterViewportChange = useEffectEvent(() => {
+    setIsTemporarilyPaused(true);
+    setIsVisible(false);
+    setIsPressed(false);
+    stateRef.current = "default";
+    setCursorMode("default");
+
+    if (resizeTimeoutRef.current) {
+      window.clearTimeout(resizeTimeoutRef.current);
+    }
+
+    resizeTimeoutRef.current = window.setTimeout(() => {
+      setIsTemporarilyPaused(false);
+    }, 450);
+  });
+
   useEffect(() => {
-    document.documentElement.classList.toggle("has-custom-cursor", isEnabled);
+    document.documentElement.classList.toggle("has-custom-cursor", isCursorActive);
     return () => {
       document.documentElement.classList.remove("has-custom-cursor");
     };
-  }, [isEnabled]);
+  }, [isCursorActive]);
 
   useEffect(() => {
     if (!isEnabled) return;
@@ -143,6 +171,8 @@ export default function CustomCursor() {
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("blur", handlePointerLeave);
     window.addEventListener("mouseout", handleWindowMouseOut);
+    window.addEventListener("resize", pauseCursorAfterViewportChange);
+    window.addEventListener("orientationchange", pauseCursorAfterViewportChange);
 
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
@@ -150,12 +180,18 @@ export default function CustomCursor() {
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("blur", handlePointerLeave);
       window.removeEventListener("mouseout", handleWindowMouseOut);
+      window.removeEventListener("resize", pauseCursorAfterViewportChange);
+      window.removeEventListener("orientationchange", pauseCursorAfterViewportChange);
+      if (resizeTimeoutRef.current) {
+        window.clearTimeout(resizeTimeoutRef.current);
+      }
     };
   }, [isEnabled]);
 
-  if (!isEnabled) return null;
+  if (!isCursorActive) return null;
 
-  const isInteractive = cursorMode === "interactive";
+  const isDarkSurface = cursorMode.startsWith("dark-");
+  const isInteractive = cursorMode === "interactive" || cursorMode === "dark-interactive";
   const isGalleryItem = cursorMode === "gallery-item";
   const shouldHide = !isVisible || cursorMode === "hidden";
   
@@ -184,7 +220,9 @@ export default function CustomCursor() {
       }}
     >
       <motion.div
-        className="rounded-full border border-ink/20 bg-ink/5 backdrop-blur-[6px] shadow-sm flex items-center justify-center"
+        className={`flex items-center justify-center rounded-full border shadow-sm backdrop-blur-[6px] ${
+          isDarkSurface ? "border-white/55 bg-white/12 shadow-white/10" : "border-ink/20 bg-ink/5"
+        }`}
         animate={{
           width: cursorSize,
           height: cursorSize,
