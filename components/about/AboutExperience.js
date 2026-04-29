@@ -4,9 +4,38 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import MagneticElement from "../MagneticElement";
-import { useState, useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+
+const profilePhoto = {
+  src: "/images/about/jerrypicsart-profile-bw.jpeg",
+  alt: "Portrait noir et blanc de Jerrypicsart",
+};
+
+const portraitPhoto = {
+  src: "/images/about/jerrypicsart-portrait-blue.jpeg",
+  alt: "Portrait studio de Jerrypicsart",
+};
+
+const storyParagraphs = [
+  "Rien ne me prédestinait à ça. J'ai fait du marketing, du growth hacking. J'ai appris à comprendre les gens, à lire ce qui les fait vibrer, ce qui les fait choisir. Sans le savoir, je me préparais déjà.",
+  "Et puis il y a eu ce feu. Pas une révélation soudaine. Plutôt quelque chose qui s'est imposé de l'intérieur, comme une évidence que j'avais longtemps ignorée. La photographie n'était pas un plan B. C'était ce vers quoi je revenais.",
+  "Comme sur un terrain de basket, j'ai tout donné. Je me suis formé avec exigence, j'ai cultivé mon regard, j'ai construit un univers à la frontière de la mode et du mariage haut de gamme, là où l'esthétique ne doit jamais sacrifier l'émotion.",
+  "Aujourd'hui, mon objectif se pose sur des couples, des célébrités, des instants intimes et des scènes plus visibles. Mais derrière chaque séance, ma conviction reste la même : chaque personne mérite d'être vue avec la même attention, la même exigence, la même humanité.",
+];
+
+const values = [
+  {
+    label: "Présence",
+    text: "Voir la personne avant le statut, l'attitude avant la pose, la présence avant le décor.",
+  },
+  {
+    label: "Tenue",
+    text: "Construire des images propres, élégantes et maîtrisées, sans retirer la vie du moment.",
+  },
+  {
+    label: "Émotion",
+    text: "Garder une trace sincère, même lorsque l'image prend une dimension éditoriale.",
+  },
+];
 
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
@@ -27,94 +56,39 @@ function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   };
 }
 
-function PhotoPanel({ photo, className = "", sizes, reduceMotion }) {
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e) => {
-    if (reduceMotion) return;
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - left) / width;
-    const y = (e.clientY - top) / height;
-
-    const rX = (y - 0.5) * 6;
-    const rY = (x - 0.5) * -6;
-    setRotate({ x: rX, y: rY });
-  };
-
-  const handleMouseLeave = () => {
-    setRotate({ x: 0, y: 0 });
-  };
-
-  if (!photo) {
-    return <div className={`rounded-[2.2rem] border border-line/12 bg-white/40 ${className}`} />;
-  }
-
+function PortraitPanel({ photo, className = "", imageClassName = "", sizes, priority = false }) {
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
-      style={{
-        perspective: 1000,
-        transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-      }}
-    >
+    <div className={`relative overflow-hidden bg-ink shadow-[0_32px_96px_rgba(12,10,8,0.14)] ${className}`}>
       <Image
         src={photo.src}
         alt={photo.alt}
         fill
+        priority={priority}
         sizes={sizes}
-        className="object-cover transition-transform duration-[2s] ease-out hover:scale-110"
-        style={{ objectPosition: photo.objectPosition || "center center" }}
+        className={`object-cover ${imageClassName}`}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.22))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.28))]" />
     </div>
   );
 }
 
-export default function AboutExperience({ leadPhoto, secondaryPhoto, atmospherePhoto }) {
+export default function AboutExperience() {
   const reduceMotion = useReducedMotion();
-  const headline = "Une écriture visuelle sobre et précise.";
-  const headlineRef = useRef(null);
-
-  useGSAP(() => {
-    if (reduceMotion) return;
-    
-    gsap.fromTo(
-      ".word-stagger",
-      { y: 60, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 1,
-        ease: "power3.out",
-        stagger: 0.05,
-        delay: 0.5, // wait for page transition
-      }
-    );
-  }, { scope: headlineRef });
+  const headline = "Je ne photographie pas un statut. Je photographie une présence.";
 
   return (
-    <div ref={headlineRef} data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
-      <section className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-        <motion.div className="space-y-6" {...getRevealProps(reduceMotion)}>
-          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-ink/50">À propos</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-8xl flex flex-wrap gap-x-[0.2em] gap-y-2">
-            {headline.split(" ").map((word, i) => (
-              <span key={i} className="overflow-hidden inline-flex">
-                <span className="word-stagger inline-block">{word}</span>
-              </span>
-            ))}
+    <div data-page="about" className="page-shell mx-auto max-w-7xl space-y-20 px-4 pb-20 pt-12 md:space-y-32 md:px-8">
+      <section className="grid min-h-[calc(100vh-8rem)] gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
+        <motion.div className="space-y-8 pb-2" {...getRevealProps(reduceMotion)}>
+          <p className="text-[11px] font-medium uppercase tracking-[0.34em] text-ink/50">À propos</p>
+          <h1 className="max-w-4xl font-serif text-5xl leading-[0.92] tracking-[-0.05em] md:text-7xl xl:text-8xl">
+            {headline}
           </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-ink/75 md:text-xl">
-             Jerrypicsart photographie les events, la Fashion Week, les celebrities, le studio et le fashion wedding avec une même intention : donner de la
-             tenue à l&apos;instant, sans enlever ce qui le rend vivant.
+          <p className="max-w-2xl text-base leading-relaxed text-ink/72 md:text-xl">
+            Jerrypicsart construit une photographie à la frontière de la mode, du mariage haut de gamme,
+            des events et des personnalités. Une image tenue, précise, mais jamais froide.
           </p>
-          <p className="max-w-xl text-base leading-relaxed text-ink/60 md:text-lg">
-             Le regard reste éditorial, mais l&apos;enjeu n&apos;est jamais de faire posé pour faire posé. Chaque image
-             doit rester lisible, élégante et juste.
-          </p>
-          <div className="flex flex-wrap gap-4 pt-4">
+          <div className="flex flex-wrap gap-4 pt-2">
             <MagneticElement strength={0.25}>
               <Link
                 href="/gallery"
@@ -134,60 +108,75 @@ export default function AboutExperience({ leadPhoto, secondaryPhoto, atmosphereP
           </div>
         </motion.div>
 
-        <motion.div {...getRevealProps(reduceMotion, 0.1)}>
-          <PhotoPanel
-            photo={leadPhoto}
-            className="min-h-[28rem] md:min-h-[44rem]"
+        <motion.div className="relative" {...getRevealProps(reduceMotion, 0.1)}>
+          <PortraitPanel
+            photo={portraitPhoto}
+            priority
+            className="min-h-[34rem] rounded-[2.4rem] border border-line/10 md:min-h-[46rem]"
+            imageClassName="object-[58%_38%]"
             sizes="(max-width: 1024px) 100vw, 56vw"
-            reduceMotion={reduceMotion}
           />
+          <div className="absolute bottom-5 left-5 max-w-xs rounded-[1.6rem] border border-white/12 bg-black/35 p-5 text-paper shadow-2xl backdrop-blur-md md:bottom-8 md:left-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/42">Conviction</p>
+            <p className="mt-3 font-serif text-2xl leading-tight">
+              Le statut change. L&apos;attention, jamais.
+            </p>
+          </div>
         </motion.div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <section className="grid gap-10 border-y border-line/12 py-12 md:py-16 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+        <motion.div className="lg:sticky lg:top-28" {...getRevealProps(reduceMotion)}>
+          <PortraitPanel
+            photo={profilePhoto}
+            priority
+            className="min-h-[32rem] rounded-[1.6rem] border border-line/10 bg-paper md:min-h-[42rem]"
+            imageClassName="object-[55%_38%]"
+            sizes="(max-width: 1024px) 100vw, 38vw"
+          />
+        </motion.div>
+
         <motion.div
-          className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0.65))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-12"
-          {...getRevealProps(reduceMotion)}
+          className="self-center lg:pl-8"
+          {...getRevealProps(reduceMotion, 0.08)}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40">Approche</p>
-          <h2 className="mt-6 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] md:text-6xl">
-            Travailler l&apos;allure sans perdre la vérité.
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">Parcours</p>
+          <h2 className="mt-6 max-w-2xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] md:text-6xl">
+            Avant l&apos;image, il y avait déjà l&apos;attention aux gens.
           </h2>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/70 md:text-xl">
-            En Fashion Week et celebrities, cela veut dire garder la tension, la coupe, le rythme. En fashion wedding, cela veut dire rester
-            attentif aux regards, aux gestes, à la circulation de la lumière.
-          </p>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink/55 md:text-lg">
-            Des images suffisamment fortes pour marquer, et suffisamment propres pour durer.
-          </p>
-        </motion.div>
-
-        <motion.div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1" {...getRevealProps(reduceMotion, 0.1)}>
-          <PhotoPanel
-            photo={secondaryPhoto}
-            className="min-h-[22rem] md:min-h-[28rem]"
-            sizes="(max-width: 1024px) 100vw, 32vw"
-            reduceMotion={reduceMotion}
-          />
-          <PhotoPanel
-            photo={atmospherePhoto}
-            className="min-h-[22rem] md:min-h-[28rem]"
-            sizes="(max-width: 1024px) 100vw, 32vw"
-            reduceMotion={reduceMotion}
-          />
+          <div className="mt-8 max-w-2xl space-y-6 text-base leading-relaxed text-ink/68 md:text-lg">
+            {storyParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
         </motion.div>
       </section>
 
-      <section className="overflow-hidden rounded-[2.8rem] border border-line/12 bg-[linear-gradient(135deg,rgba(18,15,12,0.98),rgba(52,38,28,0.95))] p-8 text-paper shadow-[0_32px_96px_rgba(12,10,8,0.18)] md:p-12 lg:p-16">
-        <motion.div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center" {...getRevealProps(reduceMotion)}>
+      <section className="grid gap-5 md:grid-cols-3">
+        {values.map((item, index) => (
+          <motion.div
+            key={item.label}
+            className="border-t border-line/16 pt-6"
+            {...getRevealProps(reduceMotion, index * 0.08)}
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/38">
+              {String(index + 1).padStart(2, "0")} / {item.label}
+            </p>
+            <p className="mt-5 text-base leading-relaxed text-ink/68 md:text-lg">{item.text}</p>
+          </motion.div>
+        ))}
+      </section>
+
+      <section className="overflow-hidden rounded-[2.8rem] border border-line/12 bg-[linear-gradient(135deg,rgba(18,15,12,0.98),rgba(29,33,41,0.96))] p-8 text-paper shadow-[0_32px_96px_rgba(12,10,8,0.18)] md:p-12 lg:p-16">
+        <motion.div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center" {...getRevealProps(reduceMotion)}>
           <div className="space-y-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/40">Direction</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/40">Manifeste</p>
             <h2 className="max-w-4xl font-serif text-4xl leading-[0.94] tracking-[-0.05em] md:text-7xl">
-              Une signature qui peut passer de l&apos;éditorial à la célébration.
+              Chaque personne mérite d&apos;être vue avec attention.
             </h2>
             <p className="max-w-2xl text-base leading-relaxed text-paper/70 md:text-xl">
-              Si tu cherches des images nettes, élégantes et pensées comme une vraie série, on peut construire quelque
-              chose de très simple, mais très tenu.
+              Couples, célébrités, entrepreneurs, familles ou invités d&apos;un événement : le cadre change,
+              mais l&apos;intention reste la même. Faire une image qui respecte la personne et élève le moment.
             </p>
           </div>
 

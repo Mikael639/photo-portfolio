@@ -4,21 +4,11 @@ import { startTransition, useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lightbox from "../Lightbox";
 import MagneticElement from "../MagneticElement";
-import { useVelocitySkew } from "../../lib/hooks/useVelocitySkew";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
-const INITIAL_VISIBLE_PHOTOS = 18;
-const LOAD_MORE_PHOTOS = 18;
-const FILTERED_VISIBLE_PHOTOS = 24;
-const FILTERED_LOAD_MORE_PHOTOS = 24;
+const GALLERY_VISIBLE_PHOTOS = 24;
+const GALLERY_LOAD_MORE_PHOTOS = 24;
 
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
@@ -72,72 +62,6 @@ function FilterButton({ category, count, isActive, onClick }) {
   );
 }
 
-function GalleryCard({
-  photo,
-  index,
-  onOpen,
-  sizes,
-  className = "",
-  priority = false,
-  reduceMotion,
-  delay = 0,
-}) {
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const liquidRef = useVelocitySkew(0.1, 7);
-
-  const handleMouseMove = (e) => {
-    if (reduceMotion) return;
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - left) / width;
-    const y = (e.clientY - top) / height;
-
-    const rX = (y - 0.5) * 10;
-    const rY = (x - 0.5) * -10;
-    setRotate({ x: rX, y: rY });
-  };
-
-  const handleMouseLeave = () => {
-    setRotate({ x: 0, y: 0 });
-  };
-
-  return (
-    <motion.button
-      type="button"
-      onClick={() => onOpen(index)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      data-cursor="gallery-item"
-      className={`group relative block w-full overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink text-left shadow-[0_32px_96px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out ${className}`}
-      initial={reduceMotion ? false : { opacity: 0, y: 42, clipPath: "inset(12% 0 12% 0 round 2.2rem)" }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, clipPath: "inset(0% 0 0% 0 round 2.2rem)" }}
-      viewport={{ once: true, amount: 0.22 }}
-      transition={reduceMotion ? undefined : { duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
-      style={{
-        perspective: 1200,
-        transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-      }}
-    >
-      <div ref={liquidRef} className="absolute inset-0 h-full w-full">
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          sizes={sizes}
-          className="parallax-gallery-img object-cover sharpen-img transition-transform duration-1000 ease-out group-hover:scale-[1.08] scale-[1.08]"
-          style={{ objectPosition: photo.objectPosition || "center center" }}
-          quality={85}
-        />
-      </div>
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.1)_40%,rgba(12,10,8,0.85))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.18)_45%,transparent_62%)] opacity-0 transition duration-700 group-hover:translate-x-full group-hover:opacity-100" />
-      <div className="pointer-events-none absolute inset-3 rounded-[1.8rem] border border-white/0 transition-colors duration-500 group-hover:border-white/18" />
-    </motion.button>
-  );
-}
-
 function FramedGalleryCard({ photo, index, onOpen, reduceMotion, priority = false }) {
   return (
     <motion.button
@@ -180,13 +104,12 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   const [activeIndex, setActiveIndex] = useState(null);
   const [visiblePhotoState, setVisiblePhotoState] = useState({
     filter: activeFilter,
-    count: INITIAL_VISIBLE_PHOTOS,
+    count: GALLERY_VISIBLE_PHOTOS,
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const containerRef = useRef(null);
-  const isFilteredCollection = activeFilter !== "Tout";
-  const initialVisibleCount = isFilteredCollection ? FILTERED_VISIBLE_PHOTOS : INITIAL_VISIBLE_PHOTOS;
-  const loadMoreCount = isFilteredCollection ? FILTERED_LOAD_MORE_PHOTOS : LOAD_MORE_PHOTOS;
+  const initialVisibleCount = GALLERY_VISIBLE_PHOTOS;
+  const loadMoreCount = GALLERY_LOAD_MORE_PHOTOS;
   const visibleCount =
     visiblePhotoState.filter === activeFilter ? visiblePhotoState.count : initialVisibleCount;
 
@@ -195,24 +118,6 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useGSAP(() => {
-    if (reduceMotion) return;
-
-    const parallaxImages = gsap.utils.toArray(".parallax-gallery-img");
-    parallaxImages.forEach((img) => {
-      gsap.to(img, {
-        yPercent: 18,
-        ease: "none",
-        scrollTrigger: {
-          trigger: img.parentElement,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    });
-  }, { scope: containerRef, dependencies: [activeFilter, visibleCount] });
 
   const categoryCounts = useMemo(() => {
     const counts = { Tout: allPhotos.length };
@@ -227,14 +132,6 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
   const hasMorePhotos = visiblePhotos.length < photos.length;
   const leadPhoto = visiblePhotos[0] || null;
-  const secondaryPhotos = useMemo(
-    () => visiblePhotos.slice(1, 3).map((photo, index) => ({ photo, index: index + 1 })),
-    [visiblePhotos]
-  );
-  const galleryGridPhotos = useMemo(
-    () => visiblePhotos.slice(3).map((photo, index) => ({ photo, index: index + 3 })),
-    [visiblePhotos]
-  );
 
   return (
     <div ref={containerRef} data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
@@ -282,85 +179,16 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
           transition={reduceMotion ? undefined : { duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-12 md:space-y-16"
         >
-          {isFilteredCollection ? (
-            <section className="space-y-6">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5">
-                {visiblePhotos.map((photo, index) => (
-                  <FramedGalleryCard
-                    key={photo.id}
-                    photo={photo}
-                    index={index}
-                    onOpen={setActiveIndex}
-                    reduceMotion={reduceMotion}
-                    priority={index < 8}
-                  />
-                ))}
-              </div>
-
-              {hasMorePhotos ? (
-                <div className="mt-10 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setVisiblePhotoState({
-                        filter: activeFilter,
-                        count: Math.min(visibleCount + loadMoreCount, photos.length),
-                      })
-                    }
-                    className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"
-                  >
-                    Voir plus ({photos.length - visiblePhotos.length})
-                  </button>
-                </div>
-              ) : null}
-            </section>
-          ) : (
-          <>
-          <section className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr] xl:items-stretch">
-            <GalleryCard
-              photo={leadPhoto}
-              index={0}
-              onOpen={setActiveIndex}
-              sizes="(max-width: 1280px) 100vw, 58vw"
-              className="min-h-[30rem] lg:min-h-[44rem] xl:h-[44rem]"
-              priority
-              reduceMotion={reduceMotion}
-            />
-
-            <div className="grid gap-6 sm:grid-cols-2 xl:h-[44rem]">
-                {secondaryPhotos.map(({ photo, index }, itemIndex) => (
-                  <GalleryCard
-                    key={photo.id}
-                    photo={photo}
-                    index={index}
-                    onOpen={setActiveIndex}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 24vw"
-                    className="aspect-[4/5] min-h-[24rem] md:min-h-[30rem] xl:h-full xl:min-h-0"
-                    reduceMotion={reduceMotion}
-                    delay={0.15 + itemIndex * 0.08}
-                  />
-                ))}
-            </div>
-          </section>
-
-          <section>
-            <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
-              {galleryGridPhotos.map(({ photo, index }, itemIndex) => (
-                <GalleryCard
+          <section className="space-y-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5">
+              {visiblePhotos.map((photo, index) => (
+                <FramedGalleryCard
                   key={photo.id}
                   photo={photo}
                   index={index}
                   onOpen={setActiveIndex}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                  className={`mb-6 min-h-[20rem] break-inside-avoid ${
-                    itemIndex % 3 === 0
-                      ? "h-[22rem] md:h-[28rem]"
-                      : itemIndex % 3 === 1
-                        ? "h-[28rem] md:h-[36rem]"
-                        : "h-[24rem] md:h-[32rem]"
-                  }`}
                   reduceMotion={reduceMotion}
-                  delay={Math.min(itemIndex * 0.03, 0.28)}
+                  priority={index < 8}
                 />
               ))}
             </div>
@@ -382,8 +210,6 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
               </div>
             ) : null}
           </section>
-          </>
-          )}
         </motion.div>
       ) : null}
       </AnimatePresence>
