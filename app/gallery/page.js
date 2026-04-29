@@ -1,7 +1,7 @@
 import GalleryExperience from "../../components/gallery/GalleryExperience";
-import { portfolioCategories } from "../../lib/categories";
 import { enhancePhotoPresentation } from "../../lib/photoPresentation";
 import { getPublicPhotos } from "../../lib/photoRepository";
+import { getCategories } from "../../lib/siteSettings";
 
 export const metadata = {
   title: "Galerie",
@@ -11,11 +11,11 @@ export const metadata = {
   },
 };
 
-function buildCategories(photos) {
+function buildCategories(photos, preferredCategories) {
   const derivedCategories = Array.from(new Set(photos.map((photo) => photo.category).filter(Boolean)));
   const orderedCategories = [];
 
-  for (const category of [...portfolioCategories, ...derivedCategories]) {
+  for (const category of [...(preferredCategories || []), ...derivedCategories]) {
     if (!orderedCategories.includes(category)) {
       orderedCategories.push(category);
     }
@@ -33,14 +33,17 @@ export default async function GalleryPage({ searchParams }) {
   const resolvedSearchParams = (await searchParams) || {};
   const requestedCategory = typeof resolvedSearchParams.category === "string" ? resolvedSearchParams.category : "Tout";
   let allPhotos = [];
+  let preferredCategories = [];
 
   try {
-    allPhotos = (await getPublicPhotos()).map(enhancePhotoPresentation);
+    const [photos, cats] = await Promise.all([getPublicPhotos(), getCategories()]);
+    allPhotos = photos.map(enhancePhotoPresentation);
+    preferredCategories = cats;
   } catch {
     allPhotos = [];
   }
 
-  const categories = buildCategories(allPhotos);
+  const categories = buildCategories(allPhotos, preferredCategories);
   const initialCategory = categories.includes(requestedCategory) ? requestedCategory : "Tout";
 
   return (

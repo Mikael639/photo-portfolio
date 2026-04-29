@@ -438,7 +438,7 @@ export default function HomePageExperience({
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-7xl px-4 md:px-8 color-transition-section">
+      <section data-cursor-surface="dark" className="mx-auto max-w-7xl px-4 md:px-8 color-transition-section">
         <div className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <MotionBlock reduceMotion={reduceMotion} className="space-y-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/55">Approche</p>
@@ -500,7 +500,7 @@ export default function HomePageExperience({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="relative overflow-hidden rounded-[2.8rem] border border-line/12 bg-ink text-paper shadow-2xl">
+        <div data-cursor-surface="dark" className="relative overflow-hidden rounded-[2.8rem] border border-line/12 bg-ink text-paper shadow-2xl">
           <Image
             src={servicesBackground.src}
             alt={servicesBackground.alt}
@@ -571,7 +571,7 @@ export default function HomePageExperience({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="relative grid gap-10 overflow-hidden rounded-[3rem] border border-line/12 bg-[linear-gradient(135deg,#171310,#302720)] p-8 text-paper shadow-[0_48px_128px_rgba(12,10,8,0.2)] md:p-12 lg:grid-cols-[1fr_auto] lg:items-center lg:p-16">
+        <div data-cursor-surface="dark" className="relative grid gap-10 overflow-hidden rounded-[3rem] border border-line/12 bg-[linear-gradient(135deg,#171310,#302720)] p-8 text-paper shadow-[0_48px_128px_rgba(12,10,8,0.2)] md:p-12 lg:grid-cols-[1fr_auto] lg:items-center lg:p-16">
           <MotionBlock reduceMotion={reduceMotion} className="space-y-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-white/40">Contact</p>
             <h2 className="max-w-3xl font-serif text-5xl leading-[0.94] tracking-[-0.05em] md:text-8xl">

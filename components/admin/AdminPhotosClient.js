@@ -8,7 +8,7 @@ import {
   reorderAdminPhotosAction,
   updateAdminPhotoAction,
   updateContactStatusAction,
-  updateHomeCopyAction,
+  deleteContactMessageAction,
   uploadAdminPhotosAction,
 } from "../../app/admin/photos/actions";
 import AdminDashboard from "./AdminDashboard";
@@ -17,25 +17,22 @@ import AdminFilters from "./AdminFilters";
 import AdminLoginForm from "./AdminLoginForm";
 import AdminMessagesPanel from "./AdminMessagesPanel";
 import AdminPhotosTable from "./AdminPhotosTable";
-import AdminSiteTextEditor from "./AdminSiteTextEditor";
 import AdminThemeGuide from "./AdminThemeGuide";
 import AdminUploadForm from "./AdminUploadForm";
 import {
-  categories,
-  categoryFilters,
+  categories as staticCategories,
+  categoryFilters as staticCategoryFilters,
   initialUploadForm,
   maxBulkUploadCount,
   maxHeroPhotoCount,
   roleOptions,
 } from "./constants";
-import { defaultHomeCopy } from "../../lib/siteSettings";
 import { compressImageFiles, formatFileSize } from "../../lib/imageCompression";
 
 const tabs = [
   { id: "photos", label: "Photos" },
   { id: "upload", label: "Ajouter" },
   { id: "messages", label: "Messages" },
-  { id: "texts", label: "Textes" },
   { id: "themes", label: "Aide" },
 ];
 
@@ -43,16 +40,15 @@ export default function AdminPhotosClient({
   initialAuthenticated = false,
   initialPhotos = [],
   initialMessages = [],
-  initialHomeCopy = {},
+  initialCategories = [],
 }) {
   const [authForm, setAuthForm] = useState({ username: "admin", password: "" });
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
   const [photos, setPhotos] = useState(initialPhotos);
   const [messages, setMessages] = useState(initialMessages);
-  const [homeCopy, setHomeCopy] = useState({ ...defaultHomeCopy, ...(initialHomeCopy || {}) });
+  const [categories, setCategories] = useState(initialCategories?.length > 0 ? initialCategories : staticCategories);
   const [uploadForm, setUploadForm] = useState(initialUploadForm);
   const [isUploading, setIsUploading] = useState(false);
-  const [isSavingText, setIsSavingText] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [busyId, setBusyId] = useState("");
@@ -312,21 +308,19 @@ export default function AdminPhotosClient({
     setStatusMessage(result.message || "Message mis a jour.");
   }
 
-  async function saveHomeCopy(event) {
-    event.preventDefault();
-    setIsSavingText(true);
-    setErrorMessage("");
+  async function deleteMessage(id) {
+    const previousMessages = messages;
+    setMessages((current) => current.filter((message) => message.id !== id));
 
-    const result = await updateHomeCopyAction(homeCopy);
-    setIsSavingText(false);
-
+    const result = await deleteContactMessageAction(id);
     if (!result.ok) {
-      setErrorMessage(result.message || "Impossible d'enregistrer les textes.");
+      setMessages(previousMessages);
+      setErrorMessage(result.message || "Impossible de supprimer le message.");
       return;
     }
 
-    setHomeCopy(result.data || homeCopy);
-    setStatusMessage(result.message || "Textes enregistres.");
+    setMessages(result.data || []);
+    setStatusMessage(result.message || "Message supprime.");
   }
 
   if (!isAuthenticated) {
@@ -378,7 +372,7 @@ export default function AdminPhotosClient({
         <>
           <AdminFilters
             categoryFilter={categoryFilter}
-            categoryFilters={categoryFilters}
+            categoryFilters={["Toutes", ...categories]}
             heroFilter={heroFilter}
             publishFilter={publishFilter}
             searchQuery={searchQuery}
@@ -419,15 +413,10 @@ export default function AdminPhotosClient({
       ) : null}
 
       {activeTab === "messages" ? (
-        <AdminMessagesPanel messages={messages} onUpdateStatus={updateMessageStatus} />
-      ) : null}
-
-      {activeTab === "texts" ? (
-        <AdminSiteTextEditor
-          homeCopy={homeCopy}
-          isSaving={isSavingText}
-          onSave={saveHomeCopy}
-          setHomeCopy={setHomeCopy}
+        <AdminMessagesPanel 
+          messages={messages} 
+          onUpdateStatus={updateMessageStatus} 
+          onDeleteMessage={deleteMessage}
         />
       ) : null}
 
