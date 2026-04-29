@@ -195,10 +195,9 @@ export default function CustomCursor() {
   const isGalleryItem = cursorMode === "gallery-item";
   const shouldHide = !isVisible || cursorMode === "hidden";
   
-  // Tailles du curseur
-  const cursorSize = 
-    isGalleryItem ? 84 : 
-    isInteractive ? 48 : 
+  const cursorSize =
+    isGalleryItem ? 84 :
+    isInteractive ? 48 :
     24;
 
   return (

@@ -1,4 +1,5 @@
 import AboutExperience from "../../components/about/AboutExperience";
+import { getAboutCopy } from "../../lib/siteSettings";
 
 export const metadata = {
   title: "À propos",
@@ -9,6 +10,7 @@ export const metadata = {
   },
 };
 
-export default function AboutPage() {
-  return <AboutExperience />;
+export default async function AboutPage() {
+  const aboutCopy = await getAboutCopy();
+  return <AboutExperience aboutCopy={aboutCopy} />;
 }

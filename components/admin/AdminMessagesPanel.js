@@ -13,7 +13,7 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-export default function AdminMessagesPanel({ messages, onUpdateStatus }) {
+export default function AdminMessagesPanel({ messages, onUpdateStatus, onDeleteMessage }) {
   return (
     <section className="space-y-4">
       <div className="rounded-2xl border border-line/20 bg-white/65 p-5">
@@ -69,16 +69,31 @@ export default function AdminMessagesPanel({ messages, onUpdateStatus }) {
                 {message.project}
               </p>
 
-              {message.referenceLink ? (
-                <a
-                  href={message.referenceLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-block rounded-full border border-line/25 px-4 py-2 text-sm hover:border-ink"
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-line/10">
+                <div className="flex gap-3">
+                  {message.referenceLink ? (
+                    <a
+                      href={message.referenceLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block rounded-full border border-line/25 px-4 py-2 text-xs font-medium hover:border-ink hover:bg-paper transition"
+                    >
+                      Ouvrir la reference
+                    </a>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("Supprimer ce message definitivement ?")) {
+                      onDeleteMessage(message.id);
+                    }
+                  }}
+                  className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 transition"
                 >
-                  Ouvrir la reference
-                </a>
-              ) : null}
+                  Supprimer
+                </button>
+              </div>
             </article>
           ))}
         </div>

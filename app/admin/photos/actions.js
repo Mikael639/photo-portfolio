@@ -11,7 +11,7 @@ import {
   verifyAdminSessionToken,
 } from "../../../lib/adminAuth";
 import { defaultPortfolioCategory } from "../../../lib/categories";
-import { listContactMessages, updateContactMessageStatus } from "../../../lib/contactStore";
+import { deleteContactMessage, listContactMessages, updateContactMessageStatus } from "../../../lib/contactStore";
 import {
   createAdminPhotos,
   deleteAdminPhoto,
@@ -22,7 +22,14 @@ import {
   reorderAdminPhotos,
   updateAdminPhoto,
 } from "../../../lib/photoRepository";
-import { updateHomeCopy } from "../../../lib/siteSettings";
+import {
+  getAboutCopy,
+  getCategories,
+  updateAboutCopy,
+  updateCategories,
+  updateHomeCopy,
+  updateMaintenanceMode,
+} from "../../../lib/siteSettings";
 
 function unauthorizedResult(message = "Unauthorized.") {
   return createActionResult({ ok: false, message });
@@ -245,5 +252,63 @@ export async function updateHomeCopyAction(input) {
     return createActionResult({ ok: true, message: "Textes du site enregistres.", data: copy });
   } catch (error) {
     return createActionResult({ ok: false, message: error.message || "Unable to update site copy." });
+  }
+}
+
+export async function updateAboutCopyAction(input) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const copy = await updateAboutCopy(input);
+    revalidateTag("site-settings");
+    revalidatePath("/about");
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Textes de la page A Propos enregistres.", data: copy });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to update about copy." });
+  }
+}
+
+export async function updateCategoriesAction(input) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const categories = await updateCategories(input);
+    revalidateTag("site-settings");
+    revalidatePublicPhotoViews();
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Categories enregistrees.", data: categories });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to update categories." });
+  }
+}
+
+export async function updateMaintenanceModeAction(isEnabled) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const status = await updateMaintenanceMode(isEnabled);
+    revalidateTag("site-settings");
+    revalidatePath("/", "layout");
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: `Mode maintenance ${status ? "active" : "desactive"}.`, data: status });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to update maintenance mode." });
+  }
+}
+
+export async function deleteContactMessageAction(id) {
+  const cookieStore = await getAuthorizedCookieStore();
+  if (!cookieStore) return unauthorizedResult();
+
+  try {
+    const messages = await deleteContactMessage(id);
+    revalidateAdminViews();
+    return createActionResult({ ok: true, message: "Message supprime definitivement.", data: messages });
+  } catch (error) {
+    return createActionResult({ ok: false, message: error.message || "Unable to delete message." });
   }
 }
