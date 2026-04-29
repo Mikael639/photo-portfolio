@@ -150,7 +150,7 @@ export default function HomePageExperience({
   }, [isHeroPaused, shuffledPhotos.length, reduceMotion]);
 
   return (
-    <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-48">
+    <div ref={containerRef} data-page="home" className="page-shell -mt-20 space-y-20 pb-16 md:space-y-28 xl:space-y-32">
       <section className="relative isolate min-h-screen overflow-hidden">
         <div className="absolute inset-0">
           {shouldCalmHeroMotion ? (
