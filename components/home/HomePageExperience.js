@@ -65,6 +65,9 @@ export default function HomePageExperience({
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const shuffledPhotos = cinematicPhotos;
   const activeHeroPhoto = shuffledPhotos[activeHeroIndex] || heroPhoto;
+  const activeHeroCategoryHref = activeHeroPhoto?.category
+    ? `/gallery?category=${encodeURIComponent(activeHeroPhoto.category)}`
+    : "/gallery";
   const containerRef = useRef(null);
   const visibleHeroDots = shuffledPhotos.slice(0, 5);
 
@@ -166,7 +169,12 @@ export default function HomePageExperience({
           </AnimatePresence>
         </div>
 
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.6)_0%,rgba(12,10,8,0.3)_30%,rgba(12,10,8,0.5)_65%,rgba(12,10,8,0.95)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
+        <motion.div
+          className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.035)_42%,transparent_58%)]"
+          animate={reduceMotion ? undefined : { x: ["-12%", "12%", "-12%"] }}
+          transition={reduceMotion ? undefined : { duration: 16, repeat: Infinity, ease: "easeInOut" }}
+        />
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.06),transparent_60%)]"
           animate={reduceMotion ? undefined : { opacity: [0.05, 0.12, 0.05] }}
@@ -263,6 +271,23 @@ export default function HomePageExperience({
                     transition={reduceMotion ? undefined : { duration: HERO_SLIDE_DURATION_MS / 1000, ease: "linear" }}
                   />
                 </div>
+                <span className="min-w-14 text-right font-serif text-xl leading-none text-paper/75">
+                  {String(activeHeroIndex + 1).padStart(2, "0")}
+                  <span className="mx-1 text-paper/25">/</span>
+                  <span className="text-sm text-paper/45">{String(shuffledPhotos.length).padStart(2, "0")}</span>
+                </span>
+              </motion.div>
+            ) : null}
+
+            {activeHeroPhoto?.category ? (
+              <motion.div variants={wordRevealVariant} className="mt-4">
+                <Link
+                  href={activeHeroCategoryHref}
+                  className="group inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-paper/55 transition hover:text-paper"
+                >
+                  Voir cette serie
+                  <span className="h-px w-8 bg-paper/30 transition-all duration-300 group-hover:w-12" />
+                </Link>
               </motion.div>
             ) : null}
           </motion.div>
