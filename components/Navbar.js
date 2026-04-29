@@ -9,6 +9,9 @@ import { siteConfig } from "../lib/siteConfig";
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isIdleOnHome, setIsIdleOnHome] = useState(false);
+  const isHome = pathname === "/";
+  const shouldDimOnHome = isHome && !isOpen && isIdleOnHome;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -22,16 +25,47 @@ export default function Navbar() {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isHome || isOpen) {
+      return undefined;
+    }
+
+    let timeoutId;
+
+    function showNavigation() {
+      setIsIdleOnHome(false);
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        if (window.innerWidth >= 768 && window.scrollY < window.innerHeight * 0.82) {
+          setIsIdleOnHome(true);
+        }
+      }, 3200);
+    }
+
+    showNavigation();
+    const events = ["mousemove", "mousedown", "touchstart", "keydown", "scroll"];
+    events.forEach((eventName) => window.addEventListener(eventName, showNavigation, { passive: true }));
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      events.forEach((eventName) => window.removeEventListener(eventName, showNavigation));
+    };
+  }, [isHome, isOpen]);
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={shouldDimOnHome ? { y: -18, opacity: 0.08 } : { y: 0, opacity: 1 }}
       transition={{ 
-        duration: 0.8, 
+        duration: shouldDimOnHome ? 0.7 : 0.45,
         ease: [0.16, 1, 0.3, 1], 
-        delay: pathname === "/" ? 2.2 : 0.4 
+        delay: pathname === "/" && !shouldDimOnHome ? 2.2 : 0.04
       }}
-      className="fixed inset-x-0 top-0 z-50 border-b border-line/20 bg-paper/70 backdrop-blur-xl"
+      onMouseEnter={() => setIsIdleOnHome(false)}
+      onFocusCapture={() => setIsIdleOnHome(false)}
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-colors duration-500 ${
+        shouldDimOnHome ? "pointer-events-none border-transparent bg-paper/0" : "border-line/20 bg-paper/70"
+      }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
         <Link href="/" className="font-serif text-xl tracking-wide text-ink">

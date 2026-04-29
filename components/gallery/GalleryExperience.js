@@ -17,6 +17,8 @@ if (typeof window !== "undefined") {
 
 const INITIAL_VISIBLE_PHOTOS = 18;
 const LOAD_MORE_PHOTOS = 18;
+const FILTERED_VISIBLE_PHOTOS = 24;
+const FILTERED_LOAD_MORE_PHOTOS = 24;
 
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
@@ -142,13 +144,13 @@ function FramedGalleryCard({ photo, index, onOpen, reduceMotion, priority = fals
       type="button"
       onClick={() => onOpen(index)}
       data-cursor="gallery-item"
-      className="group relative block w-full overflow-hidden rounded-xl border border-line/14 bg-white p-2 text-left shadow-[0_18px_54px_rgba(12,10,8,0.07)] transition duration-500 hover:-translate-y-1 hover:border-ink/18 hover:shadow-[0_28px_76px_rgba(12,10,8,0.12)]"
+      className="group relative block w-full overflow-hidden rounded-[0.8rem] border border-line/18 bg-white/75 p-[2px] text-left shadow-[0_18px_54px_rgba(12,10,8,0.07)] backdrop-blur-sm transition duration-500 hover:-translate-y-1 hover:border-ink/18 hover:bg-white hover:shadow-[0_30px_88px_rgba(12,10,8,0.13)]"
       initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.985 }}
       whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={reduceMotion ? undefined : { duration: 0.58, delay: Math.min(index * 0.025, 0.22), ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-ink">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[0.62rem] bg-ink">
         <Image
           src={photo.src}
           alt={photo.alt}
@@ -156,12 +158,15 @@ function FramedGalleryCard({ photo, index, onOpen, reduceMotion, priority = fals
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover sharpen-img transition duration-700 ease-out group-hover:scale-[1.045]"
+          className="object-cover sharpen-img transition duration-700 ease-out group-hover:scale-[1.055]"
           style={{ objectPosition: photo.objectPosition || "center center" }}
           quality={85}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.18))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="pointer-events-none absolute inset-2 rounded-md border border-white/0 transition-colors duration-500 group-hover:border-white/24" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0)_30%,rgba(12,10,8,0.26))] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.06)_35%,rgba(255,255,255,0.22)_48%,rgba(255,255,255,0.08)_58%,transparent_76%)] opacity-0 mix-blend-screen blur-[0.5px] transition duration-700 ease-out group-hover:translate-x-full group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.16),transparent_38%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-white/0 transition duration-500 group-hover:opacity-100 group-hover:ring-white/22" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/28 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
     </motion.button>
   );
@@ -179,8 +184,11 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const containerRef = useRef(null);
+  const isFilteredCollection = activeFilter !== "Tout";
+  const initialVisibleCount = isFilteredCollection ? FILTERED_VISIBLE_PHOTOS : INITIAL_VISIBLE_PHOTOS;
+  const loadMoreCount = isFilteredCollection ? FILTERED_LOAD_MORE_PHOTOS : LOAD_MORE_PHOTOS;
   const visibleCount =
-    visiblePhotoState.filter === activeFilter ? visiblePhotoState.count : INITIAL_VISIBLE_PHOTOS;
+    visiblePhotoState.filter === activeFilter ? visiblePhotoState.count : initialVisibleCount;
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -218,7 +226,6 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
 
   const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
   const hasMorePhotos = visiblePhotos.length < photos.length;
-  const isFilteredCollection = activeFilter !== "Tout";
   const leadPhoto = visiblePhotos[0] || null;
   const secondaryPhotos = useMemo(
     () => visiblePhotos.slice(1, 3).map((photo, index) => ({ photo, index: index + 1 })),
@@ -297,7 +304,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
                     onClick={() =>
                       setVisiblePhotoState({
                         filter: activeFilter,
-                        count: Math.min(visibleCount + LOAD_MORE_PHOTOS, photos.length),
+                        count: Math.min(visibleCount + loadMoreCount, photos.length),
                       })
                     }
                     className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"
@@ -365,7 +372,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
                   onClick={() =>
                     setVisiblePhotoState({
                       filter: activeFilter,
-                      count: Math.min(visibleCount + LOAD_MORE_PHOTOS, photos.length),
+                      count: Math.min(visibleCount + loadMoreCount, photos.length),
                     })
                   }
                   className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"

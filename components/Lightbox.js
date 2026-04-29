@@ -74,13 +74,15 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
           role="dialog"
           aria-modal="true"
           aria-label="Visionneuse d'images"
-          className="fixed inset-0 z-[100] bg-black h-screen w-screen overflow-hidden focus:outline-none"
+          className="fixed inset-0 z-[100] h-screen w-screen overflow-hidden bg-[#050403] focus:outline-none"
           onClick={handleClose}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           tabIndex={-1}
           autoFocus={true}
         >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.07),transparent_46%),linear-gradient(180deg,rgba(0,0,0,0.28),rgba(0,0,0,0)_34%,rgba(0,0,0,0.38))]" />
+          <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.018)_1px,transparent_1px)] [background-size:120px_120px]" />
           {/* ── Top Bar ──────────────────────────────────────────── */}
           <AnimatePresence>
             {!isZoomed && (
@@ -89,7 +91,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-6 py-4 md:px-10 bg-gradient-to-b from-black/60 to-transparent"
+                className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-5 py-4 md:px-10 bg-gradient-to-b from-black/70 to-transparent"
               >
 
             {/* Logo / Studio name */}
@@ -155,7 +157,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 animate={{ opacity: 1, scale: isZoomed ? 2 : 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="relative h-full w-full"
+                className="relative h-full w-full px-3 py-20 md:px-8 md:py-24"
                 drag={isZoomed}
                 dragConstraints={constraintsRef}
                 dragElastic={0.1}
@@ -165,7 +167,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                   src={activePhoto.src}
                   alt={activePhoto.alt}
                   fill
-                  className="object-contain pointer-events-none"
+                  className="object-contain pointer-events-none drop-shadow-[0_28px_90px_rgba(0,0,0,0.65)]"
                   sizes="100vw"
                   quality={90}
                 />
@@ -178,15 +180,27 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onPrev(); }}
-                  className="absolute inset-y-0 left-0 w-1/4 cursor-w-resize focus:outline-none z-10"
+                  className="absolute inset-y-0 left-0 z-10 flex w-1/4 cursor-w-resize items-center justify-start pl-4 text-white/0 transition focus:outline-none hover:text-white/70 md:pl-10"
                   aria-label="Image précédente"
-                />
+                >
+                  <span className="hidden h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-black/20 backdrop-blur-md md:flex">
+                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onNext(); }}
-                  className="absolute inset-y-0 right-0 w-1/4 cursor-e-resize focus:outline-none z-10"
+                  className="absolute inset-y-0 right-0 z-10 flex w-1/4 cursor-e-resize items-center justify-end pr-4 text-white/0 transition focus:outline-none hover:text-white/70 md:pr-10"
                   aria-label="Image suivante"
-                />
+                >
+                  <span className="hidden h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-black/20 backdrop-blur-md md:flex">
+                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </button>
               </>
             )}
 
@@ -216,7 +230,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
 
             <div className="flex items-center gap-4 min-w-0">
               <div
-                className="hidden md:flex items-center justify-center rounded-full border border-white/10 text-white/30 font-serif"
+                className="hidden md:flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/34 font-serif backdrop-blur-md"
                 style={{ width: 48, height: 48, fontSize: "1.1rem", flexShrink: 0 }}
               >
                 {String(currentNum).padStart(2, "0")}
@@ -265,7 +279,7 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 24 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl md:block"
+                className="absolute inset-x-0 bottom-24 z-30 mx-auto hidden max-w-4xl rounded-2xl border border-white/8 bg-black/18 backdrop-blur-md md:block"
                 onClick={(event) => event.stopPropagation()}
               >
                 {/* Masques de dégradé pour le scroll horizontal */}
