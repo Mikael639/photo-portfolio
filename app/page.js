@@ -185,7 +185,7 @@ export default async function HomePage() {
   let sourcePhotos = [];
 
   try {
-    sourcePhotos = await getPublicPhotos({ limit: 48 });
+    sourcePhotos = await getPublicPhotos({ limit: 500 });
   } catch {
     sourcePhotos = [];
   }
