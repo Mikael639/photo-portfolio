@@ -11,6 +11,7 @@ create table if not exists public.photos (
   is_published boolean not null default true,
   is_pinned boolean not null default false,
   sort_order integer not null default 0,
+  mobile_object_position text,
   created_at timestamptz not null default now()
 );
 

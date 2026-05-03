@@ -10,6 +10,15 @@ function roleLabel(role) {
   return role;
 }
 
+const mobilePositionOptions = [
+  { label: "Auto / centre", value: "" },
+  { label: "Visage plus haut", value: "center 28%" },
+  { label: "Sujet au centre", value: "center center" },
+  { label: "Sujet plus bas", value: "center 72%" },
+  { label: "Sujet à gauche", value: "35% center" },
+  { label: "Sujet à droite", value: "65% center" },
+];
+
 export default function AdminPhotosTable({
   busyId,
   categories,
@@ -94,6 +103,7 @@ export default function AdminPhotosTable({
         <motion.div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" layout>
           {filteredPhotos.map((photo) => {
             const isEditing = editingId === photo.id;
+            const isHeroPhoto = (photo.roles || []).includes("hero");
 
             return (
               <motion.article
@@ -243,6 +253,28 @@ export default function AdminPhotosTable({
                           );
                         })}
                       </div>
+
+                      {isHeroPhoto ? (
+                        <label className="block space-y-1">
+                          <span className="text-xs uppercase tracking-[0.18em] text-ink/45">Position mobile</span>
+                          <select
+                            value={photo.mobileObjectPosition || ""}
+                            onChange={(event) =>
+                              updatePhoto(photo.id, { mobileObjectPosition: event.target.value })
+                            }
+                            className="w-full rounded-lg border border-line/25 bg-white px-3 py-2"
+                          >
+                            {mobilePositionOptions.map((option) => (
+                              <option key={option.value || "auto"} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="block text-xs leading-relaxed text-ink/50">
+                            Ajuste le cadrage de cette photo dans le diaporama sur telephone.
+                          </span>
+                        </label>
+                      ) : null}
 
                       <div className="flex flex-wrap gap-2">
                         <a

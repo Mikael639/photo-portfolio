@@ -16,6 +16,8 @@ if (typeof window !== "undefined") {
 
 const HERO_SLIDE_DURATION_MS = 8400;
 const HOME_SLIDESHOW_LIMIT = 10;
+const DEFAULT_HERO_POSITION = "center 16%";
+const DEFAULT_MOBILE_HERO_POSITION = "center center";
 
 function getHeroPriority(photo) {
   const roles = new Set(photo?.roles || []);
@@ -66,6 +68,8 @@ export default function HomePageExperience({
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const shuffledPhotos = cinematicPhotos;
   const activeHeroPhoto = shuffledPhotos[activeHeroIndex] || heroPhoto;
+  const activeHeroPosition = activeHeroPhoto.objectPosition || DEFAULT_HERO_POSITION;
+  const activeMobileHeroPosition = activeHeroPhoto.mobileObjectPosition || DEFAULT_MOBILE_HERO_POSITION;
   const nextHeroPhoto =
     shuffledPhotos.length > 1 ? shuffledPhotos[(activeHeroIndex + 1) % shuffledPhotos.length] : null;
   const activeHeroCategoryHref = activeHeroPhoto?.category
@@ -161,8 +165,11 @@ export default function HomePageExperience({
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover sharpen-img"
-                style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
+                className="hero-main-image object-cover sharpen-img"
+                style={{
+                  "--hero-position": activeHeroPosition,
+                  "--hero-mobile-position": activeMobileHeroPosition,
+                }}
               />
             </div>
           ) : (
@@ -187,8 +194,11 @@ export default function HomePageExperience({
                     fill
                     priority
                     sizes="100vw"
-                    className="object-cover sharpen-img"
-                    style={{ objectPosition: activeHeroPhoto.objectPosition || "center 16%" }}
+                    className="hero-main-image object-cover sharpen-img"
+                    style={{
+                      "--hero-position": activeHeroPosition,
+                      "--hero-mobile-position": activeMobileHeroPosition,
+                    }}
                   />
                 </motion.div>
               </motion.div>
@@ -208,7 +218,7 @@ export default function HomePageExperience({
           ) : null}
         </div>
 
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.38)_0%,rgba(12,10,8,0.14)_30%,rgba(12,10,8,0.44)_68%,rgba(12,10,8,0.92)_100%)] md:bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
         <motion.div
           className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.035)_42%,transparent_58%)]"
           animate={shouldCalmHeroMotion ? undefined : { x: ["-12%", "12%", "-12%"] }}
@@ -221,7 +231,7 @@ export default function HomePageExperience({
         />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-paper/20 to-paper" />
 
-        <div className="relative mx-auto grid min-h-screen max-w-7xl gap-12 px-4 pb-12 pt-28 md:px-8 md:pb-20 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+        <div className="relative mx-auto grid min-h-[100svh] max-w-7xl content-end gap-8 px-4 pb-10 pt-28 md:min-h-screen md:gap-12 md:px-8 md:pb-20 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
           <motion.div
             initial={reduceMotion ? false : "hidden"}
             whileInView={reduceMotion ? undefined : "show"}
@@ -237,16 +247,16 @@ export default function HomePageExperience({
           >
             <motion.p
               variants={wordRevealVariant}
-              className="text-[11px] font-semibold uppercase tracking-[0.4em] text-paper/60"
+              className="max-w-[18rem] text-[10px] font-semibold uppercase tracking-[0.28em] text-paper/62 sm:max-w-none sm:text-[11px] sm:tracking-[0.4em]"
             >
               {siteText.eyebrow || "Jerrypicsart portfolio editorial"}
             </motion.p>
 
-            <motion.div variants={wordRevealVariant} className="mt-8 flex flex-wrap gap-3 hero-content-reveal">
+            <motion.div variants={wordRevealVariant} className="mt-6 flex flex-wrap gap-3 hero-content-reveal sm:mt-8">
               <MagneticElement strength={0.25}>
                 <Link
                   href="/gallery"
-                  className="inline-block rounded-full bg-paper px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-ink transition-colors hover:bg-accent hover:text-paper shadow-2xl"
+                  className="inline-block rounded-full bg-paper px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-ink shadow-2xl transition-colors hover:bg-accent hover:text-paper sm:px-8 sm:py-4 sm:text-[13px] sm:tracking-[0.22em]"
                 >
                   {siteText.primaryCta || "Explorer l'edit"}
                 </Link>
@@ -254,7 +264,7 @@ export default function HomePageExperience({
               <MagneticElement strength={0.15}>
                 <Link
                   href="/contact"
-                  className="inline-block rounded-full border border-paper/30 px-8 py-4 text-[13px] font-bold uppercase tracking-[0.22em] text-paper backdrop-blur-md transition-all hover:border-paper hover:bg-paper/10"
+                  className="inline-block rounded-full border border-paper/30 px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-paper backdrop-blur-md transition-all hover:border-paper hover:bg-paper/10 sm:px-8 sm:py-4 sm:text-[13px] sm:tracking-[0.22em]"
                 >
                   {siteText.secondaryCta || "Parler d'une date"}
                 </Link>
@@ -262,7 +272,7 @@ export default function HomePageExperience({
             </motion.div>
 
             {galleryCategories.length ? (
-              <motion.div variants={wordRevealVariant} className="mt-6 flex flex-wrap gap-3">
+              <motion.div variants={wordRevealVariant} className="mt-6 hidden flex-wrap gap-3 sm:flex">
                 {galleryCategories.map((category) => (
                   <Link
                     key={category}
@@ -276,11 +286,11 @@ export default function HomePageExperience({
             ) : null}
 
             {shuffledPhotos.length > 1 ? (
-              <motion.div variants={wordRevealVariant} className="mt-5 flex max-w-xl items-center gap-3">
+              <motion.div variants={wordRevealVariant} className="mt-5 flex max-w-xl items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={showPreviousHeroPhoto}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper sm:h-9 sm:w-9"
                   aria-label="Photo precedente"
                 >
                   <span aria-hidden="true">‹</span>
@@ -288,7 +298,7 @@ export default function HomePageExperience({
                 <button
                   type="button"
                   onClick={() => setIsHeroPaused((current) => !current)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper sm:h-9 sm:w-9"
                   aria-label={isHeroPaused ? "Relancer le diaporama" : "Mettre le diaporama en pause"}
                 >
                   <span aria-hidden="true">{isHeroPaused ? "▶" : "Ⅱ"}</span>
@@ -296,7 +306,7 @@ export default function HomePageExperience({
                 <button
                   type="button"
                   onClick={showNextHeroPhoto}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-paper/18 bg-black/18 text-paper/70 transition hover:border-paper/45 hover:text-paper sm:h-9 sm:w-9"
                   aria-label="Photo suivante"
                 >
                   <span aria-hidden="true">›</span>
@@ -336,7 +346,7 @@ export default function HomePageExperience({
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={reduceMotion ? undefined : { duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 mb-8 hero-content-reveal opacity-0"
+            className="mb-8 hidden gap-4 opacity-0 hero-content-reveal lg:grid"
           >
             {supportingPhotos.map((photo) => (
               <div
@@ -387,6 +397,17 @@ export default function HomePageExperience({
             </div>
           </motion.div>
         </div>
+        <style jsx global>{`
+          .hero-main-image {
+            object-position: var(--hero-position);
+          }
+
+          @media (max-width: 767px) {
+            .hero-main-image {
+              object-position: var(--hero-mobile-position);
+            }
+          }
+        `}</style>
       </section>
 
       {marriageFeature ? (
