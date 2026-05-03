@@ -182,6 +182,7 @@ export async function updateAdminPhotoAction(input) {
       roles: input?.roles,
       isPublished: input?.isPublished,
       isPinned: input?.isPinned,
+      mobileObjectPosition: input?.mobileObjectPosition,
     });
 
     revalidatePublicPhotoViews();
