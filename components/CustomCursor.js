@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useCallback } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 
 const interactiveSelector = [
@@ -66,6 +66,16 @@ function getFinePointerSnapshot() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
+function useEvent(handler) {
+  const handlerRef = useRef(handler);
+  useEffect(() => {
+    handlerRef.current = handler;
+  });
+  return useCallback((...args) => {
+    return handlerRef.current?.(...args);
+  }, []);
+}
+
 export default function CustomCursor() {
   const reduceMotion = useReducedMotion();
   const [isVisible, setIsVisible] = useState(false);
@@ -87,7 +97,7 @@ export default function CustomCursor() {
   const springX = useSpring(x, { stiffness: 800, damping: 40, mass: 0.1 });
   const springY = useSpring(y, { stiffness: 800, damping: 40, mass: 0.1 });
 
-  const syncCursorState = useEffectEvent((target) => {
+  const syncCursorState = useEvent((target) => {
     const nextState = getCursorMode(target);
     const currentState = stateRef.current;
 
@@ -99,7 +109,7 @@ export default function CustomCursor() {
     setCursorMode(nextState);
   });
 
-  const handlePointerMove = useEffectEvent((event) => {
+  const handlePointerMove = useEvent((event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
 
     if (isTemporarilyPaused) {
@@ -115,26 +125,26 @@ export default function CustomCursor() {
     syncCursorState(event.target);
   });
 
-  const handlePointerDown = useEffectEvent((event) => {
+  const handlePointerDown = useEvent((event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
     setIsPressed(true);
     syncCursorState(event.target);
   });
 
-  const handlePointerUp = useEffectEvent((event) => {
+  const handlePointerUp = useEvent((event) => {
     if (event.pointerType && event.pointerType !== "mouse") return;
     setIsPressed(false);
     syncCursorState(event.target);
   });
 
-  const handlePointerLeave = useEffectEvent(() => {
+  const handlePointerLeave = useEvent(() => {
     setIsVisible(false);
     setIsPressed(false);
     stateRef.current = "default";
     setCursorMode("default");
   });
 
-  const pauseCursorAfterViewportChange = useEffectEvent(() => {
+  const pauseCursorAfterViewportChange = useEvent(() => {
     setIsTemporarilyPaused(true);
     setIsVisible(false);
     setIsPressed(false);
