@@ -115,14 +115,7 @@ export default function HomePageExperience({
       );
     }
 
-    const heroContent = gsap.utils.toArray(".hero-content-reveal");
-    if (heroContent.length) {
-      gsap.fromTo(
-        heroContent,
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 1.8, ease: "power4.out", delay: 1.5, stagger: 0.15 }
-      );
-    }
+    // .hero-content-reveal elements are animated by Framer Motion — no GSAP duplicate needed
 
     const sections = gsap.utils.toArray("section.color-transition-section");
     sections.forEach((section) => {
@@ -184,7 +177,7 @@ export default function HomePageExperience({
               <motion.div
                 key={activeHeroPhoto.id}
                 className="absolute inset-0 hero-image-container"
-                initial={{ opacity: 0, scale: 1.08, filter: "blur(8px)" }}
+                initial={{ opacity: 1, scale: 1.08, filter: "blur(8px)" }}
                 animate={{ opacity: 1, scale: 1.04, filter: "blur(0px)" }}
                 exit={{ opacity: 0, scale: 0.98, filter: "blur(4px)" }}
                 transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
@@ -240,15 +233,10 @@ export default function HomePageExperience({
 
         <div className="relative mx-auto grid min-h-[100svh] max-w-7xl content-end gap-8 px-4 pb-10 pt-28 md:min-h-screen md:gap-12 md:px-8 md:pb-20 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
           <motion.div
-            initial={reduceMotion ? false : "hidden"}
-            whileInView={reduceMotion ? undefined : "show"}
-            viewport={{ once: true }}
-            variants={{
-              hidden: { opacity: 0 },
-              show: {
-                opacity: 1,
-                transition: { staggerChildren: 0.08, delayChildren: 0.3 },
-              },
+            initial={false}
+            animate={{
+              opacity: 1,
+              transition: { staggerChildren: 0.08, delayChildren: 0.3 },
             }}
             className="max-w-4xl text-paper"
           >
@@ -353,7 +341,7 @@ export default function HomePageExperience({
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={reduceMotion ? undefined : { duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-8 hidden gap-4 opacity-0 hero-content-reveal lg:grid"
+            className="mb-8 hidden gap-4 hero-content-reveal lg:grid"
           >
             {supportingPhotos.map((photo) => (
               <div
