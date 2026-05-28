@@ -9,6 +9,7 @@ const SWIPE_THRESHOLD = 50;
 
 export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext, onSelect }) {
   const [zoomedPhotoId, setZoomedPhotoId] = useState(null);
+  const [shareFeedback, setShareFeedback] = useState("");
   const constraintsRef = useRef(null);
   const touchStartRef = useRef(null);
 
@@ -17,6 +18,31 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
   const currentNum = activeIndex === null ? 0 : activeIndex + 1;
   const totalNum = photos.length;
   const progress = totalNum > 0 ? (currentNum / totalNum) * 100 : 0;
+
+  const handleShare = useCallback(async (event) => {
+    event?.stopPropagation();
+    if (!activePhoto || typeof window === "undefined") return;
+    const url = window.location.href;
+    const shareData = {
+      title: activePhoto.title || "Jerrypicsart",
+      text: activePhoto.alt || activePhoto.title || "Photographie Jerrypicsart",
+      url,
+    };
+    try {
+      if (navigator.share && navigator.canShare ? navigator.canShare(shareData) : navigator.share) {
+        await navigator.share(shareData);
+        setShareFeedback("Partage en cours...");
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback("Lien copie !");
+      } else {
+        setShareFeedback("Partage indisponible");
+      }
+    } catch {
+      setShareFeedback("Partage annule");
+    }
+    window.setTimeout(() => setShareFeedback(""), 2400);
+  }, [activePhoto]);
 
   const handleClose = useCallback(() => {
     setZoomedPhotoId(null);
@@ -111,15 +137,34 @@ export default function Lightbox({ photos, activeIndex, onClose, onPrev, onNext,
               </span>
             </div>
 
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="group flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-white/40 transition hover:text-white"
-            >
-              <span className="h-px w-6 bg-white/30 transition group-hover:w-10 group-hover:bg-white duration-300" />
-                Fermer
+            <div className="flex items-center gap-3">
+              {/* Share button */}
+              <button
+                type="button"
+                onClick={handleShare}
+                className="group flex items-center gap-2 rounded-full border border-white/14 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-white/55 transition hover:border-white/45 hover:text-white"
+                aria-label="Partager cette photo"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <path d="m8.59 13.51 6.83 3.98" />
+                  <path d="m15.41 6.51-6.82 3.98" />
+                </svg>
+                <span className="hidden sm:inline">{shareFeedback || "Partager"}</span>
               </button>
+
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={handleClose}
+                className="group flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-white/40 transition hover:text-white"
+              >
+                <span className="h-px w-6 bg-white/30 transition group-hover:w-10 group-hover:bg-white duration-300" />
+                  Fermer
+              </button>
+            </div>
             </motion.div>
             )}
           </AnimatePresence>

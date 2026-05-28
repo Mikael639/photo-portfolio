@@ -1,14 +1,46 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useState, useRef } from "react";
+import { startTransition, useEffect, useMemo, useState, useRef, useCallback } from "react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Lightbox from "../Lightbox";
 import MagneticElement from "../MagneticElement";
 
 const GALLERY_VISIBLE_PHOTOS = 24;
 const GALLERY_LOAD_MORE_PHOTOS = 24;
+
+const SORT_OPTIONS = [
+  { value: "default", label: "Par défaut" },
+  { value: "recent", label: "Plus récentes" },
+  { value: "oldest", label: "Plus anciennes" },
+  { value: "random", label: "Aléatoire" },
+];
+
+function getPhotoTimestamp(photo) {
+  const candidate = photo?.createdAt || photo?.created_at || photo?.updatedAt || photo?.updated_at;
+  if (!candidate) return 0;
+  const time = new Date(candidate).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function sortPhotos(photos, sortValue) {
+  const list = [...photos];
+  if (sortValue === "recent") {
+    return list.sort((a, b) => getPhotoTimestamp(b) - getPhotoTimestamp(a));
+  }
+  if (sortValue === "oldest") {
+    return list.sort((a, b) => getPhotoTimestamp(a) - getPhotoTimestamp(b));
+  }
+  if (sortValue === "random") {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  }
+  return list;
+}
 
 function getRevealProps(reduceMotion, delay = 0, amount = 0.22) {
   if (reduceMotion) {
@@ -100,7 +132,9 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   const reduceMotion = useReducedMotion();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const activeFilter = activeCategory || "Tout";
+  const [sortValue, setSortValue] = useState("default");
   const [activeIndex, setActiveIndex] = useState(null);
   const [visiblePhotoState, setVisiblePhotoState] = useState({
     filter: activeFilter,
@@ -112,6 +146,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
   const loadMoreCount = GALLERY_LOAD_MORE_PHOTOS;
   const visibleCount =
     visiblePhotoState.filter === activeFilter ? visiblePhotoState.count : initialVisibleCount;
+  const sortedPhotos = useMemo(() => sortPhotos(photos, sortValue), [photos, sortValue]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -129,34 +164,125 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
     return counts;
   }, [allPhotos]);
 
-  const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
-  const hasMorePhotos = visiblePhotos.length < photos.length;
+  const visiblePhotos = useMemo(() => sortedPhotos.slice(0, visibleCount), [sortedPhotos, visibleCount]);
+  const hasMorePhotos = visiblePhotos.length < sortedPhotos.length;
   const leadPhoto = visiblePhotos[0] || null;
+
+  // Synchronisation URL <-> photo ouverte (deep link / partage)
+  const requestedPhotoId = searchParams?.get("photo") || "";
+
+  useEffect(() => {
+    if (!requestedPhotoId) return;
+    const index = sortedPhotos.findIndex((photo) => photo.id === requestedPhotoId);
+    if (index === -1) return;
+    // S'assure que la photo demandee est rendue dans la grille visible
+    if (index >= visibleCount) {
+      setVisiblePhotoState({
+        filter: activeFilter,
+        count: Math.max(visibleCount, Math.ceil((index + 1) / loadMoreCount) * loadMoreCount),
+      });
+    }
+    setActiveIndex(index);
+    // On ne met cette logique qu'au premier rendu / changement d'URL
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedPhotoId, sortedPhotos]);
+
+  const updatePhotoQueryParam = useCallback(
+    (photoId) => {
+      const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+      if (photoId) {
+        params.set("photo", photoId);
+      } else {
+        params.delete("photo");
+      }
+      const queryString = params.toString();
+      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(nextUrl, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const openPhotoAt = useCallback(
+    (index) => {
+      setActiveIndex(index);
+      const photo = visiblePhotos[index];
+      if (photo?.id) updatePhotoQueryParam(photo.id);
+    },
+    [visiblePhotos, updatePhotoQueryParam]
+  );
+
+  const closeLightbox = useCallback(() => {
+    setActiveIndex(null);
+    updatePhotoQueryParam(null);
+  }, [updatePhotoQueryParam]);
+
+  const goToPrev = useCallback(() => {
+    if (activeIndex === null || visiblePhotos.length === 0) return;
+    const next = activeIndex === 0 ? visiblePhotos.length - 1 : activeIndex - 1;
+    setActiveIndex(next);
+    const photo = visiblePhotos[next];
+    if (photo?.id) updatePhotoQueryParam(photo.id);
+  }, [activeIndex, visiblePhotos, updatePhotoQueryParam]);
+
+  const goToNext = useCallback(() => {
+    if (activeIndex === null || visiblePhotos.length === 0) return;
+    const next = activeIndex === visiblePhotos.length - 1 ? 0 : activeIndex + 1;
+    setActiveIndex(next);
+    const photo = visiblePhotos[next];
+    if (photo?.id) updatePhotoQueryParam(photo.id);
+  }, [activeIndex, visiblePhotos, updatePhotoQueryParam]);
+
+  const selectIndex = useCallback(
+    (index) => {
+      setActiveIndex(index);
+      const photo = visiblePhotos[index];
+      if (photo?.id) updatePhotoQueryParam(photo.id);
+    },
+    [visiblePhotos, updatePhotoQueryParam]
+  );
 
   return (
     <div ref={containerRef} data-page="gallery" className="page-shell mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-12 md:px-8 md:space-y-16">
-      <motion.div className="flex flex-wrap gap-4" {...getRevealProps(reduceMotion, 0.1)}>
-        {categories.map((category) => (
-          <FilterButton
-            key={category}
-            category={category}
-            count={categoryCounts[category] || 0}
-            isActive={category === activeFilter}
-            onClick={() => {
-              startTransition(() => {
-                setActiveIndex(null);
+      <motion.div className="flex flex-wrap items-center justify-between gap-4" {...getRevealProps(reduceMotion, 0.1)}>
+        <div className="flex flex-wrap gap-4">
+          {categories.map((category) => (
+            <FilterButton
+              key={category}
+              category={category}
+              count={categoryCounts[category] || 0}
+              isActive={category === activeFilter}
+              onClick={() => {
+                startTransition(() => {
+                  setActiveIndex(null);
 
-                const params = new URLSearchParams();
-                if (category !== "Tout") {
-                  params.set("category", category);
-                }
+                  const params = new URLSearchParams();
+                  if (category !== "Tout") {
+                    params.set("category", category);
+                  }
 
-                const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                router.replace(nextUrl, { scroll: false });
-              });
-            }}
-          />
-        ))}
+                  const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                  router.replace(nextUrl, { scroll: false });
+                });
+              }}
+            />
+          ))}
+        </div>
+
+        <label className="flex items-center gap-3 rounded-full border border-line/20 bg-white/60 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-ink/60">
+          <span className="hidden sm:inline">Trier</span>
+          <select
+            value={sortValue}
+            onChange={(event) => setSortValue(event.target.value)}
+            className="bg-transparent text-[11px] font-bold uppercase tracking-[0.18em] text-ink outline-none"
+            aria-label="Trier les photos"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </motion.div>
 
       {photos.length === 0 ? (
@@ -186,7 +312,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
                   key={photo.id}
                   photo={photo}
                   index={index}
-                  onOpen={setActiveIndex}
+                  onOpen={openPhotoAt}
                   reduceMotion={reduceMotion}
                   priority={index < 8}
                 />
@@ -200,12 +326,12 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
                   onClick={() =>
                     setVisiblePhotoState({
                       filter: activeFilter,
-                      count: Math.min(visibleCount + loadMoreCount, photos.length),
+                      count: Math.min(visibleCount + loadMoreCount, sortedPhotos.length),
                     })
                   }
                   className="rounded-full border border-line/20 bg-white/70 px-7 py-3 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-ink hover:bg-white"
                 >
-                  Voir plus ({photos.length - visiblePhotos.length})
+                  Voir plus ({sortedPhotos.length - visiblePhotos.length})
                 </button>
               </div>
             ) : null}
@@ -217,16 +343,10 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
       <Lightbox
         photos={visiblePhotos}
         activeIndex={activeIndex}
-        onClose={() => setActiveIndex(null)}
-        onPrev={() => {
-          if (activeIndex === null || visiblePhotos.length === 0) return;
-          setActiveIndex(activeIndex === 0 ? visiblePhotos.length - 1 : activeIndex - 1);
-        }}
-        onNext={() => {
-          if (activeIndex === null || visiblePhotos.length === 0) return;
-          setActiveIndex(activeIndex === visiblePhotos.length - 1 ? 0 : activeIndex + 1);
-        }}
-        onSelect={(index) => setActiveIndex(index)}
+        onClose={closeLightbox}
+        onPrev={goToPrev}
+        onNext={goToNext}
+        onSelect={selectIndex}
       />
 
       {/* Bouton retour en haut */}

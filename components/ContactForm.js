@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { submitContactForm } from "../app/contact/actions";
 import { initialContactFormState } from "../app/contact/constants";
 import { defaultPortfolioCategory, portfolioCategories } from "../lib/categories";
@@ -11,18 +12,86 @@ const serviceOptions = portfolioCategories;
 const preferredContactOptions = ["Email", "Téléphone", "Instagram / WhatsApp"];
 const budgetOptions = ["À définir", "Moins de 500 EUR", "500 - 1000 EUR", "1000 - 2000 EUR", "Plus de 2000 EUR"];
 
+function SuccessCard({ onReset }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-[1.7rem] border border-emerald-200/60 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(255,255,255,0.92))] p-8 text-center shadow-[0_24px_80px_rgba(12,10,8,0.08)]"
+      role="status"
+      aria-live="polite"
+    >
+      <motion.div
+        initial={{ scale: 0, rotate: -30 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ delay: 0.15, type: "spring", stiffness: 220, damping: 16 }}
+        className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.35)]"
+        aria-hidden="true"
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </motion.div>
+      <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-700/80">Demande envoyée</p>
+      <h3 className="mt-3 font-serif text-3xl tracking-tight text-ink md:text-4xl">
+        Merci pour votre message.
+      </h3>
+      <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink/65">
+        Un email récapitulatif vient d&apos;être envoyé automatiquement à votre adresse. Je reviens vers vous personnellement
+        sous 24 à 48h avec un retour orienté action.
+      </p>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-full border border-line/25 px-6 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-ink transition hover:border-ink hover:bg-white"
+        >
+          Envoyer une autre demande
+        </button>
+        <a
+          href="/gallery"
+          className="rounded-full bg-ink px-6 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-paper transition hover:bg-accent"
+        >
+          Revoir la galerie
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function ContactForm() {
   const formRef = useRef(null);
   const [formState, formAction] = useActionState(submitContactForm, initialContactFormState);
+  const [isSuccessDismissed, setIsSuccessDismissed] = useState(false);
+  const [lastStatus, setLastStatus] = useState("idle");
   const errors = formState.errors || {};
   const status = formState.status || "idle";
   const message = formState.message || "";
+  const showSuccessCard = status === "success" && !isSuccessDismissed;
+
+  // Recommended React 19 pattern: derive state from props/state changes during render
+  if (status !== lastStatus) {
+    setLastStatus(status);
+    if (status === "success") {
+      setIsSuccessDismissed(false);
+    }
+  }
 
   useEffect(() => {
     if (status === "success") {
       formRef.current?.reset();
     }
   }, [status]);
+
+  if (showSuccessCard) {
+    return (
+      <AnimatePresence mode="wait">
+        <SuccessCard key="success" onReset={() => setIsSuccessDismissed(true)} />
+      </AnimatePresence>
+    );
+  }
 
   return (
     <form
