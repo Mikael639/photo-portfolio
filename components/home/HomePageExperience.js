@@ -8,7 +8,14 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MagneticElement from "../MagneticElement";
-import { MotionBlock, PhotoTile, specialties, getRevealProps, wordRevealVariant } from "./homeShared";
+import {
+  MotionBlock,
+  PhotoTile,
+  TestimonialsSection,
+  specialties,
+  getRevealProps,
+  wordRevealVariant,
+} from "./homeShared";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -590,6 +597,8 @@ export default function HomePageExperience({
           </div>
         </div>
       </section>
+
+      <TestimonialsSection reduceMotion={reduceMotion} />
 
       <section className="mx-auto max-w-7xl px-4 md:px-8">
         <div data-cursor-surface="dark" className="relative grid gap-10 overflow-hidden rounded-[3rem] border border-line/12 bg-[linear-gradient(135deg,#171310,#302720)] p-8 text-paper shadow-[0_48px_128px_rgba(12,10,8,0.2)] md:p-12 lg:grid-cols-[1fr_auto] lg:items-center lg:p-16">

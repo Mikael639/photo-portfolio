@@ -1,7 +1,142 @@
-import { motion } from "framer-motion";
+import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+export const stats = [
+  { value: 320, suffix: "+", label: "Series livrees", focus: "depuis 2020" },
+  { value: 80, suffix: "+", label: "Evenements couverts", focus: "France et international" },
+  { value: 45, suffix: "+", label: "Marques accompagnees", focus: "mode, mariage, lifestyle" },
+  { value: 48, suffix: "h", label: "Delai preview", focus: "selection envoyee" },
+];
+
+export const testimonials = [
+  {
+    quote:
+      "Une presence discrete et une vraie lecture du moment. Les images respirent et racontent vraiment ce que nous avons vecu.",
+    name: "Camille R.",
+    role: "Mariage couture, Paris",
+  },
+  {
+    quote:
+      "Direction artistique tres claire, retouche maitrisee. Le rendu est tenu, intemporel, exactement la ligne que la maison cherchait.",
+    name: "Studio Atelier 8",
+    role: "Direction creative, Fashion Week",
+  },
+  {
+    quote:
+      "Brief court, livraison rapide, edit cohérent. Jerrypicsart a parfaitement capte l'energie de la soiree.",
+    name: "Hugo M.",
+    role: "Lancement de marque, Paris",
+  },
+];
+
+function CountUp({ value, suffix = "", duration = 1.6 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.4 });
+  const motionValue = useMotionValue(0);
+  const rounded = useTransform(motionValue, (current) => Math.round(current));
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(motionValue, value, { duration, ease: [0.16, 1, 0.3, 1] });
+    const unsubscribe = rounded.on("change", (latest) => setDisplay(latest));
+    return () => {
+      controls.stop();
+      unsubscribe();
+    };
+  }, [inView, value, duration, motionValue, rounded]);
+
+  return (
+    <span ref={ref}>
+      {display}
+      {suffix}
+    </span>
+  );
+}
+
+export function StatsSection({ reduceMotion, items = stats }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 md:px-8">
+      <MotionBlock
+        reduceMotion={reduceMotion}
+        className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.62))] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-12"
+      >
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-ink/40">Reperes</p>
+            <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight tracking-[-0.03em] md:text-5xl">
+              Un studio de confiance, des chiffres qui parlent.
+            </h2>
+          </div>
+          <p className="max-w-md text-sm leading-relaxed text-ink/55 md:text-base">
+            Quelques reperes pour situer la maniere de travailler et le rythme habituel.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((item, index) => (
+            <motion.div
+              key={item.label}
+              {...getRevealProps(reduceMotion, index * 0.08, 0.3)}
+              className="border-t border-line/16 pt-5"
+            >
+              <p className="font-serif text-5xl leading-none tracking-[-0.04em] text-ink md:text-6xl">
+                {reduceMotion ? (
+                  <>
+                    {item.value}
+                    {item.suffix}
+                  </>
+                ) : (
+                  <CountUp value={item.value} suffix={item.suffix} />
+                )}
+              </p>
+              <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.24em] text-ink/55">{item.label}</p>
+              <p className="mt-1 text-sm text-ink/45">{item.focus}</p>
+            </motion.div>
+          ))}
+        </div>
+      </MotionBlock>
+    </section>
+  );
+}
+
+export function TestimonialsSection({ reduceMotion, items = testimonials }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 md:px-8">
+      <MotionBlock reduceMotion={reduceMotion} className="space-y-10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl space-y-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-ink/40">Retours</p>
+            <h2 className="font-serif text-4xl leading-[0.96] tracking-[-0.04em] md:text-6xl">
+              Ce que disent celles et ceux qui ont collabore.
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          {items.map((item, index) => (
+            <motion.figure
+              key={item.name}
+              {...getRevealProps(reduceMotion, index * 0.1, 0.2)}
+              className="flex h-full flex-col justify-between gap-8 rounded-[2rem] border border-line/12 bg-white/70 p-7 shadow-[0_18px_60px_rgba(12,10,8,0.05)] backdrop-blur-sm"
+            >
+              <div className="space-y-4">
+                <span aria-hidden="true" className="block font-serif text-5xl leading-none text-ink/15">&ldquo;</span>
+                <blockquote className="font-serif text-xl leading-snug text-ink md:text-2xl">{item.quote}</blockquote>
+              </div>
+              <figcaption className="border-t border-line/12 pt-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-ink/70">{item.name}</p>
+                <p className="mt-1 text-xs text-ink/45">{item.role}</p>
+              </figcaption>
+            </motion.figure>
+          ))}
+        </div>
+      </MotionBlock>
+    </section>
+  );
+}
 
 export const specialties = [
   {
