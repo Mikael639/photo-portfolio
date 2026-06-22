@@ -61,7 +61,7 @@ export function StatsSection({ reduceMotion, items = stats }) {
     <section className="mx-auto max-w-7xl px-4 md:px-8">
       <MotionBlock
         reduceMotion={reduceMotion}
-        className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.62))] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-12"
+        className="rounded-panel border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.62))] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.06)] backdrop-blur-md md:p-12"
       >
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
@@ -120,7 +120,7 @@ export function TestimonialsSection({ reduceMotion, items = testimonials }) {
             <motion.figure
               key={item.name}
               {...getRevealProps(reduceMotion, index * 0.1, 0.2)}
-              className="flex h-full flex-col justify-between gap-8 rounded-[2rem] border border-line/12 bg-white/70 p-7 shadow-[0_18px_60px_rgba(12,10,8,0.05)] backdrop-blur-sm"
+              className="flex h-full flex-col justify-between gap-8 rounded-card border border-line/12 bg-white/70 p-7 shadow-[0_18px_60px_rgba(12,10,8,0.05)] backdrop-blur-sm"
             >
               <div className="space-y-4">
                 <span aria-hidden="true" className="block font-serif text-5xl leading-none text-ink/15">&ldquo;</span>
@@ -243,7 +243,7 @@ export function PhotoTile({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         data-cursor="gallery-item"
-        className="group relative block h-full min-h-[18rem] overflow-hidden rounded-[2.2rem] border border-line/12 bg-ink shadow-[0_32px_120px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out"
+        className="group relative block h-full min-h-[18rem] overflow-hidden rounded-card border border-line/12 bg-ink shadow-[0_32px_120px_rgba(12,10,8,0.12)] transition-transform duration-500 ease-out"
         style={{
           transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
         }}

@@ -11,6 +11,7 @@ import MagneticElement from "../MagneticElement";
 import {
   MotionBlock,
   PhotoTile,
+  StatsSection,
   TestimonialsSection,
   specialties,
   getRevealProps,
@@ -218,7 +219,7 @@ export default function HomePageExperience({
           ) : null}
         </div>
 
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.38)_0%,rgba(12,10,8,0.14)_30%,rgba(12,10,8,0.44)_68%,rgba(12,10,8,0.92)_100%)] md:bg-[linear-gradient(180deg,rgba(12,10,8,0.58)_0%,rgba(12,10,8,0.26)_30%,rgba(12,10,8,0.48)_65%,rgba(12,10,8,0.95)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.30)_0%,rgba(12,10,8,0.08)_32%,rgba(12,10,8,0.40)_70%,rgba(12,10,8,0.88)_100%)] md:bg-[linear-gradient(180deg,rgba(12,10,8,0.46)_0%,rgba(12,10,8,0.16)_32%,rgba(12,10,8,0.42)_68%,rgba(12,10,8,0.90)_100%)]" />
         <motion.div
           className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.035)_42%,transparent_58%)]"
           animate={shouldCalmHeroMotion ? undefined : { x: ["-12%", "12%", "-12%"] }}
@@ -246,6 +247,13 @@ export default function HomePageExperience({
             >
               {siteText.eyebrow || "Jerrypicsart portfolio editorial"}
             </motion.p>
+
+            <motion.h1
+              variants={wordRevealVariant}
+              className="mt-5 max-w-[14ch] font-serif text-5xl font-medium leading-[0.95] tracking-[-0.03em] text-paper [text-wrap:balance] [text-shadow:0_2px_30px_rgba(12,10,8,0.45)] sm:mt-6 sm:max-w-[16ch] sm:text-6xl md:text-7xl xl:text-[5.5rem]"
+            >
+              {siteText.heroTitle || "La mode, le mariage et les moments qui comptent."}
+            </motion.h1>
 
             <motion.div variants={wordRevealVariant} className="mt-6 flex flex-wrap gap-3 hero-content-reveal sm:mt-8">
               <MagneticElement strength={0.25}>
@@ -346,12 +354,13 @@ export default function HomePageExperience({
             {supportingPhotos.map((photo) => (
               <div
                 key={photo.id}
-                className="relative min-h-[15rem] overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20 backdrop-blur-sm"
+                className="relative min-h-[15rem] overflow-hidden rounded-card border border-white/10 bg-black/20 backdrop-blur-sm"
               >
                 <Image
                   src={photo.src}
                   alt={photo.alt}
                   fill
+                  priority
                   sizes="(max-width: 1024px) 50vw, 22vw"
                   className="parallax-img object-cover sharpen-img transition-transform duration-1000 hover:scale-110 scale-[1.08]"
                   style={{ objectPosition: photo.objectPosition || "center center" }}
@@ -361,7 +370,7 @@ export default function HomePageExperience({
               </div>
             ))}
 
-            <div className="rounded-[2.2rem] border border-white/10 bg-black/40 p-6 text-paper/90 shadow-2xl backdrop-blur-xl">
+            <div className="rounded-card border border-white/10 bg-black/40 p-6 text-paper/90 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Direction</p>
                 {shuffledPhotos.length > 1 ? (
@@ -419,7 +428,7 @@ export default function HomePageExperience({
             <MotionBlock
               reduceMotion={reduceMotion}
               delay={0.12}
-              className="self-start rounded-[2.5rem] border border-line/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.56))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-md md:p-10 lg:p-12"
+              className="self-start rounded-panel border border-line/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.56))] p-8 shadow-[0_32px_96px_rgba(12,10,8,0.04)] backdrop-blur-md md:p-10 lg:p-12"
             >
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-ink/40">
                 {siteText.weddingEyebrow || "Fashion Wedding"}
@@ -495,7 +504,7 @@ export default function HomePageExperience({
           <MotionBlock
             reduceMotion={reduceMotion}
             delay={0.15}
-            className="relative min-h-[28rem] overflow-hidden rounded-[2.5rem] border border-line/10 bg-ink shadow-2xl lg:min-h-[40rem]"
+            className="relative min-h-[28rem] overflow-hidden rounded-panel border border-line/10 bg-ink shadow-2xl lg:min-h-[40rem]"
           >
             <Image
               src={identityPhoto.src}
@@ -507,7 +516,7 @@ export default function HomePageExperience({
               quality={90}
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0),rgba(12,10,8,0.72))]" />
-            <div className="absolute bottom-6 right-6 max-w-xs rounded-[1.8rem] border border-white/12 bg-black/40 p-6 text-paper shadow-2xl backdrop-blur-md md:bottom-10 md:right-10 md:p-8">
+            <div className="absolute bottom-6 right-6 max-w-xs rounded-inset border border-white/12 bg-black/40 p-6 text-paper shadow-2xl backdrop-blur-md md:bottom-10 md:right-10 md:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/40">Intention</p>
               <p className="mt-3 font-serif text-2xl leading-tight">L&apos;élégance vient du rythme, jamais du décoratif.</p>
             </div>
@@ -516,17 +525,17 @@ export default function HomePageExperience({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <div data-cursor-surface="dark" className="relative overflow-hidden rounded-[2.8rem] border border-line/12 bg-ink text-paper shadow-2xl">
+        <div data-cursor-surface="dark" className="relative overflow-hidden rounded-feature border border-line/12 bg-ink text-paper shadow-2xl">
           <Image
             src={servicesBackground.src}
             alt={servicesBackground.alt}
             fill
             sizes="100vw"
-            className="parallax-img object-cover opacity-60 transition-transform duration-[3s] hover:scale-[1.10] scale-[1.15]"
+            className="parallax-img object-cover opacity-75 transition-transform duration-[3s] hover:scale-[1.10] scale-[1.15]"
             style={{ objectPosition: servicesBackground.objectPosition || "center center" }}
             quality={90}
           />
-          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(12,10,8,0.95),rgba(12,10,8,0.75)_50%,rgba(12,10,8,0.9))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(12,10,8,0.82),rgba(12,10,8,0.52)_50%,rgba(12,10,8,0.86))]" />
 
           <div className="relative grid gap-12 px-6 py-12 md:px-12 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <MotionBlock reduceMotion={reduceMotion} className="space-y-6">
@@ -541,7 +550,7 @@ export default function HomePageExperience({
             </MotionBlock>
 
             <div
-              className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20 backdrop-blur-md relative group-hover-within"
+              className="overflow-hidden rounded-card border border-white/10 bg-black/20 backdrop-blur-md relative group-hover-within"
               onMouseMove={(e) => {
                 const { left, top } = e.currentTarget.getBoundingClientRect();
                 const x = e.clientX - left;
@@ -553,7 +562,7 @@ export default function HomePageExperience({
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 spotlight-bg"
                 style={{
-                  background: `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.06), transparent 40%)`,
+                  background: `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.12), transparent 45%)`,
                 }}
               />
 
@@ -586,10 +595,12 @@ export default function HomePageExperience({
         </div>
       </section>
 
+      <StatsSection reduceMotion={reduceMotion} />
+
       <TestimonialsSection reduceMotion={reduceMotion} />
 
       <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <div data-cursor-surface="dark" className="relative grid gap-10 overflow-hidden rounded-[3rem] border border-line/12 bg-[linear-gradient(135deg,#171310,#302720)] p-8 text-paper shadow-[0_48px_128px_rgba(12,10,8,0.2)] md:p-12 lg:grid-cols-[1fr_auto] lg:items-center lg:p-16">
+        <div data-cursor-surface="dark" className="relative grid gap-10 overflow-hidden rounded-feature border border-line/12 bg-[linear-gradient(135deg,#171310,#302720)] p-8 text-paper shadow-[0_48px_128px_rgba(12,10,8,0.2)] md:p-12 lg:grid-cols-[1fr_auto] lg:items-center lg:p-16">
           <MotionBlock reduceMotion={reduceMotion} className="space-y-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-white/40">Contact</p>
             <h2 className="max-w-3xl font-serif text-5xl leading-[0.94] tracking-[-0.05em] md:text-8xl">
@@ -622,7 +633,7 @@ export default function HomePageExperience({
             <MotionBlock
               reduceMotion={reduceMotion}
               delay={0.2}
-              className="rounded-[2.2rem] border border-white/10 bg-white/5 p-8 text-paper/80 backdrop-blur-xl"
+              className="rounded-card border border-white/10 bg-white/5 p-8 text-paper/80 backdrop-blur-xl"
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">Délais</p>
               <p className="mt-4 font-serif text-2xl leading-tight text-white">
@@ -636,7 +647,7 @@ export default function HomePageExperience({
             <MotionBlock
               reduceMotion={reduceMotion}
               delay={0.3}
-              className="relative min-h-[18rem] overflow-hidden rounded-[2.2rem] border border-white/10 bg-black/20"
+              className="relative min-h-[18rem] overflow-hidden rounded-card border border-white/10 bg-black/20"
             >
               <Image
                 src={closingPhoto.src}

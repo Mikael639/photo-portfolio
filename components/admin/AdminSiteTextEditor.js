@@ -1,5 +1,6 @@
 const fields = [
   { key: "eyebrow", label: "Petit texte en haut de l'accueil" },
+  { key: "heroTitle", label: "Titre principal de l'accueil (hero)", multiline: true },
   { key: "primaryCta", label: "Bouton principal" },
   { key: "secondaryCta", label: "Bouton secondaire" },
   { key: "directionTitle", label: "Titre du bloc direction" },

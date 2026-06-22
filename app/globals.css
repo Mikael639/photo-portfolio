@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
+  /* Accent terracotta — signature couleur du site */
   --paper: #fafafa;
   --ink: #111111;
-  --accent: #666666;
-  --accent-soft: #a3a3a3;
+  --accent: #8f5730;
+  --accent-soft: #b07f5a;
   --line: #2a2a2a;
   --sand: #f0f0f0;
   --rose-mist: #e5e5e5;
@@ -20,6 +21,11 @@
   --color-line: var(--line);
   --font-serif: var(--font-display);
   --font-sans: var(--font-body);
+  /* Echelle de rayons unifiee pour les cartes et sections */
+  --radius-inset: 1.5rem;
+  --radius-card: 2rem;
+  --radius-panel: 2.5rem;
+  --radius-feature: 3rem;
 }
 
 body {
@@ -38,6 +44,13 @@ body {
 a,
 button {
   cursor: pointer;
+}
+
+/* Etats de focus clavier — indispensables car le curseur custom masque le curseur natif */
+:where(a, button, [role="button"], summary, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 @media (hover: hover) and (pointer: fine) {
