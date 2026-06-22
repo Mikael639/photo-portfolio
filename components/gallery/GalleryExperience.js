@@ -286,7 +286,7 @@ export default function GalleryExperience({ photos, allPhotos = photos, activeCa
       </motion.div>
 
       {photos.length === 0 ? (
-        <div className="rounded-[2.5rem] border border-line/12 bg-white/60 p-12 text-center shadow-[0_32px_96px_rgba(12,10,8,0.06)]">
+        <div className="rounded-panel border border-line/12 bg-white/60 p-12 text-center shadow-[0_32px_96px_rgba(12,10,8,0.06)]">
           <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-ink/40">Galerie vide</p>
           <p className="mt-6 font-serif text-4xl">Aucune image dans cette collection.</p>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink/60">

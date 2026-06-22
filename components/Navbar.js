@@ -2,31 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { siteConfig } from "../lib/siteConfig";
 
+const NAV_ICONS = {
+  "/": HomeIcon,
+  "/gallery": GridIcon,
+  "/about": UserIcon,
+  "/contact": MailIcon,
+};
+
 export default function Navbar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
   const [isIdleOnHome, setIsIdleOnHome] = useState(false);
+  const [isBarHidden, setIsBarHidden] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasIntroPlayed, setHasIntroPlayed] = useState(false);
   const isHome = pathname === "/";
-  const shouldDimOnHome = isHome && !isOpen && isIdleOnHome;
+  const shouldDimOnHome = isHome && isIdleOnHome;
+  const isHeaderHiddenOnMobile = isMobile && isBarHidden;
+
+  const mobileTabs = [
+    ...siteConfig.navigation.map((link) => ({
+      href: link.href,
+      label: link.label,
+      Icon: NAV_ICONS[link.href] || HomeIcon,
+    })),
+    ...siteConfig.socialLinks.map((link) => ({
+      href: link.href,
+      label: link.name,
+      Icon: InstagramIcon,
+      external: true,
+    })),
+  ];
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isHome || isOpen) {
+    if (!isHome) {
       return undefined;
     }
 
@@ -50,143 +62,236 @@ export default function Navbar() {
       window.clearTimeout(timeoutId);
       events.forEach((eventName) => window.removeEventListener(eventName, showNavigation));
     };
-  }, [isHome, isOpen]);
+  }, [isHome]);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    function handleScroll() {
+      const currentY = window.scrollY;
+      if (currentY < 80) {
+        setIsBarHidden(false);
+      } else if (currentY > lastScrollY + 6) {
+        setIsBarHidden(true);
+      } else if (currentY < lastScrollY - 6) {
+        setIsBarHidden(false);
+      }
+      lastScrollY = currentY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const updateIsMobile = () => setIsMobile(query.matches);
+    updateIsMobile();
+    query.addEventListener("change", updateIsMobile);
+    return () => query.removeEventListener("change", updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setHasIntroPlayed(true), 2600);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   return (
-    <motion.header
-      initial={{ y: -100, opacity: 0 }}
-      animate={shouldDimOnHome ? { y: -18, opacity: 0.08 } : { y: 0, opacity: 1 }}
-      transition={{ 
-        duration: shouldDimOnHome ? 0.7 : 0.45,
-        ease: [0.16, 1, 0.3, 1], 
-        delay: pathname === "/" && !shouldDimOnHome ? 2.2 : 0.04
-      }}
-      onMouseEnter={() => setIsIdleOnHome(false)}
-      onFocusCapture={() => setIsIdleOnHome(false)}
-      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-colors duration-500 ${
-        shouldDimOnHome ? "pointer-events-none border-transparent bg-paper/0" : "border-line/20 bg-paper/70"
-      }`}
-    >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
-        <Link href="/" className="font-serif text-xl tracking-wide text-ink">
-          Jerrypicsart
-        </Link>
+    <>
+      <motion.header
+        initial={{ y: -100, opacity: 0 }}
+        animate={
+          isHeaderHiddenOnMobile
+            ? { y: -90, opacity: 0 }
+            : shouldDimOnHome
+            ? { y: -18, opacity: 0.08 }
+            : { y: 0, opacity: 1 }
+        }
+        transition={{
+          duration: isHeaderHiddenOnMobile ? 0.4 : shouldDimOnHome ? 0.7 : 0.45,
+          ease: [0.16, 1, 0.3, 1],
+          delay: !hasIntroPlayed && isHome && !shouldDimOnHome ? 2.2 : 0.04,
+        }}
+        onMouseEnter={() => setIsIdleOnHome(false)}
+        onFocusCapture={() => setIsIdleOnHome(false)}
+        className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-colors duration-500 ${
+          shouldDimOnHome || isHeaderHiddenOnMobile
+            ? "pointer-events-none border-transparent bg-paper/0"
+            : "border-line/20 bg-paper/70"
+        }`}
+      >
+        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
+          <Link href="/" className="mx-auto font-serif text-xl tracking-wide text-ink md:mx-0">
+            Jerrypicsart
+          </Link>
 
-        <div className="hidden items-center gap-1 rounded-full border border-line/20 bg-white/70 p-1 md:flex">
-          {siteConfig.navigation.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
+          <div className="hidden items-center gap-1 rounded-full border border-line/20 bg-white/70 p-1 md:flex">
+            {siteConfig.navigation.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative rounded-full px-3 py-1.5 text-sm transition ${
+                    isActive ? "text-paper" : "text-ink/75 hover:text-ink"
+                  }`}
+                >
+                  {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-ink" />}
+                  <span className="relative z-10">{link.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="hidden items-center gap-2 md:flex">
+            {siteConfig.socialLinks.map((link) => (
+              <a
                 key={link.href}
                 href={link.href}
-                className={`relative rounded-full px-3 py-1.5 text-sm transition ${
-                  isActive ? "text-paper" : "text-ink/75 hover:text-ink"
-                }`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${link.name} ${link.handle}`}
+                title={`${link.name} ${link.handle}`}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line/20 bg-white/65 text-ink/65 shadow-sm backdrop-blur-md transition hover:border-ink/20 hover:bg-white hover:text-ink"
               >
-                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-ink" />}
-                <span className="relative z-10">{link.label}</span>
-              </Link>
+                <InstagramIcon className="h-4.5 w-4.5" />
+              </a>
+            ))}
+          </div>
+        </nav>
+      </motion.header>
+
+      <motion.nav
+        aria-label="Navigation mobile"
+        initial={false}
+        animate={{ y: isBarHidden ? 130 : 0, opacity: isBarHidden ? 0 : 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 md:hidden"
+        style={{ paddingBottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
+      >
+        <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-ink/90 p-2 shadow-[0_18px_50px_rgba(12,10,8,0.45)] backdrop-blur-xl">
+          {mobileTabs.map((tab) => {
+            const isActive = !tab.external && pathname === tab.href;
+            const tabClassName = `relative flex h-12 items-center justify-center gap-2 rounded-full transition-colors ${
+              isActive ? "px-4 text-paper" : "w-12 text-paper/55 hover:text-paper/85"
+            }`;
+            const inner = (
+              <>
+                {isActive && (
+                  <motion.span
+                    layoutId="mobile-nav-pill"
+                    className="absolute inset-0 rounded-full bg-paper/14"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <tab.Icon className="relative z-10 h-6 w-6 shrink-0" active={isActive} />
+                {isActive ? (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.25, delay: 0.05 }}
+                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em]"
+                  >
+                    {tab.label}
+                  </motion.span>
+                ) : null}
+              </>
+            );
+
+            return (
+              <motion.li key={tab.href} layout transition={{ type: "spring", stiffness: 420, damping: 34 }}>
+                {tab.external ? (
+                  <a href={tab.href} target="_blank" rel="noreferrer" aria-label={tab.label} className={tabClassName}>
+                    {inner}
+                  </a>
+                ) : (
+                  <Link href={tab.href} aria-label={tab.label} aria-current={isActive ? "page" : undefined} className={tabClassName}>
+                    {inner}
+                  </Link>
+                )}
+              </motion.li>
             );
           })}
-        </div>
+        </ul>
+      </motion.nav>
+    </>
+  );
+}
 
-        <div className="hidden items-center gap-2 md:flex">
-          {siteConfig.socialLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`${link.name} ${link.handle}`}
-              title={`${link.name} ${link.handle}`}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line/20 bg-white/65 text-ink/65 shadow-sm backdrop-blur-md transition hover:border-ink/20 hover:bg-white hover:text-ink"
-            >
-              <InstagramIcon className="h-4.5 w-4.5" />
-            </a>
-          ))}
-        </div>
+function HomeIcon({ className = "", active = false }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M4 11.4 12 4l8 7.4V19.5a1 1 0 0 1-1 1h-4.2v-5.4H9.2v5.4H5a1 1 0 0 1-1-1z" />
+    </svg>
+  );
+}
 
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          aria-controls="mobile-navigation"
-          onClick={() => setIsOpen((current) => !current)}
-          className="inline-flex items-center gap-3 rounded-full border border-line/20 bg-white/80 px-4 py-2 text-sm font-medium text-ink transition-all active:scale-95 md:hidden shadow-sm"
-        >
-          <span className="tracking-wide">{isOpen ? "Fermer" : "Menu"}</span>
-          <span
-            aria-hidden="true"
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] uppercase font-bold text-paper"
-          >
-            {isOpen ? "✕" : "+"}
-          </span>
-        </button>
-      </nav>
+function GridIcon({ className = "", active = false }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </svg>
+  );
+}
 
-      <AnimatePresence>
-        {isOpen ? (
-          <>
-            <motion.button
-              type="button"
-              aria-label="Fermer le menu"
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 top-[73px] bg-ink/16 md:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
-            <motion.div
-              id="mobile-navigation"
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="border-t border-line/15 bg-paper/95 px-4 py-4 shadow-[0_24px_80px_rgba(12,10,8,0.08)] backdrop-blur-xl md:hidden"
-            >
-              <div className="mx-auto flex max-w-7xl flex-col gap-2">
-                {siteConfig.navigation.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsOpen(false)}
-                      className={`flex items-center justify-between rounded-[1.2rem] border px-6 py-4 text-lg transition-all duration-300 ${
-                        isActive
-                          ? "border-ink bg-ink text-paper"
-                          : "border-line/10 bg-white/40 text-ink/80 hover:border-ink/20 hover:bg-white hover:text-ink"
-                      }`}
-                    >
-                      <span className="font-serif tracking-tight">{link.label}</span>
-                      {isActive && (
-                        <motion.span 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="h-1.5 w-1.5 rounded-full bg-paper" 
-                        />
-                      )}
-                    </Link>
-                  );
-                })}
-                {siteConfig.socialLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between rounded-[1.2rem] border border-line/10 bg-white/40 px-6 py-4 text-lg text-ink/80 transition-all duration-300 hover:border-ink/20 hover:bg-white hover:text-ink"
-                  >
-                    <span className="font-serif tracking-tight">{link.name}</span>
-                    <span className="text-sm font-semibold">{link.handle}</span>
-                  </a>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        ) : null}
-      </AnimatePresence>
-    </motion.header>
+function UserIcon({ className = "", active = false }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="12" cy="8" r="3.9" />
+      <path d="M4.5 20c0-3.9 3.4-6 7.5-6s7.5 2.1 7.5 6" />
+    </svg>
+  );
+}
+
+function MailIcon({ className = "", active = false }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2.4" />
+      <path
+        d="M4 7.5 12 13l8-5.5"
+        stroke={active ? "var(--paper)" : "currentColor"}
+        fill="none"
+      />
+    </svg>
   );
 }
 

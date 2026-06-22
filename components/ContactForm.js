@@ -19,7 +19,7 @@ function SuccessCard({ onReset }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.98 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-[1.7rem] border border-emerald-200/60 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(255,255,255,0.92))] p-8 text-center shadow-[0_24px_80px_rgba(12,10,8,0.08)]"
+      className="rounded-inset border border-emerald-200/60 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(255,255,255,0.92))] p-8 text-center shadow-[0_24px_80px_rgba(12,10,8,0.08)]"
       role="status"
       aria-live="polite"
     >
@@ -98,9 +98,9 @@ export default function ContactForm() {
       ref={formRef}
       id="contact-form"
       action={formAction}
-      className="grid scroll-mt-32 gap-5 rounded-[1.7rem] border border-line/12 bg-white/52 p-6 md:grid-cols-2 md:p-7"
+      className="grid scroll-mt-32 gap-5 rounded-inset border border-line/12 bg-white/52 p-6 md:grid-cols-2 md:p-7"
     >
-      <div className="space-y-3 rounded-[1.6rem] border border-line/10 bg-paper/70 p-5 md:col-span-2">
+      <div className="space-y-3 rounded-inset border border-line/10 bg-paper/70 p-5 md:col-span-2">
         <p className="text-[11px] uppercase tracking-[0.24em] text-ink/48">Brief express</p>
         <h2 className="font-serif text-3xl leading-tight md:text-4xl">Parle-moi du contexte et du rendu attendu.</h2>
         <p className="max-w-2xl text-sm leading-relaxed text-ink/65 md:text-base">

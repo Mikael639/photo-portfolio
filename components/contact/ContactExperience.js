@@ -81,7 +81,7 @@ export default function ContactExperience() {
 
       <section className="space-y-8">
         <motion.div
-          className="rounded-[2.5rem] border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.68))] p-6 shadow-[0_32px_96px_rgba(12,10,8,0.08)] backdrop-blur-md md:p-10"
+          className="rounded-panel border border-line/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.68))] p-6 shadow-[0_32px_96px_rgba(12,10,8,0.08)] backdrop-blur-md md:p-10"
           {...getRevealProps(reduceMotion, 0.1)}
         >
           <div className="mb-6 space-y-2">
@@ -94,7 +94,7 @@ export default function ContactExperience() {
         </motion.div>
 
         <motion.div
-          className="rounded-[2.2rem] border border-line/12 bg-[var(--paper)] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.04)] backdrop-blur-sm"
+          className="rounded-card border border-line/12 bg-[var(--paper)] p-8 shadow-[0_24px_80px_rgba(12,10,8,0.04)] backdrop-blur-sm"
           {...getRevealProps(reduceMotion, 0.16)}
         >
            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40 mb-6">Questions fréquentes</p>
@@ -131,7 +131,7 @@ export default function ContactExperience() {
           </div>
         </motion.div>
         <motion.div
-          className="rounded-[2.2rem] border border-line/12 bg-white/40 p-8 text-center backdrop-blur-sm"
+          className="rounded-card border border-line/12 bg-white/40 p-8 text-center backdrop-blur-sm"
           {...getRevealProps(reduceMotion, 0.22)}
         >
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-ink/40 mb-4">Besoin d&apos;une autre voie ?</p>

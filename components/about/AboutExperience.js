@@ -96,11 +96,11 @@ export default function AboutExperience({ aboutCopy = defaultAboutCopy }) {
             <PortraitPanel
               photo={portrait}
               priority
-              className="min-h-[34rem] rounded-[2.4rem] border border-line/10 md:min-h-[46rem]"
+              className="min-h-[34rem] rounded-panel border border-line/10 md:min-h-[46rem]"
               imageClassName="object-[58%_38%]"
               sizes="(max-width: 1024px) 100vw, 56vw"
             />
-            <div className="absolute bottom-5 left-5 max-w-xs rounded-[1.6rem] border border-white/12 bg-black/35 p-5 text-paper shadow-2xl backdrop-blur-md md:bottom-8 md:left-8">
+            <div className="absolute bottom-5 left-5 max-w-xs rounded-inset border border-white/12 bg-black/35 p-5 text-paper shadow-2xl backdrop-blur-md md:bottom-8 md:left-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/42">{convictionTitle}</p>
               <p className="mt-3 font-serif text-2xl leading-tight">
                 {convictionText}
@@ -117,7 +117,7 @@ export default function AboutExperience({ aboutCopy = defaultAboutCopy }) {
           <PortraitPanel
             photo={profile}
             priority
-            className="min-h-[32rem] rounded-[1.6rem] border border-line/10 bg-paper md:min-h-[42rem]"
+            className="min-h-[32rem] rounded-inset border border-line/10 bg-paper md:min-h-[42rem]"
             imageClassName="object-[55%_38%]"
             sizes="(max-width: 1024px) 100vw, 38vw"
           />
@@ -154,7 +154,7 @@ export default function AboutExperience({ aboutCopy = defaultAboutCopy }) {
         ))}
       </section>
 
-      <section className="overflow-hidden rounded-[2.8rem] border border-line/12 bg-[linear-gradient(135deg,rgba(18,15,12,0.98),rgba(29,33,41,0.96))] p-8 text-paper shadow-[0_32px_96px_rgba(12,10,8,0.18)] md:p-12 lg:p-16">
+      <section className="overflow-hidden rounded-feature border border-line/12 bg-[linear-gradient(135deg,rgba(18,15,12,0.98),rgba(29,33,41,0.96))] p-8 text-paper shadow-[0_32px_96px_rgba(12,10,8,0.18)] md:p-12 lg:p-16">
         <motion.div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center" {...getRevealProps(reduceMotion)}>
           <div className="space-y-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-paper/40">Manifeste</p>

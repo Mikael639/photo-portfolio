@@ -106,7 +106,7 @@ export default async function RootLayout({ children }) {
             <NoiseOverlay />
             <CustomCursor />
             <Navbar />
-            <main className="w-full pb-16 pt-20">{children}</main>
+            <main className="w-full pb-28 pt-20 md:pb-16">{children}</main>
           </div>
         </SmoothScroll>
       </body>
