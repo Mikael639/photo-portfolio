@@ -13,6 +13,11 @@ const NAV_ICONS = {
   "/contact": MailIcon,
 };
 
+// Glisse du pill/label entre onglets : ressort doux, sans rebond, pour un morph soyeux.
+const NAV_MORPH = { type: "spring", stiffness: 210, damping: 32, mass: 1.05 };
+// Apparition/masquage des barres : courbe lente et fluide (easeOutQuint).
+const NAV_REVEAL = { duration: 0.85, ease: [0.22, 1, 0.36, 1] };
+
 export default function Navbar() {
   const pathname = usePathname();
   const [isIdleOnHome, setIsIdleOnHome] = useState(false);
@@ -108,8 +113,8 @@ export default function Navbar() {
             : { y: 0, opacity: 1 }
         }
         transition={{
-          duration: isHeaderHiddenOnMobile ? 0.4 : shouldDimOnHome ? 0.7 : 0.45,
-          ease: [0.16, 1, 0.3, 1],
+          duration: isMobile ? NAV_REVEAL.duration : shouldDimOnHome ? 0.7 : 0.45,
+          ease: isMobile ? NAV_REVEAL.ease : [0.16, 1, 0.3, 1],
           delay: !hasIntroPlayed && isHome && !shouldDimOnHome ? 2.2 : 0.04,
         }}
         onMouseEnter={() => setIsIdleOnHome(false)}
@@ -165,32 +170,37 @@ export default function Navbar() {
         aria-label="Navigation mobile"
         initial={false}
         animate={{ y: isBarHidden ? 130 : 0, opacity: isBarHidden ? 0 : 1 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        transition={NAV_REVEAL}
         className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 md:hidden"
         style={{ paddingBottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
       >
-        <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-ink/90 p-2 shadow-[0_18px_50px_rgba(12,10,8,0.45)] backdrop-blur-xl">
+        <ul className="relative flex items-center gap-1 rounded-full p-2 ring-1 ring-white/10 bg-[linear-gradient(180deg,rgba(34,29,24,0.9),rgba(12,10,8,0.94))] shadow-[0_8px_24px_rgba(12,10,8,0.28),0_28px_64px_rgba(12,10,8,0.5)] backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-7 before:top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent before:content-['']">
           {mobileTabs.map((tab) => {
             const isActive = !tab.external && pathname === tab.href;
-            const tabClassName = `relative flex h-12 items-center justify-center gap-2 rounded-full transition-colors ${
-              isActive ? "px-4 text-paper" : "w-12 text-paper/55 hover:text-paper/85"
+            const tabClassName = `group relative flex h-12 items-center justify-center gap-2 rounded-full transition-colors duration-[450ms] ease-out ${
+              isActive ? "px-4 text-paper" : "w-12 text-paper/50 hover:text-paper/90"
             }`;
             const inner = (
               <>
                 {isActive && (
                   <motion.span
                     layoutId="mobile-nav-pill"
-                    className="absolute inset-0 rounded-full bg-paper/14"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    className="absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(250,250,250,0.20),rgba(250,250,250,0.06))] ring-1 ring-white/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_3px_10px_rgba(0,0,0,0.22)]"
+                    transition={NAV_MORPH}
                   />
                 )}
-                <tab.Icon className="relative z-10 h-6 w-6 shrink-0" active={isActive} />
+                <tab.Icon
+                  className={`relative z-10 h-6 w-6 shrink-0 transition-transform duration-300 group-active:scale-90 ${
+                    isActive ? "[filter:drop-shadow(0_1px_1.5px_rgba(0,0,0,0.22))]" : ""
+                  }`}
+                  active={isActive}
+                />
                 {isActive ? (
                   <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.25, delay: 0.05 }}
-                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em]"
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, ease: NAV_REVEAL.ease, delay: 0.14 }}
+                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em]"
                   >
                     {tab.label}
                   </motion.span>
@@ -199,7 +209,7 @@ export default function Navbar() {
             );
 
             return (
-              <motion.li key={tab.href} layout transition={{ type: "spring", stiffness: 420, damping: 34 }}>
+              <motion.li key={tab.href} layout transition={NAV_MORPH}>
                 {tab.external ? (
                   <a href={tab.href} target="_blank" rel="noreferrer" aria-label={tab.label} className={tabClassName}>
                     {inner}
