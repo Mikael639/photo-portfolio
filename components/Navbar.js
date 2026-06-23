@@ -28,19 +28,11 @@ export default function Navbar() {
   const shouldDimOnHome = isHome && isIdleOnHome;
   const isHeaderHiddenOnMobile = isMobile && isBarHidden;
 
-  const mobileTabs = [
-    ...siteConfig.navigation.map((link) => ({
-      href: link.href,
-      label: link.label,
-      Icon: NAV_ICONS[link.href] || HomeIcon,
-    })),
-    ...siteConfig.socialLinks.map((link) => ({
-      href: link.href,
-      label: link.name,
-      Icon: InstagramIcon,
-      external: true,
-    })),
-  ];
+  const mobileTabs = siteConfig.navigation.map((link) => ({
+    href: link.href,
+    label: link.label,
+    Icon: NAV_ICONS[link.href] || HomeIcon,
+  }));
 
   useEffect(() => {
     if (!isHome) {
@@ -107,7 +99,7 @@ export default function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={
           isHeaderHiddenOnMobile
-            ? { y: -90, opacity: 0 }
+            ? { y: -130, opacity: 1 }
             : shouldDimOnHome
             ? { y: -18, opacity: 0.08 }
             : { y: 0, opacity: 1 }
@@ -119,10 +111,11 @@ export default function Navbar() {
         }}
         onMouseEnter={() => setIsIdleOnHome(false)}
         onFocusCapture={() => setIsIdleOnHome(false)}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
         className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-colors duration-500 ${
-          shouldDimOnHome || isHeaderHiddenOnMobile
+          shouldDimOnHome
             ? "pointer-events-none border-transparent bg-paper/0"
-            : "border-line/20 bg-paper/70"
+            : `border-line/20 bg-paper/70 ${isHeaderHiddenOnMobile ? "pointer-events-none" : ""}`
         }`}
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
@@ -169,16 +162,16 @@ export default function Navbar() {
       <motion.nav
         aria-label="Navigation mobile"
         initial={false}
-        animate={{ y: isBarHidden ? 130 : 0, opacity: isBarHidden ? 0 : 1 }}
+        animate={{ y: isBarHidden ? 140 : 0 }}
         transition={NAV_REVEAL}
         className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 md:hidden"
         style={{ paddingBottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
       >
-        <ul className="relative flex items-center gap-1 rounded-full p-2 ring-1 ring-white/10 bg-[linear-gradient(180deg,rgba(34,29,24,0.9),rgba(12,10,8,0.94))] shadow-[0_8px_24px_rgba(12,10,8,0.28),0_28px_64px_rgba(12,10,8,0.5)] backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-7 before:top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent before:content-['']">
+        <ul className="relative flex items-center gap-1.5 rounded-full p-2.5 ring-1 ring-white/15 bg-[linear-gradient(180deg,rgba(20,17,14,0.40),rgba(12,10,8,0.52))] shadow-[0_8px_24px_rgba(12,10,8,0.2),0_28px_64px_rgba(12,10,8,0.36)] backdrop-blur-2xl backdrop-saturate-150 before:pointer-events-none before:absolute before:inset-x-7 before:top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:content-['']">
           {mobileTabs.map((tab) => {
-            const isActive = !tab.external && pathname === tab.href;
+            const isActive = pathname === tab.href;
             const tabClassName = `group relative flex h-12 items-center justify-center gap-2 rounded-full transition-colors duration-[450ms] ease-out ${
-              isActive ? "px-4 text-paper" : "w-12 text-paper/50 hover:text-paper/90"
+              isActive ? "px-4 text-paper" : "w-12 text-paper/65 hover:text-paper"
             }`;
             const inner = (
               <>
@@ -190,9 +183,7 @@ export default function Navbar() {
                   />
                 )}
                 <tab.Icon
-                  className={`relative z-10 h-6 w-6 shrink-0 transition-transform duration-300 group-active:scale-90 ${
-                    isActive ? "[filter:drop-shadow(0_1px_1.5px_rgba(0,0,0,0.22))]" : ""
-                  }`}
+                  className="relative z-10 h-6 w-6 shrink-0 transition-transform duration-300 group-active:scale-90 [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.32))]"
                   active={isActive}
                 />
                 {isActive ? (
@@ -200,7 +191,7 @@ export default function Navbar() {
                     initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, ease: NAV_REVEAL.ease, delay: 0.14 }}
-                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em]"
+                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] [text-shadow:0_1px_2px_rgba(0,0,0,0.28)]"
                   >
                     {tab.label}
                   </motion.span>
@@ -210,15 +201,9 @@ export default function Navbar() {
 
             return (
               <motion.li key={tab.href} layout transition={NAV_MORPH}>
-                {tab.external ? (
-                  <a href={tab.href} target="_blank" rel="noreferrer" aria-label={tab.label} className={tabClassName}>
-                    {inner}
-                  </a>
-                ) : (
-                  <Link href={tab.href} aria-label={tab.label} aria-current={isActive ? "page" : undefined} className={tabClassName}>
-                    {inner}
-                  </Link>
-                )}
+                <Link href={tab.href} aria-label={tab.label} aria-current={isActive ? "page" : undefined} className={tabClassName}>
+                  {inner}
+                </Link>
               </motion.li>
             );
           })}

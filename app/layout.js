@@ -73,6 +73,14 @@ export const metadata = {
   },
 };
 
+// viewport-fit=cover est requis pour que env(safe-area-inset-*) renvoie une valeur
+// (encoche/barre gestuelle iPhone, mode PWA epingle).
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({ children }) {
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") || "";
