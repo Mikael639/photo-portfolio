@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import CustomCursor from "../components/CustomCursor";
 import SmoothScroll from "../components/SmoothScroll";
 import NoiseOverlay from "../components/NoiseOverlay";
+import IntroSplash from "../components/IntroSplash";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 import { getMaintenanceMode } from "../lib/siteSettings";
 import { headers } from "next/headers";
@@ -100,6 +101,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="fr" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
+        {!isAdmin ? <IntroSplash /> : null}
         <SmoothScroll>
           <div className="relative min-h-screen overflow-x-hidden">
             <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_70%_30%,rgba(188,125,79,0.18),transparent_42%)]" />
