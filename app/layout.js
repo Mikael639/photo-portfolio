@@ -5,6 +5,7 @@ import CustomCursor from "../components/CustomCursor";
 import SmoothScroll from "../components/SmoothScroll";
 import NoiseOverlay from "../components/NoiseOverlay";
 import IntroSplash from "../components/IntroSplash";
+import Footer from "../components/Footer";
 import { getSiteUrl, siteConfig, toAbsoluteUrl } from "../lib/siteConfig";
 import { getMaintenanceMode } from "../lib/siteSettings";
 import { headers } from "next/headers";
@@ -116,7 +117,8 @@ export default async function RootLayout({ children }) {
             <NoiseOverlay />
             <CustomCursor />
             <Navbar />
-            <main className="w-full pb-28 pt-20 md:pb-16">{children}</main>
+            <main className={`w-full pt-20 ${isAdmin ? "pb-16" : ""}`}>{children}</main>
+            {!isAdmin ? <Footer /> : null}
           </div>
         </SmoothScroll>
       </body>

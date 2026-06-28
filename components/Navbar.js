@@ -2,40 +2,45 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { useEffect, useState } from "react";
 import { siteConfig } from "../lib/siteConfig";
 
-const NAV_ICONS = {
-  "/": HomeIcon,
-  "/gallery": GridIcon,
-  "/about": UserIcon,
-  "/contact": MailIcon,
-};
-
-// Glisse du pill/label entre onglets : ressort doux, sans rebond, pour un morph soyeux.
-const NAV_MORPH = { type: "spring", stiffness: 210, damping: 32, mass: 1.05 };
-// Apparition/masquage des barres : courbe lente et fluide (easeOutQuint).
-const NAV_REVEAL = { duration: 0.85, ease: [0.22, 1, 0.36, 1] };
-
 export default function Navbar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
   const [isIdleOnHome, setIsIdleOnHome] = useState(false);
-  const [isBarHidden, setIsBarHidden] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [hasIntroPlayed, setHasIntroPlayed] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const isHome = pathname === "/";
-  const shouldDimOnHome = isHome && isIdleOnHome;
-  const isHeaderHiddenOnMobile = isMobile && isBarHidden;
+  const shouldDimOnHome = isHome && !isOpen && isIdleOnHome;
 
-  const mobileTabs = siteConfig.navigation.map((link) => ({
-    href: link.href,
-    label: link.label,
-    Icon: NAV_ICONS[link.href] || HomeIcon,
-  }));
+  const { scrollYProgress } = useScroll();
+  const readingProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
 
   useEffect(() => {
-    if (!isHome) {
+    const previousOverflow = document.body.style.overflow;
+
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(window.scrollY > 80);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!isHome || isOpen) {
       return undefined;
     }
 
@@ -59,234 +64,158 @@ export default function Navbar() {
       window.clearTimeout(timeoutId);
       events.forEach((eventName) => window.removeEventListener(eventName, showNavigation));
     };
-  }, [isHome]);
-
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-
-    function handleScroll() {
-      const currentY = window.scrollY;
-      if (currentY < 80) {
-        setIsBarHidden(false);
-      } else if (currentY > lastScrollY + 6) {
-        setIsBarHidden(true);
-      } else if (currentY < lastScrollY - 6) {
-        setIsBarHidden(false);
-      }
-      lastScrollY = currentY;
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 767px)");
-    const updateIsMobile = () => setIsMobile(query.matches);
-    updateIsMobile();
-    query.addEventListener("change", updateIsMobile);
-    return () => query.removeEventListener("change", updateIsMobile);
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setHasIntroPlayed(true), 2600);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [isHome, isOpen]);
 
   return (
-    <>
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={
-          isHeaderHiddenOnMobile
-            ? { y: -130, opacity: 1 }
-            : shouldDimOnHome
-            ? { y: -18, opacity: 0.08 }
-            : { y: 0, opacity: 1 }
-        }
-        transition={{
-          duration: isMobile ? NAV_REVEAL.duration : shouldDimOnHome ? 0.7 : 0.45,
-          ease: isMobile ? NAV_REVEAL.ease : [0.16, 1, 0.3, 1],
-          delay: !hasIntroPlayed && isHome && !shouldDimOnHome ? 2.2 : 0.04,
-        }}
-        onMouseEnter={() => setIsIdleOnHome(false)}
-        onFocusCapture={() => setIsIdleOnHome(false)}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-        className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-colors duration-500 ${
-          shouldDimOnHome
-            ? "pointer-events-none border-transparent bg-paper/0"
-            : `border-line/20 bg-paper/70 ${isHeaderHiddenOnMobile ? "pointer-events-none" : ""}`
+    <motion.header
+      initial={{ y: -100, opacity: 0 }}
+      animate={shouldDimOnHome ? { y: -18, opacity: 0.08 } : { y: 0, opacity: 1 }}
+      transition={{
+        duration: shouldDimOnHome ? 0.7 : 0.45,
+        ease: [0.16, 1, 0.3, 1],
+        delay: pathname === "/" && !shouldDimOnHome ? 2.2 : 0.04,
+      }}
+      onMouseEnter={() => setIsIdleOnHome(false)}
+      onFocusCapture={() => setIsIdleOnHome(false)}
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl transition-[background-color,box-shadow,border-color] duration-500 ${
+        shouldDimOnHome
+          ? "pointer-events-none border-transparent bg-paper/0 shadow-none"
+          : isScrolled
+          ? "border-line/15 bg-paper/90 shadow-[0_10px_40px_rgba(12,10,8,0.07)]"
+          : "border-line/20 bg-paper/70 shadow-none"
+      }`}
+    >
+      <motion.div
+        aria-hidden="true"
+        style={{ scaleX: readingProgress }}
+        className="absolute inset-x-0 bottom-0 h-px origin-left bg-accent/70"
+      />
+
+      <nav
+        className={`mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 transition-[padding] duration-500 md:px-8 ${
+          isScrolled ? "py-3 md:py-2" : "py-3"
         }`}
       >
-        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
-          <Link href="/" className="mx-auto font-serif text-xl tracking-wide text-ink md:mx-0">
-            Jerrypicsart
-          </Link>
+        <Link href="/" className="font-serif text-xl tracking-wide text-ink">
+          Jerrypicsart
+        </Link>
 
-          <div className="hidden items-center gap-1 rounded-full border border-line/20 bg-white/70 p-1 md:flex">
-            {siteConfig.navigation.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative rounded-full px-3 py-1.5 text-sm transition ${
-                    isActive ? "text-paper" : "text-ink/75 hover:text-ink"
-                  }`}
-                >
-                  {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-ink" />}
-                  <span className="relative z-10">{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="hidden items-center gap-2 md:flex">
-            {siteConfig.socialLinks.map((link) => (
-              <a
+        <div className="hidden items-center gap-1 rounded-full border border-line/20 bg-white/70 p-1 md:flex">
+          {siteConfig.navigation.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
                 key={link.href}
                 href={link.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`${link.name} ${link.handle}`}
-                title={`${link.name} ${link.handle}`}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line/20 bg-white/65 text-ink/65 shadow-sm backdrop-blur-md transition hover:border-ink/20 hover:bg-white hover:text-ink"
+                className={`relative rounded-full px-3 py-1.5 text-sm transition ${
+                  isActive ? "text-paper" : "text-ink/75 hover:text-ink"
+                }`}
               >
-                <InstagramIcon className="h-4.5 w-4.5" />
-              </a>
-            ))}
-          </div>
-        </nav>
-      </motion.header>
-
-      <motion.nav
-        aria-label="Navigation mobile"
-        initial={false}
-        animate={{ y: isBarHidden ? 140 : 0 }}
-        transition={NAV_REVEAL}
-        className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 md:hidden"
-        style={{ paddingBottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
-      >
-        <ul className="relative flex items-center gap-1.5 rounded-full p-2.5 ring-1 ring-white/15 bg-[linear-gradient(180deg,rgba(20,17,14,0.40),rgba(12,10,8,0.52))] shadow-[0_8px_24px_rgba(12,10,8,0.2),0_28px_64px_rgba(12,10,8,0.36)] backdrop-blur-2xl backdrop-saturate-150 before:pointer-events-none before:absolute before:inset-x-7 before:top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:content-['']">
-          {mobileTabs.map((tab) => {
-            const isActive = pathname === tab.href;
-            const tabClassName = `group relative flex h-12 items-center justify-center gap-2 rounded-full transition-colors duration-[450ms] ease-out ${
-              isActive ? "px-4 text-paper" : "w-12 text-paper/65 hover:text-paper"
-            }`;
-            const inner = (
-              <>
-                {isActive && (
-                  <motion.span
-                    layoutId="mobile-nav-pill"
-                    className="absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(250,250,250,0.20),rgba(250,250,250,0.06))] ring-1 ring-white/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_3px_10px_rgba(0,0,0,0.22)]"
-                    transition={NAV_MORPH}
-                  />
-                )}
-                <tab.Icon
-                  className="relative z-10 h-6 w-6 shrink-0 transition-transform duration-300 group-active:scale-90 [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.32))]"
-                  active={isActive}
-                />
-                {isActive ? (
-                  <motion.span
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, ease: NAV_REVEAL.ease, delay: 0.14 }}
-                    className="relative z-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] [text-shadow:0_1px_2px_rgba(0,0,0,0.28)]"
-                  >
-                    {tab.label}
-                  </motion.span>
-                ) : null}
-              </>
-            );
-
-            return (
-              <motion.li key={tab.href} layout transition={NAV_MORPH}>
-                <Link href={tab.href} aria-label={tab.label} aria-current={isActive ? "page" : undefined} className={tabClassName}>
-                  {inner}
-                </Link>
-              </motion.li>
+                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-ink" />}
+                <span className="relative z-10">{link.label}</span>
+              </Link>
             );
           })}
-        </ul>
-      </motion.nav>
-    </>
-  );
-}
+        </div>
 
-function HomeIcon({ className = "", active = false }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill={active ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M4 11.4 12 4l8 7.4V19.5a1 1 0 0 1-1 1h-4.2v-5.4H9.2v5.4H5a1 1 0 0 1-1-1z" />
-    </svg>
-  );
-}
+        <div className="hidden items-center gap-2 md:flex">
+          {siteConfig.socialLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${link.name} ${link.handle}`}
+              title={`${link.name} ${link.handle}`}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line/20 bg-white/65 text-ink/65 shadow-sm backdrop-blur-md transition hover:border-ink/20 hover:bg-white hover:text-ink"
+            >
+              <InstagramIcon className="h-4.5 w-4.5" />
+            </a>
+          ))}
+        </div>
 
-function GridIcon({ className = "", active = false }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill={active ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
-      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
-      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
-      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
-    </svg>
-  );
-}
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setIsOpen((current) => !current)}
+          className="inline-flex items-center gap-3 rounded-full border border-line/20 bg-white/80 px-4 py-2 text-sm font-medium text-ink transition-all active:scale-95 md:hidden shadow-sm"
+        >
+          <span className="tracking-wide">{isOpen ? "Fermer" : "Menu"}</span>
+          <span
+            aria-hidden="true"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] uppercase font-bold text-paper"
+          >
+            {isOpen ? "✕" : "+"}
+          </span>
+        </button>
+      </nav>
 
-function UserIcon({ className = "", active = false }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill={active ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="12" cy="8" r="3.9" />
-      <path d="M4.5 20c0-3.9 3.4-6 7.5-6s7.5 2.1 7.5 6" />
-    </svg>
-  );
-}
-
-function MailIcon({ className = "", active = false }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill={active ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-      strokeLinecap="round"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2.4" />
-      <path
-        d="M4 7.5 12 13l8-5.5"
-        stroke={active ? "var(--paper)" : "currentColor"}
-        fill="none"
-      />
-    </svg>
+      <AnimatePresence>
+        {isOpen ? (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Fermer le menu"
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 top-[73px] bg-ink/16 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <motion.div
+              id="mobile-navigation"
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="border-t border-line/15 bg-paper/95 px-4 py-4 shadow-[0_24px_80px_rgba(12,10,8,0.08)] backdrop-blur-xl md:hidden"
+            >
+              <div className="mx-auto flex max-w-7xl flex-col gap-2">
+                {siteConfig.navigation.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center justify-between rounded-[1.2rem] border px-6 py-4 text-lg transition-all duration-300 ${
+                        isActive
+                          ? "border-ink bg-ink text-paper"
+                          : "border-line/10 bg-white/40 text-ink/80 hover:border-ink/20 hover:bg-white hover:text-ink"
+                      }`}
+                    >
+                      <span className="font-serif tracking-tight">{link.label}</span>
+                      {isActive && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="h-1.5 w-1.5 rounded-full bg-paper"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+                {siteConfig.socialLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between rounded-[1.2rem] border border-line/10 bg-white/40 px-6 py-4 text-lg text-ink/80 transition-all duration-300 hover:border-ink/20 hover:bg-white hover:text-ink"
+                  >
+                    <span className="font-serif tracking-tight">{link.name}</span>
+                    <span className="text-sm font-semibold">{link.handle}</span>
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        ) : null}
+      </AnimatePresence>
+    </motion.header>
   );
 }
 
